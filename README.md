@@ -17,3 +17,6 @@
 5. Run the tests:
 `python manage.py test`
 
+6. Run pylint:
+`pylint --load-plugins pylint_django --django-settings-module=DelfiTLM.settings app`
+
