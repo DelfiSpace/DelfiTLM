@@ -62,8 +62,7 @@ ROOT_URLCONF = 'DelfiTLM.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [os.path.join(BASE_DIR, 'app/templates'),
-                 os.path.join(BASE_DIR, 'delfic3/templates'),
+        'DIRS': [os.path.join(BASE_DIR, 'delfic3/templates'),
                  os.path.join(BASE_DIR, 'delfin3xt/templates'),
                  os.path.join(BASE_DIR, 'delfipq/templates'),
                  os.path.join(BASE_DIR, 'davinci/templates'),

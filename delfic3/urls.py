@@ -4,5 +4,5 @@ from django.urls import path
 from . import views
 
 urlpatterns = [
-    path('', views.home, name='home'),
+    path('delfic3/home/', views.home, name='delfic3_home'),
 ]
