@@ -21,5 +21,11 @@ jobs:
         pip install pylint-django
     - name: Analysing the code with pylint
       run: |
-        pylint --load-plugins pylint_django --django-settings-module=DelfiTLM.settings app
+        pylint --load-plugins pylint_django --django-settings-module=DelfiTLM.settings delfic3
+        pylint --load-plugins pylint_django --django-settings-module=DelfiTLM.settings delfin3xt
+        pylint --load-plugins pylint_django --django-settings-module=DelfiTLM.settings delfipq
+        pylint --load-plugins pylint_django --django-settings-module=DelfiTLM.settings davinci
+        pylint --load-plugins pylint_django --django-settings-module=DelfiTLM.settings members
+        pylint --load-plugins pylint_django --django-settings-module=DelfiTLM.settings ewilgs
+
 
