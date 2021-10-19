@@ -39,6 +39,12 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'davinci',
+    'delfic3',
+    'delfin3xt',
+    'delfipq',
+    'ewilgs',
+    'members',
 ]
 
 MIDDLEWARE = [
@@ -56,7 +62,12 @@ ROOT_URLCONF = 'DelfiTLM.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [os.path.join(BASE_DIR, 'app/templates')],
+        'DIRS': [os.path.join(BASE_DIR, 'delfic3/templates'),
+                 os.path.join(BASE_DIR, 'delfin3xt/templates'),
+                 os.path.join(BASE_DIR, 'delfipq/templates'),
+                 os.path.join(BASE_DIR, 'davinci/templates'),
+                 os.path.join(BASE_DIR, 'members/templates'),
+                 os.path.join(BASE_DIR, 'ewilgs/templates')],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
