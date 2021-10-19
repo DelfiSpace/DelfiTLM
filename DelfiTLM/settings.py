@@ -67,7 +67,8 @@ TEMPLATES = [
                  os.path.join(BASE_DIR, 'delfipq/templates'),
                  os.path.join(BASE_DIR, 'davinci/templates'),
                  os.path.join(BASE_DIR, 'members/templates'),
-                 os.path.join(BASE_DIR, 'ewilgs/templates')],
+                 os.path.join(BASE_DIR, 'ewilgs/templates'),
+                 os.path.join(BASE_DIR, 'home/templates')],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
