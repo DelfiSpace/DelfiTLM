@@ -22,4 +22,5 @@ urlpatterns = [
     path('', include('delfipq.urls')),
     path('', include('ewilgs.urls')),
     path('', include('members.urls')),
+    path('', include('home.urls')),
 ]
