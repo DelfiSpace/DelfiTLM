@@ -1,4 +1,6 @@
-version: '3.9'
+# runs local docker container on localhost, port 8000
+# this is not used for deployment
+version: '3.7'
 
 services:
     app:

@@ -7,6 +7,8 @@ services:
         volumes:
             - static_data:/vol/web
         environment:
+            # TODO: change the key
+            # could also add database config here and remove it from settings.py
             - SECRET_KEY=qwerty
             - ALLOWED_HOSTS=localhost,127.0.0.1
     proxy:
