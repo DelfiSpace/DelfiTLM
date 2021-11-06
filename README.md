@@ -9,7 +9,7 @@
 `source env/bin/activate`
 
 3. Install the requirements (one time instruction):
-`pip install requirements.txt`
+`pip install -r requirements.txt`
 
 4. Run the server from the root folder: 
 `python manage.py runserver` The server runs on http://127.0.0.1:8000/
