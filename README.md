@@ -1,4 +1,4 @@
-# DelfiTLM
+# delfitlm
 
 # Setup
 
@@ -18,6 +18,7 @@
 `python src/manage.py test`
 
 6. Run pylint:
-`pylint --load-plugins pylint_django --django-settings-module=DelfiTLM.settings app`
+`find src -name "*.py" | xargs pylint`
 
-7. Build and run Docker deployment script `docker-compose -f docker-compose-deploy.yml up --build`
+7. Build and run Docker deployment script:
+`docker-compose -f docker-compose-deploy.yml up --build`
