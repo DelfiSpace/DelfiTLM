@@ -21,6 +21,6 @@ jobs:
         pip install pylint-django
     - name: Lint with pylint
       run: |
-        find src -name "*.py" | xargs pylint --load-plugins pylint_django
+        find src -name "*.py" | xargs pylint --load-plugins=pylint_django
 
 
