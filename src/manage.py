@@ -3,10 +3,11 @@
 import os
 import sys
 
+# pylint: disable=all
 
 def main():
     """Run administrative tasks."""
-    os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'DelfiTLM.settings')
+    os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'delfitlm.settings')
     try:
         from django.core.management import execute_from_command_line
     except ImportError as exc:
