@@ -9,6 +9,7 @@ services:
         environment:
             # TODO: change the key
             # could also add database config here and remove it from settings.py
+            - DEBUG=0
             - SECRET_KEY=qwerty
             - ALLOWED_HOSTS=localhost,127.0.0.1
     proxy:
