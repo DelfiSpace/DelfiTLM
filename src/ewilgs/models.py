@@ -1,3 +1,17 @@
-# from django.db import models
+from django.db import models
+from members.models import Members
 
-# Create your models here.
+class Downlink(models.Model):
+    received_at = models.TimeField(auto_now_add=True, null=False)
+    data = models.BinaryField(null=False)
+    frequency = models.FloatField(null=False)
+    processed = models.BooleanField(null=True) #NULL values are allowed for this field
+
+class Uplink(models.Model):
+    UUID_user = models.ForeignKey(Members, editable=False,on_delete=models.CASCADE)
+    created_at = models.TimeField(auto_now_add=True, null=False)
+    transmitted_at = models.TimeField(auto_now=True, null=True) #auto_mow: last edited timestamp is registered
+    data = models.BooleanField(null=True)
+    frequency = models.FloatField(null=False)
+    radio_amateur_username = models.CharField(max_length=70, null=False)
+    sat = models.CharField(max_length=70, null=False)

@@ -1,5 +1,8 @@
 """Admin page for managing the database models"""
 
-# from django.contrib import admin
+from django.contrib import admin
+from .models import Downlink, Uplink
 
-# Register your models here.
+admin.site.register(Downlink)
+admin.site.register(Uplink)
+
