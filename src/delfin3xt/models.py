@@ -1,8 +1,13 @@
+"""
+Models for Delft N3xt.
+"""
 import datetime
-
 from django.db import models
 
-class Delfin3xt_L0_telemetry(models.Model):
+class Delfin3xt_L0_telemetry(models.Model): #pylint: disable=C0103
+    """
+    Telemetry Table Delfin3xt
+    """
     counter = models.PositiveIntegerField(primary_key=True, null=False)
     frame_time = models.IntegerField(default=None, null=True)
     send_time = models.IntegerField(default=None, null=True)
