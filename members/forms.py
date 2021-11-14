@@ -10,3 +10,11 @@ class SetPasswordForm(forms.ModelForm):
     class Meta:
         model = Passwords
         fields = ["username", "password"]
+
+class LoginForm(forms.ModelForm):
+    username = forms.CharField(label="Username")
+    password = forms.CharField(label="password")
+
+    class Meta:
+        model = Passwords
+        fields = ["username", "password"]
