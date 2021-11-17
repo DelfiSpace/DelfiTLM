@@ -3,10 +3,12 @@ from django.shortcuts import render
 from .forms import SetPasswordForm, LoginForm
 from .models import Members, Passwords
 from django.contrib.auth.forms import UserCreationForm
-from django.contrib.auth import authenticate, login
+from django.contrib.auth import login, authenticate
+from .backend.AuthenticationBackend import AuthenticationBackend
 from django.utils import timezone
 from django.contrib import messages
 from django.contrib.auth.hashers import make_password, check_password
+
 
 def home(request):
     """render index.html page"""
@@ -57,34 +59,26 @@ def setPassword(request):
 
     return render(request, "members/set/set_password.html", {'form': form })
 
-def login(request):
+def loginPage(request):
     form = LoginForm(request.POST)
     if request.method == "POST":
         if form.is_valid():
             entered_username = form.cleaned_data.get('username')
             entered_password = form.cleaned_data.get('password')
-
-            # if user exists
-            if Passwords.objects.filter(username=entered_username).exists():
-
-                # check password
-                member = Passwords.objects.get(username=entered_username)
-                password = member.password
-                print(entered_password, password)
-
-                # if password is correct
-                if check_password(entered_password, password):
-                    print("logged in")
-                    return render(request, "members/home/index.html", {'form': form})
-                else:
-                    print("wrong password")
-                    messages.info(request, "Wrong Password")
-                    return render(request, "members/home/login.html", {'form': form})
-
+            member = AuthenticationBackend.authenticate(request, username=entered_username, password=entered_password)
+            print(member)
+            if member is not None:
+                print("there is member")
+                try:
+                    authenticate.login(request, member)
+                except AttributeError:
+                    print("")
+                print("logged in")
             else:
-                print("no members")
-                messages.info(request, "You are not a member")
-                return render(request, "members/home/login.html", {'form': form})
-
+                print("couldnt log in")
+            # if user exists
+                login(request, member)
+                print("logged in")
+                return render(request, "members/home/index.html", {'form': form})
 
     return render(request, "members/home/login.html", { 'form': form })

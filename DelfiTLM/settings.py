@@ -112,9 +112,12 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
+AUTH_USER_MODEL = "members.Passwords"
+
+
 AUTHENTICATION_BACKENDS = [
     'django.contrib.auth.backends.ModelBackend',
-    'members.backend.AuthenticationBackend',
+    'members.backend.AuthenticationBackend'
 ]
 
 

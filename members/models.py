@@ -1,6 +1,9 @@
 import uuid
 from django.db import models
 from django.core.validators import RegexValidator
+# from django.contrib.auth.models import User
+from django.db.models.signals import post_save
+from django.contrib.auth.models import AbstractBaseUser
 
 # Create your models here.
 
@@ -15,7 +18,7 @@ class Members(models.Model):
     def __str__(self):
         return self.username
 
-class Passwords(models.Model):
+class Passwords(AbstractBaseUser):
     UUID = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     member_id = models.ForeignKey(Members, on_delete=models.CASCADE)
     username = models.CharField(max_length=70)
@@ -25,6 +28,7 @@ class Passwords(models.Model):
                                                    message='Enter password containing min 8 characters, min 1 upper and lower case letter, 1 number and 1 special character')
                                 ])
     last_changed = models.DateField(null=True, blank=True)
+    USERNAME_FIELD = 'username'
 
     def __str__(self):
         return self.username
