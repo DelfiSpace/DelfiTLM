@@ -13,8 +13,18 @@ class SetPasswordForm(forms.ModelForm):
 
 class LoginForm(forms.ModelForm):
     username = forms.CharField(label="Username")
-    password = forms.CharField(label="password")
+    password = forms.CharField(label="Password")
 
     class Meta:
         model = Passwords
         fields = ["username", "password"]
+
+class ChangePasswordForm(forms.ModelForm):
+    username = forms.CharField(label="Username")
+    current_password = forms.CharField(label="Current Password")
+    new_password = forms.CharField(label="New Password")
+    confirm_password = forms.CharField(label="Confirm New Password")
+
+    class Meta:
+        model = Passwords
+        fields = ["username", "current_password", "new_password", "confirm_password"]
