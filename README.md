@@ -12,7 +12,7 @@
 `pip install -r requirements.txt`
 
 4. If you run the server locally, set up the database for local development
-`docker-compose -f docker-compose.yml -f docker-compose-dev.yml up db`
+`docker-compose up db`
 
 5. Run the server from the root folder:
 `python src/manage.py runserver` The server runs on http://127.0.0.1:8000/
