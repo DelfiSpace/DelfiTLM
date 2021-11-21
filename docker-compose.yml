@@ -24,4 +24,4 @@ services:
         - DEBUG=1
     depends_on:
       - "db"
-    
+
