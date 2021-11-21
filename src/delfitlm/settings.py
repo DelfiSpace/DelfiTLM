@@ -24,6 +24,12 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # gets the key from the runtime environment (docker-compose-deploy)
 # change_me is default if a value is not specified
 SECRET_KEY = os.environ.get('SECRET_KEY', 'change_me')
+POSTGRES_DB         = os.environ.get('POSTGRES_DB', 'postgres')
+POSTGRES_USER       = os.environ.get('POSTGRES_USER', 'postgres')
+POSTGRES_PASSWORD   = os.environ.get('POSTGRES_PASSWORD', 'postgres')
+POSTGRES_HOST       = os.environ.get('POSTGRES_HOST', 'localhost')
+POSTGRES_PORT       = int(os.environ.get('POSTGRES_PORT', 5432))
+
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = bool(int(os.environ.get('DEBUG', 1)))
@@ -95,11 +101,11 @@ WSGI_APPLICATION = 'delfitlm.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'postgres',
-        'USER': 'postgres',
-        'PASSWORD': 'postgres',
-        'HOST': 'db',
-        'PORT': 5432,
+        'NAME': POSTGRES_DB,
+        'USER': POSTGRES_USER,
+        'PASSWORD': POSTGRES_PASSWORD,
+        'HOST': POSTGRES_HOST,
+        'PORT': POSTGRES_PORT,
     }
 }
 
