@@ -3,13 +3,25 @@
 version: '3.7'
 
 services:
-    app:
-        build:
-            context: .
-        ports:
-            - "8000:8000"
-        volumes:
-            - ./src:/delfitlm
-        command: sh -c "python manage.py runserver 0.0.0.0:8000"
-        environment:
-            - DEBUG=1
+  db:
+    image: postgres
+    volumes:
+      - ./data/db:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_DB=postgres
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+  
+  app:
+    build:
+        context: .
+    ports:
+        - "8000:8000"
+    volumes:
+        - ./src:/app
+    command: sh -c "python manage.py runserver 0.0.0.0:8000"
+    environment:
+        - DEBUG=1
+    depends_on:
+      - "db"
+    

@@ -6,6 +6,7 @@ isort==5.9.3
 lazy-object-proxy==1.6.0
 mccabe==0.6.1
 platformdirs==2.4.0
+psycopg2==2.8.6
 pylint==2.11.1
 pylint-django==2.4.4
 pylint-plugin-utils==0.6
