@@ -53,4 +53,3 @@ class ChangePasswordTestCase(TestCase):
         # self.client.login(user='test', password='testpassword')
         response = self.client.get(reverse('change'))
         self.assertEqual(response.status_code, 200)
-

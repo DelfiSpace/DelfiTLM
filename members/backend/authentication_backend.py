@@ -1,24 +1,24 @@
-from django.conf import settings
+"""authentication_backend"""
 from django.contrib.auth.backends import BaseBackend
 from django.contrib.auth.hashers import check_password
 from ..models import Member
 
 class AuthenticationBackend(BaseBackend):
+    """Custom authentication backend"""
 
     def authenticate(self, username=None, password=None):
-        print("authentication called")
+        """Authentication method"""
+
         if Member.objects.filter(username=username).exists():
             # check password
             member = Member.objects.get(username=username)
-            passwordFound = member.password
+            password_found = member.password
 
-            print(member)
-            print(password)
-            print(passwordFound)
             # if password is correct
-            if check_password(password, passwordFound):
+            if check_password(password, password_found):
                 return Member.objects.get(username=username)
-            return None
+
+        return None
 
     def get_user(self, user_id):
         try:
