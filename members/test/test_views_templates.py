@@ -1,5 +1,5 @@
 """Test views html templates"""
-from django.test import SimpleTestCase, Client
+from django.test import SimpleTestCase, Client, TestCase
 from django.urls import reverse
 
 
@@ -13,3 +13,12 @@ class TestViews(SimpleTestCase):
         response = self.client.get(self.list_url)
         self.assertEquals(response.status_code, 200)
         self.assertTemplateUsed(response, 'ewilgs/home/index.html')
+
+class TestCalls(TestCase):
+    def test_call_home_page(self):
+        self.client = Client()
+        self.list_url = reverse('members_home')
+        response = self.client.get(self.list_url)
+        self.assertEquals(response.status_code, 200)
+        self.assertTemplateUsed(response, 'members/home/index.html')
+

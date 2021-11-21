@@ -18,7 +18,7 @@ from django.contrib import admin
 from django.conf.urls import url
 
 urlpatterns = [
-    url(r'^admin/', admin.site.urls),
+    path('admin/', admin.site.urls),
     path('', include('davinci.urls')),
     path('', include('delfic3.urls')),
     path('', include('delfin3xt.urls')),

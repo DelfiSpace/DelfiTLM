@@ -1,9 +1,9 @@
-"""Admin page for managing the database models"""
-
-# Register your models here.
-
+from django import forms
 from django.contrib import admin
-from .models import Members, Passwords
+from django.contrib.auth.models import Group
+from django.contrib.auth.admin import UserAdmin
+from django.contrib.auth.forms import ReadOnlyPasswordHashField
 
-admin.site.register(Members)
-admin.site.register(Passwords)
+from .models import Member
+
+admin.site.register(Member)
