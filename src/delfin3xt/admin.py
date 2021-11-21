@@ -1,5 +1,8 @@
 """Admin page for managing the database models"""
 
-# from django.contrib import admin
+from django.contrib import admin
+from .models import Delfin3xt_L0_telemetry
 
-# Register your models here.
+@admin.register(Delfin3xt_L0_telemetry)
+class Delfin3xt_L0_telemetry_Admin(admin.ModelAdmin):
+    pass
