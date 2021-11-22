@@ -1,4 +1,4 @@
-"""DelfiTLM URL Configuration
+"""delfitlm URL Configuration
 
 The `urlpatterns` list routes URLs to views. For more information please see:
     https://docs.djangoproject.com/en/3.2/topics/http/urls/
@@ -25,4 +25,5 @@ urlpatterns = [
     path('', include('delfipq.urls')),
     path('', include('ewilgs.urls')),
     path('', include('members.urls')),
+    path('', include('home.urls')),
 ]

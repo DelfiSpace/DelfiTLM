@@ -16,16 +16,9 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install pylint
-        pip install django
-        pip install pylint-django
-    - name: Analysing the code with pylint
+        pip install -r requirements.txt
+    - name: Lint with pylint
       run: |
-        pylint --load-plugins pylint_django --django-settings-module=DelfiTLM.settings delfic3
-        pylint --load-plugins pylint_django --django-settings-module=DelfiTLM.settings delfin3xt
-        pylint --load-plugins pylint_django --django-settings-module=DelfiTLM.settings delfipq
-        pylint --load-plugins pylint_django --django-settings-module=DelfiTLM.settings davinci
-        pylint --load-plugins pylint_django --django-settings-module=DelfiTLM.settings members
-        pylint --load-plugins pylint_django --django-settings-module=DelfiTLM.settings ewilgs
+        find src -name "*.py" | xargs pylint
 
 

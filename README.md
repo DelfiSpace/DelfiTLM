@@ -9,14 +9,21 @@
 `source env/bin/activate`
 
 3. Install the requirements (one time instruction):
-`pip install requirements.txt`
+`pip install -r requirements.txt`
 
-4. Run the server from the root folder: 
-`python manage.py runserver` The server runs on http://127.0.0.1:8000/
+4. Run the server from the root folder:
+`python src/manage.py runserver` The server runs on http://127.0.0.1:8000/
 
 5. Run the tests:
-`python manage.py test`
+`python src/manage.py test`
 
 6. Run pylint:
-`pylint --load-plugins pylint_django --django-settings-module=DelfiTLM.settings app`
+`find src -name "*.py" | xargs pylint`
 
+7. Build and run Docker deployment script (runs on port 80 - default web port):
+`docker-compose -f docker-compose-deploy.yml up --build`
+
+8. Simulate a deployment locally with Django debug mode enabled (runs on port 8000):
+`docker-compose up --build`
+
+Note: remove `--build` to skip building the container, will use the cached one (last build)
