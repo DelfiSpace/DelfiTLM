@@ -14,8 +14,8 @@ class Member(AbstractUser):
                                 validators=[
                                     RegexValidator(
                                         regex='^(?=.*[a-z])(?=.*[A-Z])'
-                                              '(?=.*\d)(?=.*[@$!%*?&])'
-                                              '[A-Za-z\d@$!%*?&]{8,}$',
+                                              '(?=.*\\d)(?=.*[@$!%*?&])'
+                                              '[A-Za-z\\d@$!%*?&]{8,}$',
                                         message='Enter password containing min 8 characters, '
                                                 'min 1 upper and lower case letter, '
                                                 '1 number and 1 special character')
