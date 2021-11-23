@@ -20,7 +20,7 @@ class Member(AbstractUser):
                                                 'min 1 upper and lower case letter, '
                                                 '1 number and 1 special character')
                                 ], null=True, blank=True)
-    role = models.CharField(max_length=60, null=True, blank=True)
+    role = models.CharField(max_length=60, default="radio_amateur")
     created_at = models.DateField(null=True, blank=True)
     active = models.BooleanField(default=False, null=False, blank=False)
     last_changed = models.DateField(null=True, blank=True)

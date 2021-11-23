@@ -1,9 +1,10 @@
 """Customised forms for view/html files"""
 from django import forms
 
-class SetPasswordForm(forms.Form):
+class RegisterForm(forms.Form):
     """set password form"""
     username = forms.CharField(label="Username")
+    email = forms.CharField(label="email")
     password = forms.CharField(label="password")
     confirm_password = forms.CharField(label="confirm password")
 

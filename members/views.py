@@ -5,7 +5,7 @@ from django.utils import timezone
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.hashers import make_password
-from .forms import SetPasswordForm, LoginForm, ChangePasswordForm
+from .forms import RegisterForm, LoginForm, ChangePasswordForm
 from .models import Member
 from .backend.authentication_backend import AuthenticationBackend
 
@@ -15,34 +15,33 @@ def home(request):
     ren = render(request, "members/home/index.html")
     return ren
 
-def set_password(request):
+def register(request):
     """render set.html page"""
 
+    form = RegisterForm(request.POST)
+
     if request.method == 'POST':
-        form = SetPasswordForm(request.POST)
 
         if form.is_valid():
-            print("form valid")
             entered_username = form.cleaned_data['username']
+            entered_email = form.cleaned_data['email']
             entered_password = form.cleaned_data['password']
             entered_confirmpassword = form.cleaned_data['confirm_password']
 
             if Member.objects.filter(username=entered_username).exists():
+                messages.info(request, "Member already exists")
 
-                member = Member.objects.get(username=entered_username)
+            if entered_password == entered_confirmpassword:
+                Member.objects.create(
+                    username=entered_username,
+                    email=entered_email,
+                    password=make_password(entered_password),
+                    created_at=timezone.now(),
+                    last_changed=timezone.now(),
+                    active=True,
+                )
 
-                print(member.password)
-                if member.password is None:
-                    messages.info(request, "Password already exists")
-
-                if entered_password == entered_confirmpassword:
-                    Member.objects.filter(username=entered_username).update(
-                        password=make_password(entered_password),
-                        created_at=timezone.now(),
-                        last_changed=timezone.now(),
-                        active=True,
-                    )
-                    return render(request, "members/home/index.html")
+                return render(request, "members/home/index.html")
     # messages.info("Wrong password or no user found")
     return render(request, "members/set/set_password.html", {'form': form })
 
@@ -64,9 +63,11 @@ def login_member(request):
 
             if member is not None:
                 login(request, member)
+                print("logged in")
                 return render(request, "members/home/index.html", {'form': form})
 
-    messages.info(request, "Wrong password or user does not exist")
+        messages.info(request, "Wrong password or user does not exist")
+
     return render(request, "members/home/login.html", { 'form': form })
 
 def change_password(request):
@@ -91,7 +92,6 @@ def change_password(request):
                 if entered_new_password == entered_confirm_password:
                     Member.objects.filter(username=entered_username).update(
                         password=make_password(entered_new_password),
-                        created_at=timezone.now(),
                         last_changed=timezone.now(),
                         active=True,
                     )
