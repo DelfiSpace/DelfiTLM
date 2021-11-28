@@ -13,4 +13,4 @@ class DaVinci_L0_telemetry(models.Model): #pylint: disable=C0103
     command_code = models.IntegerField(default=None, null=True)
     content_code = models.IntegerField(default=None, null=True)
     data = models.BinaryField(default=None, null=True)
-    received_at = models.TimeField(null=False, auto_now=False, auto_now_add=False, default=datetime.time)
+    received_at = models.TimeField(null=False, auto_now=False, auto_now_add=False, default=datetime.time) #pylint: disable=C0301
