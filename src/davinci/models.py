@@ -7,10 +7,10 @@ from ewilgs.models import Downlink
 
 class DaVinci_L0_telemetry(models.Model): #pylint: disable=C0103
     """
-    Telemetry Table Delfin3xt
+    Telemetry Table Da Vinci
     """
     id = models.ForeignKey(Downlink, primary_key=True, editable=False, on_delete=models.DO_NOTHING)
     command_code = models.IntegerField(default=None, null=True)
     content_code = models.IntegerField(default=None, null=True)
     data = models.BinaryField(default=None, null=True)
-    received_at = models.TimeField(null=False, default=datetime.time)
+    received_at = models.TimeField(null=False, auto_now=False, auto_now_add=False, default=datetime.time)
