@@ -1,5 +1,12 @@
 # DelfiTLM
 
+# Requirements
+
+- A modern python version
+- For local running/development: The postgres client library (For apt users: `apt install libpq-dev`)
+- Docker and docker-compose if running the system or the database from a container
+- For running without docker: Set up a Postgres instance on port 5432
+
 # Setup
 
 1. Create a python environment (one time instruction):
@@ -30,3 +37,4 @@
 `docker-compose up --build`
 
 Note: remove `--build` to skip building the container, will use the cached one (last build)
+
