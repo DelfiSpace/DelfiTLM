@@ -6,5 +6,10 @@ services:
       - "5432:5432"
             
   app:
+    command: sh -c "python manage.py runserver 0.0.0.0:8000"
+    environment:
+        - DEBUG=1
+    ports:
+      - "8000:8000"
     volumes:
       - ./src:/app
