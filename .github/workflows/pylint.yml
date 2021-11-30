@@ -19,6 +19,4 @@ jobs:
         pip install -r requirements.txt
     - name: Lint with pylint
       run: |
-        find src -name "*.py"  -not -path "*/migrations/*" | xargs pylint
-
-
+        find src -name "*.py" -not -path "*/migrations/*" -not -path "*/test/*" -not -path "*/delfitlm/*" | xargs pylint
