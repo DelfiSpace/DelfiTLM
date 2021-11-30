@@ -31,7 +31,7 @@
 `find src -name "*.py" | xargs pylint`
 
 8. Build and run Docker deployment script (runs on port 80 - default web port):
-`docker-compose -f docker-compose-deploy.yml up --build`
+`docker-compose -f docker-compose.yml -f docker-compose-deploy.yml up --build`
 
 9. Simulate a deployment locally with Django debug mode enabled (runs on port 8000):
 `docker-compose up --build`
