@@ -24,7 +24,7 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # gets the key from the runtime environment (docker-compose-deploy)
 # change_me is default if a value is not specified
 SECRET_KEY = os.environ.get('SECRET_KEY', 'change_me')
-POSTGRES_DB         = os.environ.get('POSTGRES_DB', 'postgres')
+POSTGRES_DB         = os.environ.get('POSTGRES_DB', 'delfitlm')
 POSTGRES_USER       = os.environ.get('POSTGRES_USER', 'postgres')
 POSTGRES_PASSWORD   = os.environ.get('POSTGRES_PASSWORD', 'postgres')
 POSTGRES_HOST       = os.environ.get('POSTGRES_HOST', 'localhost')
