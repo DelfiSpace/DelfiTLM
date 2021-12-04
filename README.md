@@ -30,11 +30,21 @@
 7. Run pylint:
 `find src -name "*.py" | xargs pylint`
 
-8. Build and run Docker deployment script (runs on port 80 - default web port):
+8. Simulate a deployment locally with Django debug mode enabled (runs on port 8000):
+`docker-compose up --build`
+
+Note: remove `--build` to skip building the container, will use the cached one (last build)
+
+# Deployment
+
+1. Build and run Docker deployment script (runs on port 80 - default web port):
 `docker-compose -f docker-compose.yml -f docker-compose-deploy.yml up --build`
 
-9. Simulate a deployment locally with Django debug mode enabled (runs on port 8000):
-`docker-compose up --build`
+2. Access the container to initialise Django (only required the first time):
+`docker exec -it delfitlm_app_1 /bin/bash`
+
+3. Run the database migration to create the tables (only required the first time):
+`python manage.py migrate`
 
 Note: remove `--build` to skip building the container, will use the cached one (last build)
 
