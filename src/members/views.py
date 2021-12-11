@@ -55,7 +55,7 @@ def login_member(request):
             entered_username = form.cleaned_data.get('username')
             entered_password = form.cleaned_data.get('password')
 
-            member = AuthenticationBackend.authenticate(
+            member = AuthenticationBackend().authenticate(
                 request,
                 username=entered_username,
                 password=entered_password

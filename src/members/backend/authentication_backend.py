@@ -1,10 +1,10 @@
 """authentication_backend"""
-from django.contrib.auth.backends import BaseBackend
+from django.contrib.auth.backends import ModelBackend
 from django.contrib.auth.hashers import check_password
 from ..models import Member
 
 
-class AuthenticationBackend(BaseBackend):
+class AuthenticationBackend(ModelBackend):
     """Custom authentication backend"""
 
     def authenticate(self, request, username=None, password=None):
