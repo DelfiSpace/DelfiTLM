@@ -18,7 +18,6 @@ jobs:
         python -m pip install --upgrade pip
         pip install -r requirements.txt
     - name: Lint with pylint
-      env:
-        DJANGO_SETTINGS_MODULE: ${DJANGO_SETTINGS_MODULE} --load-plugins pylint_django
-      run: |
-        find src -name "*.py" -not -path "*/migrations/*" -not -path "*/test/*" -not -path "*/delfitlm/*" | xargs pylint
+      run: >
+        find src -name "*.py" -not -path "*/migrations/*" -not -path "*/test/*" -not -path "*/delfitlm/*" |
+        xargs pylint --load-plugins pylint_django
