@@ -20,4 +20,4 @@ jobs:
     - name: Lint with pylint
       run: >
         find src -name "*.py" -not -path "*/migrations/*" -not -path "*/test/*" -not -path "*/delfitlm/*" |
-        xargs pylint --load-plugins pylint_django --django-settings-module=src/delfitlm/settings.py
+        xargs pylint --load-plugins pylint_django --django-settings-module=src/delfitlm
