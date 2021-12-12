@@ -1,5 +1,6 @@
-"""Admin page for managing the database models"""
+"""Admin page for managing the database Delfipq models"""
 
-# from django.contrib import admin
+from django.contrib import admin
+from .models import Delfipq_L0_telemetry
 
-# Register your models here.
+admin.site.register(Delfipq_L0_telemetry)

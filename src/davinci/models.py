@@ -1,3 +1,17 @@
-# from django.db import models
+"""
+Models for Da Vinci mission.
+"""
+import datetime
+from django.db import models
+from ewilgs.models import Downlink
 
-# Create your models here.
+#pylint: disable=all
+class DaVinci_L0_telemetry(models.Model):
+    """
+    Telemetry Table Da Vinci
+    """
+    id = models.OneToOneField(Downlink, primary_key=True, editable=False, on_delete=models.DO_NOTHING)
+    command_code = models.IntegerField(default=None, null=True)
+    content_code = models.IntegerField(default=None, null=True)
+    data = models.BinaryField(default=None, null=True)
+    received_at = models.TimeField(null=False, auto_now=False, auto_now_add=False, default=datetime.time)

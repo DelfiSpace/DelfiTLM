@@ -1,5 +1,6 @@
-"""Admin page for managing the database models"""
+"""Admin page for managing the database Da Vinci models"""
 
-# from django.contrib import admin
+from django.contrib import admin
+from .models import DaVinci_L0_telemetry
 
-# Register your models here.
+admin.site.register(DaVinci_L0_telemetry)

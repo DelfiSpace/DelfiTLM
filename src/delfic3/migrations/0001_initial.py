@@ -15,7 +15,7 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.CreateModel(
-            name='Delfin3xt_L0_telemetry',
+            name='Delfic3_L0_telemetry',
             fields=[
                 ('id', models.OneToOneField(editable=False, on_delete=django.db.models.deletion.DO_NOTHING, primary_key=True, serialize=False, to='ewilgs.downlink')),
                 ('frame_time', models.TimeField(default=datetime.time)),
