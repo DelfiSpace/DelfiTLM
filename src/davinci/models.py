@@ -9,7 +9,7 @@ class DaVinci_L0_telemetry(models.Model): #pylint: disable=C0103
     """
     Telemetry Table Da Vinci
     """
-    id = models.OneToOneField(Downlink, primary_key=True, editable=False, on_delete=models.DO_NOTHING)
+    id = models.OneToOneField(Downlink, primary_key=True, editable=False, on_delete=models.DO_NOTHING)   #pylint: disable=C0301
     command_code = models.IntegerField(default=None, null=True)
     content_code = models.IntegerField(default=None, null=True)
     data = models.BinaryField(default=None, null=True)

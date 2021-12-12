@@ -1,13 +1,14 @@
 """
-Models for Delfipq mission.
+Models for DelfiPQ mission.
 """
 import datetime
 from django.db import models
 from ewilgs.models import Downlink
 
-class Delfipq_L0_telemetry(models.Model): #pylint: disable=C0103
+# pylint: disable=all
+class Delfipq_L0_telemetry(models.Model):
     """
-    Telemetry Table Delfipq
+    Telemetry Table DelfiPQ
     """
     id = models.OneToOneField(Downlink, primary_key=True, editable=False, on_delete=models.DO_NOTHING)
     frame_time = models.TimeField(null=False, default=datetime.time, auto_now=False, auto_now_add=False)

@@ -1,8 +1,7 @@
 """API request handling. Map requests to the corresponding HTMLs."""
+from django_pandas.io import read_frame
 from django.shortcuts import render
 from .models import Uplink, Downlink
-import pandas as pd
-from django_pandas.io import read_frame
 
 def home(request):
     """render index.html page"""
@@ -10,6 +9,7 @@ def home(request):
     return ren
 
 def query_uplink_downlink(request):
+    """Query uplink and downlink table (Select *) and return the results"""
     uplink = Uplink.objects.all()
     df_uplink = read_frame(uplink)
     uplink_html = df_uplink.to_html()
