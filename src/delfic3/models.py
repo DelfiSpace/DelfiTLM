@@ -9,7 +9,7 @@ class Delfic3_L0_telemetry(models.Model): #pylint: disable=C0103
     """
     Telemetry Table Delfic3
     """
-    id = models.ForeignKey(Downlink, primary_key=True, editable=False, on_delete=models.DO_NOTHING)
+    id = models.OneToOneField(Downlink, primary_key=True, editable=False, on_delete=models.DO_NOTHING)
     frame_time = models.TimeField(null=False, default=datetime.time, auto_now=False, auto_now_add=False)    #pylint: disable=C0301
     send_time = models.TimeField(null=False, default=datetime.time, auto_now=False, auto_now_add=False)     #pylint: disable=C0301
     receive_time = models.TimeField(null=False, default=datetime.time, auto_now=False, auto_now_add=False)  #pylint: disable=C0301

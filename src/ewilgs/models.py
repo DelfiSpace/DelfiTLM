@@ -2,7 +2,7 @@ from django.db import models
 from members.models import Member
 
 class Downlink(models.Model):
-    received_at = models.TimeField(auto_now_add=True, null=False)
+    received_at = models.TimeField(auto_now_add=False, null=False)
     data = models.BinaryField(null=False)
     frequency = models.FloatField(null=False)
     processed = models.BooleanField(null=True) #NULL values are allowed for this field
