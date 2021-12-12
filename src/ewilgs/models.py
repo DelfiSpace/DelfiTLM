@@ -12,10 +12,10 @@ class Downlink(models.Model):
 class Uplink(models.Model):
     """Table for uplink data frames"""
     UUID_user = models.ForeignKey(Member, editable=False,on_delete=models.CASCADE)
+    radio_amateur_username = models.CharField(max_length=70, null=False)
     created_at = models.TimeField(auto_now=False, auto_now_add=False, null=False)
     #auto_now: last edited timestamp is registered
     transmitted_at = models.TimeField(auto_now=False, auto_now_add=False, null=True)
-    data = models.BooleanField(null=True)
+    data = models.BinaryField(null=False)
     frequency = models.FloatField(null=False)
-    radio_amateur_username = models.CharField(max_length=70, null=False)
     sat = models.CharField(max_length=70, null=False)
