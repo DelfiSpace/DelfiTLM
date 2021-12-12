@@ -11,7 +11,7 @@ class Uplink(models.Model):
     UUID_user = models.ForeignKey(Members, editable=False,on_delete=models.CASCADE)
     created_at = models.TimeField(auto_now_add=True, null=False)
     transmitted_at = models.TimeField(auto_now=True, null=True) #auto_mow: last edited timestamp is registered
-    data = models.BooleanField(null=True)
+    data = models.BinaryField(null=True)
     frequency = models.FloatField(null=False)
     radio_amateur_username = models.CharField(max_length=70, null=False)
     sat = models.CharField(max_length=70, null=False)
