@@ -18,7 +18,7 @@ def home(request):
 def register(request):
     """render set.html page"""
 
-    form = RegisterForm(request.POST)
+    form = RegisterForm(request.POST or None)
 
     if request.method == 'POST':
 
@@ -48,7 +48,7 @@ def register(request):
 def login_member(request):
     """Render login page"""
 
-    form = LoginForm(request.POST)
+    form = LoginForm(request.POST or None)
 
     if request.method == "POST":
         if form.is_valid():
