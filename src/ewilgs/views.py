@@ -10,7 +10,7 @@ QUERY_ROW_LIMIT = 500
 
 def home(request):
     """render index.html page"""
-    ren = render(request, "home.html")
+    ren = render(request, "ewilgs/home/index.html")
     return ren
 
 def add_downlink_frames(request):
