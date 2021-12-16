@@ -29,19 +29,22 @@ def register_downlink_frames(frames_to_add) -> None:
             downlink_entry.received_at = dt.datetime.now()
         else:
             downlink_entry.received_at = dt.datetime.now()
-            # downlink_entry.received_at = dt.datetime.strptime(frame['frame_time'], '%Y-%m-%d %H:%M:%S.%f')
+            # format = '%Y-%m-%d %H:%M:%S.%f'
+            # downlink_entry.received_at = dt.datetime.strptime(frame['frame_time'], format)
 
         if 'send_time' not in frame or frame['send_time'] is None:
             downlink_entry.received_at = dt.datetime.now()
         else:
+            # format = '%Y-%m-%d %H:%M:%S.%f'
             downlink_entry.received_at = dt.datetime.now()
-            # downlink_entry.received_at = dt.datetime.strptime(frame['frame_time'], '%Y-%m-%d %H:%M:%S.%f')
+            # downlink_entry.received_at = dt.datetime.strptime(frame['send_time'], format)
 
         if 'receive_time' not in frame or frame['receive_time'] is None:
             downlink_entry.received_at = dt.datetime.now()
         else:
+            # format = '%Y-%m-%d %H:%M:%S.%f'
             downlink_entry.received_at = dt.datetime.now()
-            # downlink_entry.received_at = dt.datetime.strptime(frame['frame_time'], '%Y-%m-%d %H:%M:%S.%f')
+            # downlink_entry.received_at = dt.datetime.strptime(frame['receive_time'], format)
 
         # save entry
         downlink_entry.save()

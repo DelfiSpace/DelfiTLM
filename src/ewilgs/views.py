@@ -1,11 +1,14 @@
 """API request handling. Map requests to the corresponding HTMLs."""
 import json
+from django.db.models.sql.query import Query
 from django.http.response import JsonResponse, HttpResponse
 from django.shortcuts import render
 from django_pandas.io import read_frame
 from ewilgs.models import Uplink, Downlink
 from ewilgs.save_frames import register_downlink_frames
 from .models import Uplink, Downlink
+
+QUERY_ROW_LIMIT = 500
 
 def home(request):
     """render index.html page"""
@@ -26,20 +29,70 @@ def add_downlink_frames(request):
 
     return JsonResponse({"len": len(Downlink.objects.all())})
 
+def filter_query(query, frames):
+
+    if query.get("id") is not None:
+        frames = frames.filter(id=query.get("id")).all()
+
+    if query.get("frequency") is not None:
+        frames = frames.filter(frequency__range=query.get("frequency")).all()
+
+    if query.get("frame_time") is not None:
+        frames = frames.filter(frame_time__range=query.get("frame_time")).all()
+
+    if query.get("processed") is not None:
+        frames = frames.filter(processed=query.get("processed")).all()
+
+    if query.get("radio_amateur") is not None:
+        frames = frames.filter(radio_amateur=query.get("radio_amateur")).all()
+
+    if query.get("version") is not None:
+        frames = frames.filter(version=query.get("version")).all()
+
+
+    if query.get("order_by") == "oldest":
+        frames = frames.order_by('-frame_time') # oldest first
+    else:
+        frames = frames.order_by('frame_time') # newest first
+
+    return frames
+
 def get_downlink_frames(request):
     """Query uplink table (Select *) if the body of the get request is empty,
     otherwise it filter the results."""
 
-    if request.body == bytearray():
-        downlink_frames = Downlink.objects.filter().all()
-    else:
-        query = json.loads(request.body)
-        downlink_frames = Downlink.objects.filter(frequency=query.get("frequency"),
-                                                    processed=query.get("processed")).all()
 
+    if request.body == bytearray():
+        downlink_frames = Downlink.objects.filter().all().order_by('frame_time')[:QUERY_ROW_LIMIT]
+        data = read_frame(downlink_frames)
+        table_html = data.to_html()
+        return HttpResponse(table_html)
+
+
+    # query = {
+    #     "frequency" : [2000.00, 2300.00],
+    #     "frame_time": ["2021-12-16 13:55:14.380345+00:00", 	"2021-12-16 13:55:14.408362+00:00"],
+    #     "frequency" : None,
+    #     "processed" : None,
+    #     "id": None,
+    #     "radio_amateur": None,
+    #     "version": None,
+    #     "order_by": "oldest",
+
+    # }
+
+    query = json.loads(request.body)
+    downlink_frames = Downlink.objects.all()
+
+    # filter results
+    downlink_frames = filter_query(query, downlink_frames)
+
+    # limit results
+    downlink_frames = downlink_frames[:QUERY_ROW_LIMIT]
     # data = list(downlink_frames)
     data = read_frame(downlink_frames)
     table_html = data.to_html()
+
     return HttpResponse(table_html)
 
 
