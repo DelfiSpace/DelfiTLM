@@ -13,26 +13,32 @@ from .models import Uplink, Downlink
 
 def home(request):
     """render index.html page"""
-    ren = render(request, "ewilgs/home/index.html")
+    ren = render(request, "home.html")
     return ren
 
-def addDownlinkFrames(request):
-    # add dummy data
+def add_downlink_frames(request):
+    # uncomment to add dummy data
     # with open('src/ewilgs/dummy_downlink.json', 'r') as file:
     #     dummy_data = json.load(file)
     #     registerDownlinkFrames(dummy_data)
+    #
+    # comment the next to lines at first run
     frames_to_add = json.loads(request.body)
     registerDownlinkFrames(frames_to_add)
 
     return JsonResponse({"len": len(Downlink.objects.all())}
                         )
-def getDownlinkFrames(request):
-    query = json.loads(request.body)
-    downlink_frames = Downlink.objects.filter(frequency=query.get("frequency"),
-                                                processed=query.get("processed")).all()
+def get_downlink_frames(request):
+    if request.body == bytearray():
+        downlink_frames = Downlink.objects.filter().all()
+    else:
+        query = json.loads(request.body)
+        downlink_frames = Downlink.objects.filter(frequency=query.get("frequency"),
+                                                    processed=query.get("processed")).all()
 
-    df = list(downlink_frames.values_list("id", "received_at", "data", "frequency", "processed"))
-    return render(request, 'ewilgs/Downlink/index.html', {"df": df})
+    df = list(downlink_frames.values_list("id", "frame_time", "frame", "frequency", "qos", "processed"))
+    # print(df)
+    return render(request, 'ewilgs/downlink.html', {"df": df})
 
 
 def query_uplink_downlink(request):
@@ -45,7 +51,7 @@ def query_uplink_downlink(request):
     df_downlink = read_frame(downlink)
     downlink_html = df_downlink.to_html()
 
-    ren_uplink = render(request, "ewilgs/Data/index.html", {'uplink_html': uplink_html})
-    ren_downlink = render(request, "ewilgs/Data/index.html", {'downlink_html': downlink_html})
+    ren_uplink = render(request, "ewilgs/data/index.html", {'uplink_html': uplink_html})
+    ren_downlink = render(request, "ewilgs/data/index.html", {'downlink_html': downlink_html})
 
     return ren_uplink, ren_downlink

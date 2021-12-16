@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Downlink frames</title>
+    </head>
+    <body>
+        <h1>Downlink Frames</h1>
+        {% for item in df %}
+        <tr>
+            <td>{{ item.id }}</td>
+            <td>{{ item.frame_time }}</td>
+            <td>{{ item.frame }}</td>
+            <td>{{ item.frequency }}</td>
+            <td>{{ item.qos }}</td>
+            <td>{{ item.processed }}</td>
+        </tr>
+        {% endfor %}
+    </body>
+</html>
+
