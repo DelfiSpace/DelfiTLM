@@ -1,15 +1,11 @@
 """API request handling. Map requests to the corresponding HTMLs."""
-from django.http.response import JsonResponse
-from django_pandas.io import read_frame
-from django.shortcuts import render
-import pandas as pd
-from django.views.generic import ListView
-from django.core import serializers
-from ewilgs.models import Uplink, Downlink
-from ewilgs.save_frames import registerDownlinkFrames
 import json
+from django.http.response import JsonResponse
+from django.shortcuts import render
+from django_pandas.io import read_frame
+from ewilgs.models import Uplink, Downlink
+from ewilgs.save_frames import register_downlink_frames
 from .models import Uplink, Downlink
-
 
 def home(request):
     """render index.html page"""
@@ -17,18 +13,23 @@ def home(request):
     return ren
 
 def add_downlink_frames(request):
+    """Add frames to Downlink table. The input is a list of json objects embedded in to the
+    HTTP request."""
     # uncomment to add dummy data
     # with open('src/ewilgs/dummy_downlink.json', 'r') as file:
     #     dummy_data = json.load(file)
-    #     registerDownlinkFrames(dummy_data)
+    #     register_downlink_frames(dummy_data)
     #
     # comment the next to lines at first run
     frames_to_add = json.loads(request.body)
-    registerDownlinkFrames(frames_to_add)
+    register_downlink_frames(frames_to_add)
 
-    return JsonResponse({"len": len(Downlink.objects.all())}
-                        )
+    return JsonResponse({"len": len(Downlink.objects.all())})
+
 def get_downlink_frames(request):
+    """Query uplink table (Select *) if the body of the get request is empty,
+    otherwise it filter the results."""
+
     if request.body == bytearray():
         downlink_frames = Downlink.objects.filter().all()
     else:
@@ -36,9 +37,8 @@ def get_downlink_frames(request):
         downlink_frames = Downlink.objects.filter(frequency=query.get("frequency"),
                                                     processed=query.get("processed")).all()
 
-    df = list(downlink_frames.values_list("id", "frame_time", "frame", "frequency", "qos", "processed"))
-    # print(df)
-    return render(request, 'ewilgs/downlink.html', {"df": df})
+    data = list(downlink_frames)
+    return render(request, 'ewilgs/downlink.html', {"data": data})
 
 
 def query_uplink_downlink(request):

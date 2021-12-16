@@ -1,13 +1,13 @@
-from .models import Uplink, Downlink
-import json
+"""Scripts for saving the frames into the database"""
 import datetime as dt
+from .models import Downlink
 
-
-def registerDownlinkFrames(frames_to_add) -> None:
+def register_downlink_frames(frames_to_add) -> None:
     """Adds a list of json frames to the downlink table
 
     Args:
-        input: a json containing a list of json object, each of them being a frame to be added to the downlink table.
+        input: a json containing a list of json object, each of them being a frame
+        to be added to the downlink table.
     """
     for frame in frames_to_add['frames']:
         downlink_entry = Downlink()

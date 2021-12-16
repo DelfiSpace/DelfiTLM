@@ -1,9 +1,10 @@
 """EWILGS models for uplink and downlink data"""
+import datetime
 from django.db import models
 from django.db.models.deletion import DO_NOTHING
 from members.models import Member
-import datetime
 
+#pylint: disable=all
 class Downlink(models.Model):
     """Table for downlink data frames"""
     frame_time = models.TimeField(null=False, default=datetime.time, auto_now=False, auto_now_add=False)
