@@ -21,11 +21,12 @@ class Downlink(models.Model):
 
 class Uplink(models.Model):
     """Table for uplink data frames"""
-    UUID_user = models.ForeignKey(Member, editable=False,on_delete=models.CASCADE)
-    radio_amateur_username = models.CharField(max_length=70, null=False)
-    created_at = models.DateTimeField(auto_now=False, auto_now_add=False, null=False)
-    #auto_now: last edited timestamp is registered
-    transmitted_at = models.DateTimeField(auto_now=False, auto_now_add=False, null=True)
-    data = models.BinaryField(null=False)
+    radio_amateur = models.ForeignKey(Member, to_field="username", db_column="radio_amateur", null=False, on_delete=DO_NOTHING)
+    frame_time = models.DateTimeField(null=False, default=datetime.now, auto_now=False, auto_now_add=False)
+    send_time = models.DateTimeField(null=False, default=datetime.now, auto_now=False, auto_now_add=False)
     frequency = models.FloatField(null=False)
+    qos = models.FloatField(default=None, null=True)
     sat = models.CharField(max_length=70, null=False)
+    frame = models.TextField(default=None, null=True)
+    frame_binary = models.BinaryField(default=None, null=True)
+

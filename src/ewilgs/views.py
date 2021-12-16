@@ -3,9 +3,8 @@ import json
 from django.http.response import JsonResponse, HttpResponse
 from django.shortcuts import render
 from django_pandas.io import read_frame
-from ewilgs.models import Uplink, Downlink
-from ewilgs.save_frames import register_downlink_frames
 from .models import Uplink, Downlink
+from .save_frames import register_downlink_frames
 
 QUERY_ROW_LIMIT = 500
 
@@ -56,40 +55,60 @@ def filter_query(query, frames):
 
     return frames
 
-def get_downlink_frames(request):
-    """Query uplink table (Select *) if the body of the get request is empty,
-    otherwise it filter the results."""
 
+def retrive_frames(request_body, table):
+    """Query a db table and filter the results"""
+#     query = {
+#     "frequency" : [2000.00, 2500.00],
+#     "frame_time": ["2021-12-16 13:55:14.380345+00:00", 	"2021-12-16 13:55:14.408362+00:00"],
+#     # "id": 5,
+#     # "radio_amateur": None,
+#     # "version": None,
+#     "order_by": "oldest",
+# }
 
-    if request.body == bytearray():
-        downlink_frames = Downlink.objects.filter().all().order_by('frame_time')[:QUERY_ROW_LIMIT]
-        data = read_frame(downlink_frames)
+    if request_body == bytearray():
+        uplink_frames = table.order_by('frame_time')[:QUERY_ROW_LIMIT]
+        data = read_frame(uplink_frames)
         table_html = data.to_html()
-        return HttpResponse(table_html)
+        return table_html
 
-
-    # query = {
-    #     "frequency" : [2000.00, 2500.00],
-    #     "frame_time": ["2021-12-16 13:55:14.380345+00:00", 	"2021-12-16 13:55:14.408362+00:00"],
-    #     # "id": 5,
-    #     # "radio_amateur": None,
-    #     # "version": None,
-    #     "order_by": "oldest",
-    # }
-
-    query = json.loads(request.body)
-    downlink_frames = Downlink.objects.all()
-
+    query = json.loads(request_body)
     # filter results
-    downlink_frames = filter_query(query, downlink_frames)
+    frames = filter_query(query, table)
 
     # limit results
-    downlink_frames = downlink_frames[:QUERY_ROW_LIMIT]
-    data = read_frame(downlink_frames)
+    frames = frames[:QUERY_ROW_LIMIT]
+    data = read_frame(frames)
     table_html = data.to_html()
+
+    return table_html
+
+def get_downlink_frames(request):
+    """Query downlink table (Select * LIMIT 500) if the body of the get request is empty,
+    otherwise it filter the results."""
+
+    query = request.body
+
+    downlink_frames = Downlink.objects.all()
+
+    # get results
+    table_html = retrive_frames(query, downlink_frames)
 
     return HttpResponse(table_html)
 
+
+def get_uplink_frames(request):
+    """Query uplink table (Select * LIMIT 500) if the body of the get request is empty,
+    otherwise it filter the results."""
+
+    query = request.body
+    uplink_frames = Uplink.objects.all()
+
+    # get results
+    table_html = retrive_frames(query, uplink_frames)
+
+    return HttpResponse(table_html)
 
 def query_uplink_downlink(request):
     """Query uplink and downlink table (Select *) and return the results"""
