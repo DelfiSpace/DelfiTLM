@@ -1,31 +1,41 @@
-from ewilgs.models import Uplink, Downlink
+from .models import Uplink, Downlink
 import json
 import datetime as dt
 
 
-def registerDownlinkFrames(input) -> None:
+def registerDownlinkFrames(frames_to_add) -> None:
     """Adds a list of json frames to the downlink table
 
     Args:
         input: a json containing a list of json object, each of them being a frame to be added to the downlink table.
     """
-    frames_to_add = json.loads(input)
     for frame in frames_to_add['frames']:
-        dowlink_entry = Downlink()
+        downlink_entry = Downlink()
 
         # assign values
-        dowlink_entry.frequency = frame['frequency']
-        dowlink_entry.data = frame['data']
+        downlink_entry.frequency = frame['frequency']
+        downlink_entry.frame = frame['frame']
+        downlink_entry.qos = frame['qos']
 
         if 'processed' not in frame or frame['processed'] is None:
-            dowlink_entry.processed = False
+            downlink_entry.processed = False
         else:
-            dowlink_entry.processed = frame['processed']
+            downlink_entry.processed = frame['processed']
 
-        if frame['receive_at'] is None:
-            dowlink_entry.received_at = dt.now()
+        if 'frame_time' not in frame or frame['frame_time'] is None:
+            downlink_entry.received_at = dt.time()
         else:
-            dowlink_entry.received_at = frame['received_at']
+            downlink_entry.received_at = frame['frame_time']
+
+        if 'send_time' not in frame or frame['send_time'] is None:
+            downlink_entry.received_at = dt.time()
+        else:
+            downlink_entry.received_at = frame['send_time']
+
+        if 'receive_time' not in frame or frame['receive_time'] is None:
+            downlink_entry.received_at = dt.time()
+        else:
+            downlink_entry.received_at = frame['receive_time']
 
         # save entry
-        dowlink_entry.save()
+        downlink_entry.save()
