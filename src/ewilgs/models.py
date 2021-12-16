@@ -1,17 +1,29 @@
+"""EWILGS models for uplink and downlink data"""
 from django.db import models
-from members.models import Members
+from django.db.models.deletion import DO_NOTHING
+from members.models import Member
+import datetime
 
 class Downlink(models.Model):
-    received_at = models.TimeField(auto_now_add=True, null=False)
-    data = models.BinaryField(null=False)
-    frequency = models.FloatField(null=False)
-    processed = models.BooleanField(null=True) #NULL values are allowed for this field
+    """Table for downlink data frames"""
+    frame_time = models.TimeField(null=False, default=datetime.time, auto_now=False, auto_now_add=False)
+    send_time = models.TimeField(null=False, default=datetime.time, auto_now=False, auto_now_add=False)
+    receive_time = models.TimeField(null=False, default=datetime.time, auto_now=False, auto_now_add=False)
+    radio_amateur = models.ForeignKey(Member, default=None, null=True, on_delete=DO_NOTHING)
+    frame = models.BinaryField(default=None, null=True)
+    version = models.TextField(null=True)
+    processed = models.BooleanField(default=False, null=False)
+    frequency = models.FloatField(default=None, null=True)
+    qos = models.FloatField(default=None, null=True)
+
 
 class Uplink(models.Model):
-    UUID_user = models.ForeignKey(Members, editable=False,on_delete=models.CASCADE)
-    created_at = models.TimeField(auto_now_add=True, null=False)
-    transmitted_at = models.TimeField(auto_now=True, null=True) #auto_mow: last edited timestamp is registered
-    data = models.BinaryField(null=True)
-    frequency = models.FloatField(null=False)
+    """Table for uplink data frames"""
+    UUID_user = models.ForeignKey(Member, editable=False,on_delete=models.CASCADE)
     radio_amateur_username = models.CharField(max_length=70, null=False)
+    created_at = models.TimeField(auto_now=False, auto_now_add=False, null=False)
+    #auto_now: last edited timestamp is registered
+    transmitted_at = models.TimeField(auto_now=False, auto_now_add=False, null=True)
+    data = models.BinaryField(null=False)
+    frequency = models.FloatField(null=False)
     sat = models.CharField(max_length=70, null=False)

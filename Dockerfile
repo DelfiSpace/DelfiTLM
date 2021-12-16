@@ -3,8 +3,12 @@ FROM  python:3.9
 
 ENV PATH="/scripts:${PATH}"
 
+# Always flush output directly
+ENV PYTHONBUFFERED=1
+
 # install dependencies
 COPY ./requirements.txt /requirements.txt
+
 RUN pip3 install -r /requirements.txt
 
 # add the code to the docker image

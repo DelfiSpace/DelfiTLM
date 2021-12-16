@@ -5,4 +5,3 @@ from .models import Downlink, Uplink
 
 admin.site.register(Downlink)
 admin.site.register(Uplink)
-

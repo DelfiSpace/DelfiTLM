@@ -24,6 +24,12 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # gets the key from the runtime environment (docker-compose-deploy)
 # change_me is default if a value is not specified
 SECRET_KEY = os.environ.get('SECRET_KEY', 'change_me')
+POSTGRES_DB         = os.environ.get('POSTGRES_DB', 'delfitlm')
+POSTGRES_USER       = os.environ.get('POSTGRES_USER', 'postgres')
+POSTGRES_PASSWORD   = os.environ.get('POSTGRES_PASSWORD', 'postgres')
+POSTGRES_HOST       = os.environ.get('POSTGRES_HOST', 'localhost')
+POSTGRES_PORT       = int(os.environ.get('POSTGRES_PORT', 5432))
+
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = bool(int(os.environ.get('DEBUG', 1)))
@@ -94,10 +100,15 @@ WSGI_APPLICATION = 'delfitlm.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR + '/db.sqlite3',
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': POSTGRES_DB,
+        'USER': POSTGRES_USER,
+        'PASSWORD': POSTGRES_PASSWORD,
+        'HOST': POSTGRES_HOST,
+        'PORT': POSTGRES_PORT,
     }
 }
+
 
 
 # Password validation
@@ -117,6 +128,19 @@ AUTH_PASSWORD_VALIDATORS = [
         'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
     },
 ]
+
+AUTH_USER_MODEL = 'members.Member'
+
+# AUTHENTICATION_BACKENDS = [
+#     'django.contrib.auth.backends.ModelBackend',
+#     # 'members.backend.AuthenticationBackend',
+# ]
+
+REST_FRAMEWORK = {
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.authentication.TokenAuthentication',
+    ]
+}
 
 
 # Internationalization
