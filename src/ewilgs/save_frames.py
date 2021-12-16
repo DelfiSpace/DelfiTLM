@@ -17,25 +17,31 @@ def register_downlink_frames(frames_to_add) -> None:
         downlink_entry.frame = frame['frame']
         downlink_entry.qos = frame['qos']
 
+        if 'username' in frame and frame['username'] is not None:
+            downlink_entry.radio_amateur = frame['username']
+
         if 'processed' not in frame or frame['processed'] is None:
             downlink_entry.processed = False
         else:
             downlink_entry.processed = frame['processed']
 
         if 'frame_time' not in frame or frame['frame_time'] is None:
-            downlink_entry.received_at = dt.time()
+            downlink_entry.received_at = dt.datetime.now()
         else:
-            downlink_entry.received_at = frame['frame_time']
+            downlink_entry.received_at = dt.datetime.now()
+            # downlink_entry.received_at = dt.datetime.strptime(frame['frame_time'], '%Y-%m-%d %H:%M:%S.%f')
 
         if 'send_time' not in frame or frame['send_time'] is None:
-            downlink_entry.received_at = dt.time()
+            downlink_entry.received_at = dt.datetime.now()
         else:
-            downlink_entry.received_at = frame['send_time']
+            downlink_entry.received_at = dt.datetime.now()
+            # downlink_entry.received_at = dt.datetime.strptime(frame['frame_time'], '%Y-%m-%d %H:%M:%S.%f')
 
         if 'receive_time' not in frame or frame['receive_time'] is None:
-            downlink_entry.received_at = dt.time()
+            downlink_entry.received_at = dt.datetime.now()
         else:
-            downlink_entry.received_at = frame['receive_time']
+            downlink_entry.received_at = dt.datetime.now()
+            # downlink_entry.received_at = dt.datetime.strptime(frame['frame_time'], '%Y-%m-%d %H:%M:%S.%f')
 
         # save entry
         downlink_entry.save()

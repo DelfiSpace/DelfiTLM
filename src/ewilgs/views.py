@@ -1,6 +1,6 @@
 """API request handling. Map requests to the corresponding HTMLs."""
 import json
-from django.http.response import JsonResponse
+from django.http.response import JsonResponse, HttpResponse
 from django.shortcuts import render
 from django_pandas.io import read_frame
 from ewilgs.models import Uplink, Downlink
@@ -19,8 +19,8 @@ def add_downlink_frames(request):
     # with open('src/ewilgs/dummy_downlink.json', 'r') as file:
     #     dummy_data = json.load(file)
     #     register_downlink_frames(dummy_data)
-    #
-    # comment the next to lines at first run
+
+    # comment the next to lines when adding dummy data
     frames_to_add = json.loads(request.body)
     register_downlink_frames(frames_to_add)
 
@@ -37,8 +37,10 @@ def get_downlink_frames(request):
         downlink_frames = Downlink.objects.filter(frequency=query.get("frequency"),
                                                     processed=query.get("processed")).all()
 
-    data = list(downlink_frames)
-    return render(request, 'ewilgs/downlink.html', {"data": data})
+    # data = list(downlink_frames)
+    data = read_frame(downlink_frames)
+    table_html = data.to_html()
+    return HttpResponse(table_html)
 
 
 def query_uplink_downlink(request):

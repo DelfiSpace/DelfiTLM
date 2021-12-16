@@ -11,17 +11,12 @@ class Migration(migrations.Migration):
 
     dependencies = [
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
-        ('ewilgs', '0001_initial'),
+        ('delfic3', '0001_initial'),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='uplink',
-            name='UUID_user',
-            field=models.ForeignKey(editable=False, on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL),
-        ),
-        migrations.AddField(
-            model_name='downlink',
+            model_name='delfic3_l0_telemetry',
             name='radio_amateur',
             field=models.ForeignKey(db_column='radio_amateur', default=None, null=True, on_delete=django.db.models.deletion.DO_NOTHING, to=settings.AUTH_USER_MODEL, to_field='username'),
         ),
