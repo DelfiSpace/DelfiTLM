@@ -48,6 +48,9 @@ def filter_query(query, frames):
     if "version" in query and query.get("version") is not None:
         frames = frames.filter(version=query.get("version")).all()
 
+    if "sat" in query and query.get("sat") is not None:
+        frames = frames.filter(sat=query.get("sat")).all()
+
     if "order_by" in query and query.get("order_by") == "oldest":
         frames = frames.order_by('-frame_time') # oldest first
     else:
