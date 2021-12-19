@@ -50,12 +50,13 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django_filters',
     'davinci',
     'delfic3',
     'delfin3xt',
     'delfipq',
     'ewilgs',
-    'members',
+    'members'
 ]
 
 MIDDLEWARE = [
