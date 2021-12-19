@@ -6,7 +6,7 @@ from django_pandas.io import read_frame
 from .models import Uplink, Downlink
 from .save_frames import register_downlink_frames
 
-QUERY_ROW_LIMIT = 500
+QUERY_ROW_LIMIT = 250
 
 def home(request):
     """render index.html page"""
@@ -86,6 +86,18 @@ def retrive_frames(request_body, table):
     table_html = data.to_html()
 
     return table_html
+
+def get_next_frames(request, pointer):
+
+    posts = list(Downlink.objects.values()[pointer:pointer + QUERY_ROW_LIMIT])
+    posts_size = len(posts)
+    return JsonResponse({'data': posts, 'size': posts_size}, safe=False)
+
+
+def get_downlink_table(request):
+
+    return render(request, "ewilgs/downlink.html")
+
 
 def get_downlink_frames(request):
     """Query downlink table (Select * LIMIT 500) if the body of the get request is empty,
