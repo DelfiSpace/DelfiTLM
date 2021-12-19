@@ -12,9 +12,9 @@ class Delfipq_L0_telemetry(models.Model):
     Telemetry Table DelfiPQ
     """
     id = models.OneToOneField(Downlink, primary_key=True, editable=False, on_delete=models.DO_NOTHING)
-    frame_time = models.DateTimeField(null=False, default=datetime.now, auto_now=False, auto_now_add=False)
-    send_time = models.DateTimeField(null=False, default=datetime.now, auto_now=False, auto_now_add=False)
-    receive_time = models.DateTimeField(null=False, default=datetime.now, auto_now=False, auto_now_add=False)
+    frame_time = models.DateTimeField(null=False, default=datetime.utcnow, auto_now=False, auto_now_add=False)
+    send_time = models.DateTimeField(null=False, default=datetime.utcnow, auto_now=False, auto_now_add=False)
+    receive_time = models.DateTimeField(null=False, default=datetime.utcnow, auto_now=False, auto_now_add=False)
     radio_amateur = models.ForeignKey(Member, to_field="username", db_column="radio_amateur", default=None, null=True, on_delete=models.DO_NOTHING)
     version = models.TextField(null=True)
     processed = models.BooleanField(default=False, null=False)
