@@ -18,3 +18,4 @@ toml==0.10.2
 typing-extensions==3.10.0.2
 wrapt==1.12.1
 django-tables2 == 2.4.1
+django-filter==21.1
