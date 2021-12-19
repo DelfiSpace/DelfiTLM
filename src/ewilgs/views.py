@@ -21,7 +21,7 @@ def add_downlink_frames(request):
     #     dummy_data = json.load(file)
     #     register_downlink_frames(dummy_data)
 
-    # comment the next to lines when adding dummy data
+    # comment the next two lines when adding dummy data
     frames_to_add = json.loads(request.body)
     register_downlink_frames(frames_to_add)
 

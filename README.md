@@ -9,7 +9,7 @@
 
 # Setup (Run locally/on host machine)
 
-This method 
+This method
 
 1. Create a python environment (one time instruction):
 `python3 -m venv env`
@@ -46,7 +46,7 @@ After this, you can access the application on http://127.0.0.1:8000/ and a pgAdm
 
 ![image](https://user-images.githubusercontent.com/15870306/145728488-ada8aacf-ec53-42d1-8e4d-b7198c70cc77.png)
 
-
+To reset the container and remove the volumes run the `./reset_docker.sh` script
 
 # Deployment
 
