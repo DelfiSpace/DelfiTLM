@@ -18,7 +18,7 @@ def home(request):
 def register(request):
     """render set.html page"""
 
-    form = RegisterForm(request.POST)
+    form = RegisterForm(request.POST or None)
 
     if request.method == 'POST':
 
@@ -43,12 +43,12 @@ def register(request):
 
                 return render(request, "members/home/index.html")
     # messages.info("Wrong password or no user found")
-    return render(request, "members/set/set_password.html", {'form': form })
+    return render(request, "members/set/register.html", {'form': form })
 
 def login_member(request):
     """Render login page"""
 
-    form = LoginForm(request.POST)
+    form = LoginForm(request.POST or None)
 
     if request.method == "POST":
         if form.is_valid():
@@ -73,7 +73,7 @@ def login_member(request):
 def change_password(request):
     """Render change password page"""
 
-    form = ChangePasswordForm(request.POST)
+    form = ChangePasswordForm(request.POST or None)
 
     if request.method == "POST":
         if form.is_valid():
