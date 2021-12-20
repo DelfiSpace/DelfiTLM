@@ -5,7 +5,7 @@
     <title>Registration Page</title>
 </head>
 <body>
-    <h1>Set Password Page</h1>
+    <h1>Registration Page</h1>
     <form class="post-form" method="POST">
         {% csrf_token %}
           {% for field in form %}
@@ -15,7 +15,7 @@
         {{ field }}
     </div>
         {% endfor %}
-        <input type="submit" value="Set Password">
+        <input type="submit" value="Register">
     </form>
     {% if messages %}
     <ul class="messages">
