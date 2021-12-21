@@ -54,11 +54,12 @@ def register(request):
                     )
                     login(request, member)
                     return render(request, "members/home/profile.html")
-                else:
-                    message="""Enter a password containing min 8 characters,
-                    min 1 upper and lower case letter,
-                    1 number and 1 special character"""
-                    messages.info(request, message)
+
+                message="""Enter a password containing min 8 characters,
+                min 1 upper and lower case letter,
+                1 number and 1 special character"""
+                messages.info(request, message)
+
             else:
                 messages.info(request, "The password confirmation does not match")
 
@@ -131,11 +132,11 @@ def change_password(request):
                         )
                         login(request, member)
                         return render(request, "members/home/profile.html", {'form': form })
-                    else:
-                        message="""Enter a password containing min 8 characters,
-                        min 1 upper and lower case letter,
-                        1 number and 1 special character"""
-                        messages.info(request, message)
+
+                    message="""Enter a password containing min 8 characters,
+                    min 1 upper and lower case letter,
+                    1 number and 1 special character"""
+                    messages.info(request, message)
                 else:
                     messages.info(request, "The password confirmation does not match")
 

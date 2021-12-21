@@ -1,7 +1,6 @@
 """Database model for this app"""
 import uuid
 from django.db import models
-from django.core.validators import RegexValidator
 from django.contrib.auth.models import AbstractUser
 
 class Member(AbstractUser):
