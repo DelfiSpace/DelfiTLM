@@ -1,4 +1,5 @@
 """API request handling. Map requests to the corresponding HTMLs."""
+import re
 from django.shortcuts import redirect, render
 from django.contrib.auth import login, authenticate, logout
 from django.utils import timezone
@@ -7,14 +8,23 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.hashers import make_password
 from .forms import RegisterForm, LoginForm, ChangePasswordForm
 from .models import Member
-from .backend.authentication_backend import AuthenticationBackend
+
+
+def check_password(password):
+    """Check the password for min 8 characters, min 1 upper and lower case letter,
+    1 number and 1 special character"""
+
+    regex_str = '^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&])[A-Za-z\\d@$!%*?&]{8,}$'
+    regex = re.compile(regex_str)
+    if regex.match(password):
+        return True
+    return False
 
 
 @login_required(login_url='/members/login')
 def profile(request):
     """Render profile page"""
-    ren = render(request, "members/home/profile.html")
-    return ren
+    return render(request, "members/home/profile.html")
 
 
 def register(request):
@@ -34,16 +44,23 @@ def register(request):
                 messages.info(request, "Username already exists")
 
             if entered_password == entered_confirmpassword:
-                Member.objects.create(
-                    username=entered_username,
-                    email=entered_email,
-                    password=make_password(entered_password),
-                    created_at=timezone.now(),
-                    last_changed=timezone.now(),
-                    active=True,
-                )
-
-                return render(request, "members/home/profile.html")
+                if check_password(entered_password):
+                    member = Member.objects.create(
+                        username=entered_username,
+                        email=entered_email,
+                        password=make_password(entered_password),
+                        created_at=timezone.now(),
+                        last_changed=timezone.now()
+                    )
+                    login(request, member)
+                    return render(request, "members/home/profile.html")
+                else:
+                    message="""Enter a password containing min 8 characters,
+                    min 1 upper and lower case letter,
+                    1 number and 1 special character"""
+                    messages.info(request, message)
+            else:
+                messages.info(request, "The password confirmation does not match")
 
     return render(request, "members/set/register.html", {'form': form })
 
@@ -58,13 +75,13 @@ def login_member(request):
             entered_username = form.cleaned_data.get('username')
             entered_password = form.cleaned_data.get('password')
 
-            member = AuthenticationBackend().authenticate(
+            member = authenticate(
                 request,
                 username=entered_username,
                 password=entered_password
             )
 
-            if member is not None:
+            if member is not None and member.is_active is True:
                 login(request, member)
                 return render(request, "members/home/profile.html", {'form': form})
 
@@ -102,17 +119,33 @@ def change_password(request):
 
             if member is not None:
                 if entered_new_password == entered_confirm_password:
-                    Member.objects.filter(username=username).update(
-                        password=make_password(entered_new_password),
-                        last_changed=timezone.now(),
-                        active=True,
-                    )
-                    member = authenticate(
-                        request,
-                        username=username,
-                        password=entered_current_password
-                    )
-                    login(request, member)
-                    return render(request, "members/home/profile.html", {'form': form })
+                    if check_password(entered_new_password):
+                        Member.objects.filter(username=username).update(
+                            password=make_password(entered_new_password),
+                            last_changed=timezone.now()
+                        )
+                        member = authenticate(
+                            request,
+                            username=username,
+                            password=entered_current_password
+                        )
+                        login(request, member)
+                        return render(request, "members/home/profile.html", {'form': form })
+                    else:
+                        message="""Enter a password containing min 8 characters,
+                        min 1 upper and lower case letter,
+                        1 number and 1 special character"""
+                        messages.info(request, message)
+                else:
+                    messages.info(request, "The password confirmation does not match")
+
+            else:
+                messages.info(request, "The current password does not match your password")
 
     return render(request, "members/set/change_password.html", {'form': form })
+
+
+def reset_password(request):
+    """Todo Render reset password page and reset password"""
+
+    return redirect('homepage')

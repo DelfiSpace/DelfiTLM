@@ -24,7 +24,11 @@
         {% endfor %}
     </ul>
     {% endif %}
-<h5>You do not have an account?</h5>
-    <button type="button"><a href="{% url 'register' %}">Register New Account</a></button>
+
+    <h5>You do not have an account?</h5>
+        <button type="button"><a href="{% url 'register' %}">Register New Account</a></button>
+
+    <h5>Forgot your password? (TO DO)</h5>
+    <button type="button"><a href="{% url 'reset_password' %}">Reset Password</a></button>
 </body>
 </html>

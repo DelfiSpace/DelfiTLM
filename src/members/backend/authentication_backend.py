@@ -15,6 +15,10 @@ class AuthenticationBackend(ModelBackend):
             member = Member.objects.get(username=username)
             password_found = member.password
 
+            # logins from blocked users
+            if member.is_active == False:
+                return None
+
             # if password is correct
             if check_password(password, password_found):
                 return Member.objects.get(username=username)
