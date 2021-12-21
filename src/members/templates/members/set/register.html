@@ -5,7 +5,7 @@
     <title>Registration Page</title>
 </head>
 <body>
-    <h1>Registration Page</h1>
+    <h1>Register</h1>
     <form class="post-form" method="POST">
         {% csrf_token %}
           {% for field in form %}
@@ -26,21 +26,5 @@
     {% endif %}
     <h5>Do you already have an account?</h5>
     <button type="button"><a href="{% url 'login' %}">Login Existing Account</a></button>
-
-<!--    <form action="/members/set/" method="post">-->
-<!--        <label for="username">Username </label>-->
-<!--        <input id="username" type="text" name="username" value="{{ current_username }}">-->
-<!--        <input type="submit" value="OK">-->
-<!--    </form>-->
-<!--    <form action="/members/set/" method="post">-->
-<!--        <label for="password">Password </label>-->
-<!--        <input id="password" type="text" name="password" value="{{ current_password }}">-->
-<!--        <input type="submit" value="OK">-->
-<!--    </form>-->
-<!--    <form action="/members/set/" method="post">-->
-<!--        <label for="confirm_password">Password </label>-->
-<!--        <input id="confirm_password" type="text" name="confirm_password" value="{{ current_confirm_password }}">-->
-<!--        <input type="submit" value="OK">-->
-<!--    </form>-->
 </body>
 </html>

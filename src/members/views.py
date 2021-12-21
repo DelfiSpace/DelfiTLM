@@ -1,6 +1,6 @@
 """API request handling. Map requests to the corresponding HTMLs."""
-from django.shortcuts import render
-from django.contrib.auth import login, authenticate
+from django.shortcuts import redirect, render
+from django.contrib.auth import login, authenticate, logout
 from django.utils import timezone
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
@@ -9,14 +9,16 @@ from .forms import RegisterForm, LoginForm, ChangePasswordForm
 from .models import Member
 from .backend.authentication_backend import AuthenticationBackend
 
+
 @login_required(login_url='/members/login')
-def home(request):
-    """render index.html page"""
-    ren = render(request, "members/home/index.html")
+def profile(request):
+    """Render profile page"""
+    ren = render(request, "members/home/profile.html")
     return ren
 
+
 def register(request):
-    """render set.html page"""
+    """Render the register page and register a user"""
 
     form = RegisterForm(request.POST or None)
 
@@ -29,7 +31,7 @@ def register(request):
             entered_confirmpassword = form.cleaned_data['confirm_password']
 
             if Member.objects.filter(username=entered_username).exists():
-                messages.info(request, "Member already exists")
+                messages.info(request, "Username already exists")
 
             if entered_password == entered_confirmpassword:
                 Member.objects.create(
@@ -41,9 +43,10 @@ def register(request):
                     active=True,
                 )
 
-                return render(request, "members/home/index.html")
-    # messages.info("Wrong password or no user found")
+                return render(request, "members/home/profile.html")
+
     return render(request, "members/set/register.html", {'form': form })
+
 
 def login_member(request):
     """Render login page"""
@@ -63,44 +66,53 @@ def login_member(request):
 
             if member is not None:
                 login(request, member)
-                print("logged in")
-                return render(request, "members/home/index.html", {'form': form})
+                return render(request, "members/home/profile.html", {'form': form})
 
-        messages.info(request, "Wrong password or user does not exist")
+        messages.info(request, "Wrong username or password")
 
     return render(request, "members/home/login.html", { 'form': form })
 
+
+@login_required(login_url='/members/login')
+def logout_member(request):
+    """Logout and reddirect to homepage"""
+    logout(request)
+
+    return redirect('homepage')
+
+
+@login_required(login_url='/members/login')
 def change_password(request):
-    """Render change password page"""
+    """Render change password page and reset password"""
 
     form = ChangePasswordForm(request.POST or None)
+    username = request.user.username
 
     if request.method == "POST":
         if form.is_valid():
-            entered_username = form.cleaned_data.get('username')
             entered_current_password = form.cleaned_data.get('current_password')
             entered_new_password = form.cleaned_data.get('new_password')
             entered_confirm_password = form.cleaned_data.get('confirm_password')
 
             member = authenticate(
                 request,
-                username=entered_username,
+                username=username,
                 password=entered_current_password
             )
 
             if member is not None:
                 if entered_new_password == entered_confirm_password:
-                    Member.objects.filter(username=entered_username).update(
+                    Member.objects.filter(username=username).update(
                         password=make_password(entered_new_password),
                         last_changed=timezone.now(),
                         active=True,
                     )
                     member = authenticate(
                         request,
-                        username=entered_username,
+                        username=username,
                         password=entered_current_password
                     )
                     login(request, member)
-                    return render(request, "members/home/index.html", {'form': form })
+                    return render(request, "members/home/profile.html", {'form': form })
 
     return render(request, "members/set/change_password.html", {'form': form })
