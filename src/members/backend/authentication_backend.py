@@ -16,7 +16,7 @@ class AuthenticationBackend(ModelBackend):
             password_found = member.password
 
             # logins from blocked users
-            if member.is_active == False:
+            if member.is_active is False:
                 return None
 
             # if password is correct
