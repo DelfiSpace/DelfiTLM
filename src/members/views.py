@@ -55,9 +55,9 @@ def register(request):
                     login(request, member)
                     return render(request, "members/home/profile.html")
 
-                message="""Enter a password containing min 8 characters,
-                min 1 upper and lower case letter,
-                1 number and 1 special character"""
+                message="""Enter a password containing a minimum of 8 characters,
+                    1 upper and lower case letter,
+                    1 number and 1 special character."""
                 messages.info(request, message)
 
             else:
