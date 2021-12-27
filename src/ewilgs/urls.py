@@ -7,5 +7,5 @@ urlpatterns = [
     path('ewilgs/home/', home, name='home'),
     path('ewilgs/downlink/', get_downlink_table, name='ewilgs_downlink'),
     path('ewilgs/uplink/', get_uplink_table, name='ewilgs_uplink'),
-    path('ewilgs/downlink/addframe', add_downlink_frames, name='add_downlink_frames'),
+    path('submit/', add_downlink_frames, name='add_downlink_frames'),
 ]
