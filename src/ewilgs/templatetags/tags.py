@@ -7,6 +7,6 @@ def url_replace(request, field, value):
     """This method ensures that filtering and pagination work together.
     It copies the filtering parameters of the url and changes the page
     of the results so that the filter is not reset"""
-    d = request.GET.copy()
-    d[field] = value
-    return d.urlencode()
+    request_url = request.GET.copy()
+    request_url[field] = value
+    return request_url.urlencode()
