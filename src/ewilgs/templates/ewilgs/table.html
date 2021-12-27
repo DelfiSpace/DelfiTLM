@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>{{table_name}} frames</title>
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    </head>
+    <body>
+        <h1>Downlink Frames</h1>
+
+        <form method="get">
+        {{telemetry_filter.form}}
+
+        <button type="submit">Search</button>
+        </form>
+        <table border="1" class="dataframe">
+            <thead>
+              <tr style="text-align: left;">
+
+                <th>id</th>
+                <th>frame_time</th>
+                <th>send_time</th>
+                <th>receive_time</th>
+                <th>radio_amateur</th>
+                <th>version</th>
+                <th>processed</th>
+                <th>frequency</th>
+                <th>qos</th>
+                <th>frame</th>
+                <!-- <th>frame_binary</th> -->
+              </tr>
+            </thead>
+            <tbody>
+                <tr>
+            {% for frame in page_obj %}
+            <td>{{ frame.id }}</td>
+            <td>{{ frame.frame_time}}</td>
+            <!-- <td>{{ frame.frame_time|upper}}</td> USE |upper to view the timestamp in full-->
+            <td>{{ frame.send_time}}</td>
+            <td>{{ frame.receive_time}}</td>
+            <td>{{ frame.radio_amateur}}</td>
+            <td>{{ frame.version}}</td>
+            <td>{{ frame.processed}}</td>
+            <td>{{ frame.frequency}}</td>
+            <td>{{ frame.qos}}</td>
+            <td>{{ frame.frame}}</td>
+            <!-- <td>{{ frame.frame_binary}}</td> -->
+            </tr>
+                {% endfor %}
+
+            </tbody>
+        </table>
+
+        <div class="pagination">
+            {% load tags %}
+            <span class="step-links">
+                {% if page_obj.has_previous %}
+                    <a href="?{% url_replace request 'page' 1 %}">&laquo; first</a>
+                    <a href="?{% url_replace request 'page' page_obj.previous_page_number %}">previous</a>
+                {% endif %}
+
+                <span class="current">
+                    Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}.
+                </span>
+
+                {% if page_obj.has_next %}
+                    <a href="?{% url_replace request 'page' page_obj.next_page_number %}">next</a>
+                    <a href="?{% url_replace request 'page' page_obj.paginator.num_pages %}">last &raquo;</a>
+                {% endif %}
+            </span>
+        </div>
+        <table id="table" border="1" class="dataframe">
+          </table>
+
+</html>
+
