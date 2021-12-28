@@ -17,7 +17,13 @@
         {% endfor %}
         <input type="submit" value="Register">
     </form>
-    <p> Enter a password containing a minimum of 8 characters, 1 upper and lower case letter, 1 number and 1 special character.</p>
+    <ul>
+        <li> The username can be 150 characters or fewer. Letters, digits and @/./+/-/_ only.</li>
+        <li> Your password cannot be too similar to your other personal information.</li>
+        <li> Your password must contain at least 8 characters.</li>
+        <li> Your password cannot be a commonly used password.</li>
+        <li> Your password cannot be entirely numeric.</li>
+    </ul>
     {% if messages %}
     <ul class="messages">
         {% for message in messages %}
