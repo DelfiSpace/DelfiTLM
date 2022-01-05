@@ -1,5 +1,5 @@
 """API request handling. Map requests to the corresponding HTMLs."""
-from datetime import datetime
+from django.utils import timezone
 from django.shortcuts import redirect, render
 from django.contrib.auth import login, authenticate, logout
 from django.contrib import messages
@@ -24,8 +24,8 @@ def register(request):
             user = form.save()
             login(request, user)
             Member.objects.filter(username=user.username).update(
-                        date_joined=datetime.utcnow(),
-                        last_login=datetime.utcnow()
+                        date_joined=timezone.now(),
+                        last_login=timezone.now()
                     )
             return render(request, "members/home/profile.html")
         messages.error(request, "Unsuccessful registration. Invalid information.")
@@ -50,7 +50,7 @@ def login_member(request):
             if member is not None and member.is_active is True:
                 login(request, member)
                 Member.objects.filter(username=member.username).update(
-                        last_login=datetime.utcnow()
+                        last_login=timezone.now()
                     )
                 return render(request, "members/home/profile.html")
 
@@ -79,7 +79,7 @@ def change_password(request):
             user = form.save()
             update_session_auth_hash(request, user)
             Member.objects.filter(username=user.username).update(
-                        last_changed=datetime.utcnow()
+                        last_changed=timezone.now()
                     )
             return render(request, "members/home/profile.html")
     else:
