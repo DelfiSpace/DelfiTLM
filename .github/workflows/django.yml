@@ -21,12 +21,6 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         pip install -r requirements.txt
-    - name: Set up db
-      run: |
-        docker-compose up db
-    - name: Apply migrations
-      run: |
-        python manage.py migrate
     - name: Run Tests
       run: |
         cd src && python manage.py test
