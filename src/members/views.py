@@ -31,7 +31,9 @@ def register(request):
                     )
             send_mail(
                 'Welcome to the DelfiTLM portal!',
-                'Dear ' + user.username + ',\n thank you for joining the DelfiTLM portal: with this portal, you can submit telemetry for all the DelfiSpace satellites. ',
+                'Dear ' + user.username +
+                ',\n thank you for joining the DelfiTLM portal: with this portal,'
+                ' you can submit telemetry for all the DelfiSpace satellites. ',
                 os.environ.get('EMAIL_FROM',''),
                 [user.email],
                 fail_silently=True,
