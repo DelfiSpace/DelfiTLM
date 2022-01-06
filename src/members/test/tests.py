@@ -10,5 +10,5 @@ from ewilgs.views import *
 
 class TestUrls(SimpleTestCase):
     def test_index(self):
-        url = reverse('ewilgs_home')
+        url = reverse('home')
         self.assertEquals(resolve(url).func, home)
