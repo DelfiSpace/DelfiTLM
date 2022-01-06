@@ -1,21 +1,35 @@
-"""Customised forms for view/html files"""
-from django import forms
+"""Customized forms for view/html files"""
 
-class RegisterForm(forms.Form):
-    """set password form"""
-    username = forms.CharField(label="Username")
-    email = forms.CharField(label="email")
-    password = forms.CharField(label="password", widget=forms.PasswordInput())
-    confirm_password = forms.CharField(label="confirm password", widget=forms.PasswordInput())
+from django import forms
+from django.contrib.auth.forms import UserCreationForm, PasswordChangeForm
+from .models import Member
+
+class RegisterForm(UserCreationForm):
+    """Register user form"""
+    email = forms.EmailField(required=True)
+    username = forms.CharField(required=True)
+
+    class Meta:
+        """Meta class to specify db model"""
+        model = Member
+        fields = ("username", "email", "password1", "password2")
+
+    def save(self, commit=True):
+        user = super().save(commit=False)
+        user.email = self.cleaned_data['email']
+        user.username = self.cleaned_data['username']
+        if commit:
+            user.save()
+        return user
 
 class LoginForm(forms.Form):
     """login form"""
     username = forms.CharField(label="Username")
     password = forms.CharField(label="Password", widget=forms.PasswordInput())
 
-class ChangePasswordForm(forms.Form):
-    """change password form"""
-    username = forms.CharField(label="Username")
-    current_password = forms.CharField(label="Current Password", widget=forms.PasswordInput())
-    new_password = forms.CharField(label="New Password", widget=forms.PasswordInput())
-    confirm_password = forms.CharField(label="Confirm New Password", widget=forms.PasswordInput())
+
+class ChangePasswordForm(PasswordChangeForm):
+    """Change password form"""
+    class Meta:
+        """Meta class to specify db model"""
+        model = Member

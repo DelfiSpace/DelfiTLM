@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Profile Page</title>
+    </head>
+    <body>
+        {% if user.is_authenticated %}
+        <h1>Welcome {{ user.username }}!</h1>
+        {% endif %}
+        <button type="button"><a href="{% url 'homepage' %}">Missions Dashboard</a></button>
+        <br>
+        <br>
+        <button type="button"><a href="{% url 'change_password' %}">Change Password</a></button>
+        <button type="button"><a href="{% url 'logout' %}">Logout</a></button>
+    </body>
+</html>
