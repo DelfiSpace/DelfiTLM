@@ -30,6 +30,13 @@ POSTGRES_PASSWORD   = os.environ.get('POSTGRES_PASSWORD', 'postgres')
 POSTGRES_HOST       = os.environ.get('POSTGRES_HOST', 'localhost')
 POSTGRES_PORT       = int(os.environ.get('POSTGRES_PORT', 5432))
 
+# configure the email backend to relay email
+EMAIL_BACKEND           = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST              = os.environ.get('SMTP_HOST', '')
+EMAIL_PORT              = os.environ.get('SMTP_PORT, '25')
+EMAIL_HOST_USER         = os.environ.get('SMTP_USER, '')
+EMAIL_HOST_PASSWORD     = os.environ.get('SMTP_PASSWORD, '')
+EMAIL_USE_TLS           = False
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = bool(int(os.environ.get('DEBUG', 1)))
