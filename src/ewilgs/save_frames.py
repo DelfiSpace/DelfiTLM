@@ -14,7 +14,7 @@ def register_downlink_frames(frames_to_add, username=None) -> None:
     for frame in frames_to_add['frames']:
         add_frame(frame, username)
 
-def add_frame(frame, username) -> None:
+def add_frame(frame, username=None) -> None:
     """Adds one json frame to the downlink table"""
     downlink_entry = Downlink()
 

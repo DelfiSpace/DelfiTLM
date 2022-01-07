@@ -1,12 +1,14 @@
 """API request handling. Map requests to the corresponding HTMLs."""
+from django.http.response import JsonResponse
 from django.utils import timezone
 from django.shortcuts import redirect, render
 from django.contrib.auth import login, authenticate, logout
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import update_session_auth_hash
+from rest_framework_api_key.models import BaseAPIKeyManager
 from .forms import RegisterForm, LoginForm, ChangePasswordForm
-from .models import Member
+from .models import APIKey, Member
 
 @login_required(login_url='/members/login')
 def profile(request):
@@ -58,6 +60,14 @@ def login_member(request):
 
     return render(request, "members/home/login.html", { 'form': form })
 
+
+@login_required(login_url='/members/login')
+def generate_key(request):
+    api_key, generated_key = APIKey.objects.create_key(name=request.user.username,
+                                                       username=Member.objects.get(username=request.user.username)
+)
+
+    return JsonResponse({"api_key": str(api_key), "generated_key": str(generated_key)})
 
 @login_required(login_url='/members/login')
 def logout_member(request):

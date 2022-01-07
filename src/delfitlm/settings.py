@@ -53,7 +53,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'django_filters',
     'rest_framework',
-    # 'rest_framework_api_key',
+    'rest_framework_api_key',
     'davinci',
     'delfic3',
     'delfin3xt',

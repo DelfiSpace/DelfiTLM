@@ -10,4 +10,5 @@ urlpatterns = [
     path('members/change/', views.change_password, name='change_password'),
     path('members/reset/', views.reset_password, name='reset_password'),
     path('members/logout/', views.logout_member, name='logout'),
+    path('members/key/', views.generate_key, name='generate_key'),
 ]

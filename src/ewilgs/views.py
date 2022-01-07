@@ -25,10 +25,12 @@ QUERY_ROW_LIMIT = 100
 
 #         if APIKey.objects.filter(key=api_key).exists():
 #             username = APIKey.objects.filter(key=api_key).all()[0].username
-#             frames_to_add = json.loads(request.body)
-#             register_downlink_frames(frames_to_add, username=username)
+#             frame_to_add = json.loads(request.body)
+#             add_frame(frame_to_add, username=username)
+#             return JsonResponse({"frame_added": frame_to_add['frame']})
 
-#         return JsonResponse({"len": len(Downlink.objects.all())})
+#         return JsonResponse({"frame_added": ''})
+
 
 @login_required(login_url='/members/login')
 def submit(request):
