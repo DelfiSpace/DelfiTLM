@@ -4,6 +4,7 @@ branch = True
 omit =  */test*
         */__init__.py*
         */migrations/*
+        */manage.py*
 
 [report]
 exclude_lines =
