@@ -82,8 +82,8 @@ def change_password(request):
                         last_changed=timezone.now()
                     )
             return redirect('profile')
-        else:
-            messages.info(request, "Invalid password")
+
+        messages.info(request, "Invalid password")
 
     return render(request, "members/set/change_password.html", {'form': form })
 
