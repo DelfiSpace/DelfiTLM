@@ -24,7 +24,7 @@ class TestLogin(TestCase):
         self.user.set_password('delfispace4242')
         self.user.save()
 
-    def teardown(self):
+    def tearDown(self):
         self.client.logout()
 
     def test_login(self):
@@ -86,7 +86,7 @@ class TestProfile(TestCase):
         self.user.set_password('delfispace4242')
         self.user.save()
 
-    def teardown(self):
+    def tearDown(self):
         self.client.logout()
 
     def test_user_logged_in(self):
@@ -109,7 +109,7 @@ class TestRegister(TestCase):
         self.user.set_password('delfispace4242')
         self.user.save()
 
-    def teardown(self):
+    def tearDown(self):
         self.client.logout()
 
     def test_register(self):
@@ -202,7 +202,7 @@ class TestChangePassword(TestCase):
         self.user.set_password('delfispace4242')
         self.user.save()
 
-    def teardown(self):
+    def tearDown(self):
         self.client.logout()
 
     def test_change_password_user_not_logged_in(self):
