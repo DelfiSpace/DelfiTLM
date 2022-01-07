@@ -48,7 +48,7 @@ def add_dummy_downlink_frames(request):
     """Add frames to Downlink table. The input is a list of json objects embedded in to the
     HTTP request."""
 
-    with open('src/ewilgs/dummy_downlink.json', 'r') as file:
+    with open('src/ewilgs/dummy_downlink.json', 'r', encoding="utf-8") as file:
         dummy_data = json.load(file)
         register_downlink_frames(dummy_data)
 

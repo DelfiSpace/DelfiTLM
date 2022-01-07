@@ -34,7 +34,9 @@ class Member(AbstractUser):
 
 # class APIKey(models.Model):
 
-#     user = models.ForeignKey(Member, to_field="username", db_column="radio_amateur", null=False, on_delete=models.CASCADE)
+#     user = models.ForeignKey(Member, to_field="username",
+#                               db_column="radio_amateur",
+#                               null=False, on_delete=models.CASCADE)
 #     key = models.CharField(max_length=40, blank=True)
 
 #     def __unicode__(self):
