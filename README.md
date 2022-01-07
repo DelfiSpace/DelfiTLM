@@ -61,3 +61,8 @@ To reset the container and remove the volumes run the `./reset_docker.sh` script
 
 Note: remove `--build` to skip building the container, will use the cached one (last build)
 
+# Testing
+
+1. To run the unit tests execute `python manage.py test` from within the `src` folder
+
+2. To compile the coverage report run the `./run_coverage.sh` script and the report will appear in `src/htmlcov/index.html`
