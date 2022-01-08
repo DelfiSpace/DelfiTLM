@@ -6,7 +6,6 @@ from django.contrib.auth import login, authenticate, logout
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import update_session_auth_hash
-from rest_framework_api_key.models import BaseAPIKeyManager
 from .forms import RegisterForm, LoginForm, ChangePasswordForm
 from .models import APIKey, Member
 
@@ -63,8 +62,9 @@ def login_member(request):
 
 @login_required(login_url='/members/login')
 def generate_key(request):
+    """Generates an API key"""
     api_key, generated_key = APIKey.objects.create_key(name=request.user.username,
-                                                       username=Member.objects.get(username=request.user.username)
+                            username=Member.objects.get(username=request.user.username)
 )
 
     return JsonResponse({"api_key": str(api_key), "generated_key": str(generated_key)})

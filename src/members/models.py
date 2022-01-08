@@ -22,6 +22,7 @@ class Member(AbstractUser):
 
 
 class APIKey(AbstractAPIKey):
+    """API keys table"""
     username = models.ForeignKey(
         Member,
         on_delete=models.CASCADE,
