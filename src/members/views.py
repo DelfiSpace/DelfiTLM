@@ -92,9 +92,9 @@ def change_password(request):
             Member.objects.filter(username=user.username).update(
                         last_changed=timezone.now()
                     )
-            return render(request, "members/home/profile.html")
-    else:
-        form = ChangePasswordForm(request.user)
+            return redirect('profile')
+
+        messages.info(request, "Invalid password")
 
     return render(request, "members/set/change_password.html", {'form': form })
 
