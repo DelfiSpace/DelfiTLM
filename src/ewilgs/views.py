@@ -1,10 +1,11 @@
 """API request handling. Map requests to the corresponding HTMLs."""
 import json
+from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
 from django.http.response import JsonResponse
 from django.shortcuts import render
 from .models import Uplink, Downlink
-from .save_frames import register_downlink_frames
+from .save_frames import register_downlink_frames, add_frame
 from .filters import TelemetryDownlinkFilter, TelemetryUplinkFilter
 
 QUERY_ROW_LIMIT = 100
@@ -14,19 +15,30 @@ def home(request):
     ren = render(request, "ewilgs/home/index.html")
     return ren
 
-def add_downlink_frames(request):
+@login_required(login_url='/members/login')
+def submit(request):
     """Add frames to Downlink table. The input is a list of json objects embedded in to the
     HTTP request."""
-    # uncomment to add dummy data
-    # with open('src/ewilgs/dummy_downlink.json', 'r') as file:
-    #     dummy_data = json.load(file)
-    #     register_downlink_frames(dummy_data)
 
-    # comment the next two lines when adding dummy data
-    frames_to_add = json.loads(request.body)
-    register_downlink_frames(frames_to_add)
+    if request.method == 'POST':
+        username = request.user.username
+        frame_to_add = json.loads(request.body)
+        add_frame(frame_to_add, username=username)
+        return JsonResponse({"frame_added": frame_to_add['frame']})
+
+    return JsonResponse({"frame_added": ''})
+
+
+def add_dummy_downlink_frames(request):
+    """Add frames to Downlink table. The input is a list of json objects embedded in to the
+    HTTP request."""
+
+    with open('src/ewilgs/dummy_downlink.json', 'wb') as file:
+        dummy_data = json.load(file)
+        register_downlink_frames(dummy_data)
 
     return JsonResponse({"len": len(Downlink.objects.all())})
+
 
 
 def paginate_telemetry_table(request, telemetry_filter, table_name):

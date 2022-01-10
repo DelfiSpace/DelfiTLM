@@ -1,8 +1,10 @@
 """Scripts for saving the frames into the database"""
 import datetime as dt
+
+from members.models import Member
 from .models import Downlink
 
-def register_downlink_frames(frames_to_add) -> None:
+def register_downlink_frames(frames_to_add, username=None) -> None:
     """Adds a list of json frames to the downlink table
 
     Args:
@@ -10,38 +12,42 @@ def register_downlink_frames(frames_to_add) -> None:
         to be added to the downlink table.
     """
     for frame in frames_to_add['frames']:
-        downlink_entry = Downlink()
+        add_frame(frame, username)
 
-        # assign values
-        downlink_entry.frequency = frame['frequency']
-        downlink_entry.frame = frame['frame']
-        downlink_entry.qos = frame['qos']
+def add_frame(frame, username=None) -> None:
+    """Adds one json frame to the downlink table"""
+    downlink_entry = Downlink()
 
-        if 'username' in frame and frame['username'] is not None:
-            downlink_entry.radio_amateur = frame['username']
+    # assign values
+    downlink_entry.frequency = frame['frequency']
+    downlink_entry.frame = frame['frame']
+    downlink_entry.qos = frame['qos']
 
-        if 'processed' not in frame or frame['processed'] is None:
-            downlink_entry.processed = False
-        else:
-            downlink_entry.processed = frame['processed']
+    if username is not None:
+        downlink_entry.radio_amateur = Member.objects.get(username=username)
 
-        if 'frame_time' not in frame or frame['frame_time'] is None:
-            downlink_entry.received_at = dt.datetime.utcnow()
-        else:
-            time_format = '%Y-%m-%dT%H:%M:%S.%fZ'
-            downlink_entry.received_at = dt.datetime.strptime(frame['frame_time'], time_format)
+    if 'processed' not in frame or frame['processed'] is None:
+        downlink_entry.processed = False
+    else:
+        downlink_entry.processed = frame['processed']
 
-        if 'send_time' not in frame or frame['send_time'] is None:
-            downlink_entry.received_at = dt.datetime.utcnow()
-        else:
-            time_format = '%Y-%m-%dT%H:%M:%S.%fZ'
-            downlink_entry.received_at = dt.datetime.strptime(frame['send_time'], time_format)
+    if 'frame_time' not in frame or frame['frame_time'] is None:
+        downlink_entry.received_at = dt.datetime.utcnow()
+    else:
+        time_format = '%Y-%m-%dT%H:%M:%S.%fZ'
+        downlink_entry.received_at = dt.datetime.strptime(frame['frame_time'], time_format)
 
-        if 'receive_time' not in frame or frame['receive_time'] is None:
-            downlink_entry.received_at = dt.datetime.utcnow()
-        else:
-            time_format = '%Y-%m-%dT%H:%M:%S.%fZ'
-            downlink_entry.received_at = dt.datetime.strptime(frame['receive_time'], time_format)
+    if 'send_time' not in frame or frame['send_time'] is None:
+        downlink_entry.received_at = dt.datetime.utcnow()
+    else:
+        time_format = '%Y-%m-%dT%H:%M:%S.%fZ'
+        downlink_entry.received_at = dt.datetime.strptime(frame['send_time'], time_format)
 
-        # save entry
-        downlink_entry.save()
+    if 'receive_time' not in frame or frame['receive_time'] is None:
+        downlink_entry.received_at = dt.datetime.utcnow()
+    else:
+        time_format = '%Y-%m-%dT%H:%M:%S.%fZ'
+        downlink_entry.received_at = dt.datetime.strptime(frame['receive_time'], time_format)
+
+    # save entry
+    downlink_entry.save()
