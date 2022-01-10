@@ -17,8 +17,8 @@ def home(request):
 
 @login_required(login_url='/members/login')
 def submit(request):
-    """Add frames to Downlink table. The input is a list of json objects embedded in to the
-    HTTP request."""
+    """Adds user submitted frames to Downlink table. The input is a frame
+    encoded as a json object embedded in to the HTTP request."""
 
     if request.method == 'POST':
         username = request.user.username
@@ -30,10 +30,15 @@ def submit(request):
 
 
 def add_dummy_downlink_frames(request):
-    """Add frames to Downlink table. The input is a list of json objects embedded in to the
-    HTTP request."""
+    """Add dummy frames from a json to Downlink table."""
 
-    with open('src/ewilgs/dummy_downlink.json', 'wb') as file:
+    # if server runs from DelfiTLM
+    # path = 'src/ewilgs/dummy_downlink.json'
+
+    # if server runs from DelfiTLM/src
+    path = 'ewilgs/dummy_downlink.json'
+
+    with open(path, 'r', encoding='utf-8') as file:
         dummy_data = json.load(file)
         register_downlink_frames(dummy_data)
 
