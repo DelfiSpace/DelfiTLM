@@ -1,0 +1,46 @@
+# only listen to HTTP to forward to HTTPS
+server {
+    listen 8080 default_server;
+    server_name ${MY_HOST};
+    return 301 https://${MY_HOST}${DOLLAR}request_uri;
+}
+
+# HTTPS configuration
+server {
+    listen 8443 ssl http2;
+
+    server_name ${MY_HOST};
+
+    # expects certificates in this folder
+    ssl_certificate        /certs/server.pem;
+    ssl_certificate_key    /certs/server.key;
+
+    ssl_protocols TLSv1.3 TLSv1.2;
+    ssl_prefer_server_ciphers on;
+    ssl_ecdh_curve secp521r1:secp384r1;
+    ssl_ciphers EECDH+AESGCM:EECDH+AES256;
+
+    ssl_session_cache shared:TLS:2m;
+    ssl_buffer_size 4k;
+
+    # OCSP stapling
+    ssl_stapling on;
+    ssl_stapling_verify on;
+    resolver 1.1.1.1 1.0.0.1; # Cloudflare
+
+    # Set HSTS to 365 days
+    add_header Strict-Transport-Security 'max-age=31536000; includeSubDomains; preload' always;
+
+    location / {
+        uwsgi_pass app:8000;
+        include /etc/nginx/uwsgi_params;
+    }
+
+    location /dbmanager/ {
+        proxy_set_header X-Script-Name /dbmanager;
+        proxy_set_header X-Scheme ${DOLLAR}scheme;
+        proxy_set_header Host ${MY_HOST};
+        proxy_pass http://pgadmin/;
+        proxy_redirect off;
+    }
+}
