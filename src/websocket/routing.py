@@ -1,8 +1,8 @@
 """Websocket routes"""
 from django.urls import path
 
-from . import entry
+from . import echo
 
 websocket_urlpatterns = [
-    path('ws/entry/', entry.Consumer.as_asgi()),
+    path('ws/echo/', echo.EchoConsumer.as_asgi()),
 ]

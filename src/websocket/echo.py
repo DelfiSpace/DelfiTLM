@@ -2,7 +2,7 @@
 import json
 from channels.generic.websocket import WebsocketConsumer
 
-class Consumer(WebsocketConsumer):
+class EchoConsumer(WebsocketConsumer):
     """
     A sample websocket consumer, as demo to use for new things!
     """
