@@ -11,7 +11,6 @@ class EchoConsumer(WebsocketConsumer):
         self.send("Connected to DelfiTLM websocket")
 
     def receive(self, text_data=None, bytes_data=None):
-        print(text_data)
         self.send(json.dumps({
             'context': 'echo',
             'text': text_data
