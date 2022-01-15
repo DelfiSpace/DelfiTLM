@@ -62,6 +62,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'django_filters',
+    'channels',
     'davinci',
     'delfic3',
     'delfin3xt',
@@ -104,7 +105,7 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = 'delfitlm.wsgi.application'
+ASGI_APPLICATION = 'delfitlm.asgi.application'
 
 
 # Database
