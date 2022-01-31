@@ -92,6 +92,7 @@ def generate_key(request):
 
 @login_required(login_url='/members/login')
 def get_new_key(request):
+    """Render profile page with API key"""
 
     key = json.loads(generate_key(request).content)['generated_key']
     context = {'key': key}
