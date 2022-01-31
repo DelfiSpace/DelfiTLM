@@ -10,6 +10,3 @@ class TestUrls(SimpleTestCase):
     def test_index(self):
         url = reverse('home')
         self.assertEquals(resolve(url).func, home)
-
-
-

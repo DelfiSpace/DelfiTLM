@@ -1,4 +1,5 @@
 """API request handling. Map requests to the corresponding HTMLs."""
+import os
 from django.http.response import JsonResponse
 from django.utils import timezone
 from django.shortcuts import redirect, render
@@ -6,6 +7,7 @@ from django.contrib.auth import login, authenticate, logout
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import update_session_auth_hash
+from django.core.mail import send_mail
 from .forms import RegisterForm, LoginForm, ChangePasswordForm
 from .models import APIKey, Member
 
@@ -28,6 +30,15 @@ def register(request):
                         date_joined=timezone.now(),
                         last_login=timezone.now()
                     )
+            send_mail(
+                'Welcome to the DelfiTLM portal!',
+                'Dear ' + user.username +
+                ',\n thank you for joining the DelfiTLM portal: with this portal,'
+                ' you can submit telemetry for all the DelfiSpace satellites. ',
+                os.environ.get('EMAIL_FROM',''),
+                [user.email],
+                fail_silently=True,
+                )
             return render(request, "members/home/profile.html")
         messages.error(request, "Unsuccessful registration. Invalid information.")
 
@@ -91,9 +102,9 @@ def change_password(request):
             Member.objects.filter(username=user.username).update(
                         last_changed=timezone.now()
                     )
-            return render(request, "members/home/profile.html")
-    else:
-        form = ChangePasswordForm(request.user)
+            return redirect('profile')
+
+        messages.info(request, "Invalid password")
 
     return render(request, "members/set/change_password.html", {'form': form })
 
