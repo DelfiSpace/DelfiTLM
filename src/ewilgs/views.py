@@ -1,49 +1,41 @@
 """API request handling. Map requests to the corresponding HTMLs."""
 import json
-from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
+from django.http import HttpResponseBadRequest
 from django.http.response import JsonResponse
 from django.shortcuts import render
-# from rest_framework.views import APIView
-# from rest_framework_api_key.models import APIKey
-# from rest_framework_api_key.permissions import HasAPIKey, IsAuthenticated
+from rest_framework_api_key.permissions import HasAPIKey
+from rest_framework.decorators import permission_classes
+from members.models import APIKey
 from .models import Uplink, Downlink
 from .save_frames import register_downlink_frames, add_frame
 from .filters import TelemetryDownlinkFilter, TelemetryUplinkFilter
 
+
 QUERY_ROW_LIMIT = 100
 
-# class SubmissionView(APIView):
-#     permission_classes = [HasAPIKey|IsAuthenticated]
-
-#     def submit_frame(self, request):
-#         """Add frames to Downlink table. The input is a list of json objects embedded in to the
-#         HTTP request."""
-
-#         key = request.META["HTTP_AUTHORIZATION"].split()[1]
-#         api_key = APIKey.objects.get_from_key(key)
-
-#         if APIKey.objects.filter(key=api_key).exists():
-#             username = APIKey.objects.filter(key=api_key).all()[0].username
-#             frame_to_add = json.loads(request.body)
-#             add_frame(frame_to_add, username=username)
-#             return JsonResponse({"frame_added": frame_to_add['frame']})
-
-#         return JsonResponse({"frame_added": ''})
-
-
-@login_required(login_url='/members/login')
-def submit(request):
+@permission_classes([HasAPIKey,])
+def submit_frame(request):
     """Add frames to Downlink table. The input is a list of json objects embedded in to the
     HTTP request."""
 
     if request.method == 'POST':
-        username = request.user.username
-        frame_to_add = json.loads(request.body)
-        add_frame(frame_to_add, username=username)
-        return JsonResponse({"frame_added": frame_to_add['frame']})
 
-    return JsonResponse({"frame_added": ''})
+        key = request.META["HTTP_AUTHORIZATION"]
+
+        try: # try to find key match
+
+            api_key_name = APIKey.objects.get_from_key(key)
+            frame_to_add = json.loads(request.body)
+            add_frame(frame_to_add, username=api_key_name)
+            return JsonResponse({"frame_added": frame_to_add['frame']})
+
+        except:  #pylint:disable=W0702
+            # no match, no access
+            return HttpResponseBadRequest("Unauthorized")
+
+    return JsonResponse({"frame_added": {}})
+
 
 
 def add_dummy_downlink_frames(request):

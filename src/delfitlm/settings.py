@@ -78,6 +78,8 @@ INSTALLED_APPS = [
 #     ]
 # }
 
+API_KEY_CUSTOM_HEADER = "HTTP_AUTHORIZATION"
+
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',

@@ -11,6 +11,7 @@ from django.core.mail import send_mail
 from .forms import RegisterForm, LoginForm, ChangePasswordForm
 from .models import APIKey, Member
 
+
 @login_required(login_url='/members/login')
 def profile(request):
     """Render profile page"""
@@ -74,11 +75,19 @@ def login_member(request):
 @login_required(login_url='/members/login')
 def generate_key(request):
     """Generates an API key"""
-    api_key, generated_key = APIKey.objects.create_key(name=request.user.username,
-                            username=Member.objects.get(username=request.user.username)
-)
 
-    return JsonResponse({"api_key": str(api_key), "generated_key": str(generated_key)})
+    if len(APIKey.objects.filter(name=request.user.username))!=0:
+        key = APIKey.objects.filter(name=request.user.username)
+        key.delete()
+
+
+    api_key_name, generated_key = APIKey.objects.create_key(
+                            name=request.user.username,
+                            username=Member.objects.get(username=request.user.username),
+    )
+
+    return JsonResponse({"api_key": str(api_key_name), "generated_key": str(generated_key)})
+
 
 @login_required(login_url='/members/login')
 def logout_member(request):
