@@ -16,6 +16,10 @@ RUN chmod +x /entrypoint.sh
 # create a folder for the certificates
 RUN mkdir /certs
 
+# create a folder to service Django static content
+RUN mkdir -p /vol/static
+RUN chmod 755 /vol/static
+
 # expose also the HTTPS port
 EXPOSE 8443
 
