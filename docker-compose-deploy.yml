@@ -13,6 +13,8 @@ services:
             - SMTP_HOST=${SMTP_HOST}
             - SMTP_PORT=${SMTP_PORT}
             - FROM_EMAIL=${FROM_EMAIL}
+        restart: always
+
     proxy:
         build:
             context: ./proxy
@@ -27,18 +29,21 @@ services:
         depends_on:
             - app
             - pgadmin
+        restart: always
 
     pgadmin:
         container_name: pgadmin4_container
-        image: dpage/pgadmin4
+        image: dpage/pgadmin4:6.4
         restart: always
         environment:
             - PGADMIN_DEFAULT_EMAIL=${PGADMIN_DEFAULT_EMAIL:-admin@admin.com}
             - PGADMIN_DEFAULT_PASSWORD=${PGADMIN_DEFAULT_PASSWORD:-admin}
         depends_on:
             - "db"
+        volumes:
+            - pgadmin_persistent:/var/lib/pgadmin
 
 volumes:
     static_data:
     certificates:
-
+    pgadmin_persistent:
