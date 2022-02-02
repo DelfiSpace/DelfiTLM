@@ -39,7 +39,7 @@ EMAIL_HOST_USER         = os.environ.get('SMTP_USER', '')
 EMAIL_HOST_PASSWORD     = os.environ.get('SMTP_PASSWORD', '')
 EMAIL_USE_TLS           = False
 
-if EMAIL_HOST is '':
+if EMAIL_HOST == '':
     EMAIL_BACKEND       = 'django.core.mail.backends.console.EmailBackend'
 
 # SECURITY WARNING: don't run with debug turned on in production!
@@ -178,9 +178,9 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/3.2/howto/static-files/
 
-STATIC_URL = '/static/static/'
+STATIC_URL = '/static/'
 
-MEDIA_URL = '/static/media/'
+MEDIA_URL = '/media/'
 
 STATIC_ROOT = '/vol/web/static'
 MEDIA_ROOT = '/vol/web/media'
