@@ -19,6 +19,7 @@ services:
         build:
             context: ./proxy
         volumes:
+            - static_data:/vol:ro
             - certificates:/certs:ro
         ports:
             - "80:8080"
