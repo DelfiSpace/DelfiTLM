@@ -1,5 +1,6 @@
 """API urls"""
 from django.urls import path
+from django.views.decorators.csrf import csrf_exempt
 
 from . import views
 
@@ -9,5 +10,5 @@ urlpatterns = [
     path('ewilgs/uplink/', views.get_uplink_table, name='ewilgs_uplink'),
     # add dummy data
     # path('add/', views.add_dummy_downlink_frames, name='add_dummy_downlink_frames'),
-    path('submit_frame/', views.submit_frame, name='submit_frame'),
+    path('submit_frame/', csrf_exempt(views.submit_frame), name='submit_frame'),
 ]
