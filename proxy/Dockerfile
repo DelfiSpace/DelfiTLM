@@ -1,14 +1,30 @@
 # this image runs an nginx proxy
 FROM nginxinc/nginx-unprivileged:1-alpine
 
-COPY ./default.conf /etc/nginx/conf.d/default.conf
-COPY ./uwsgi_params /etc/nginx/uwsgi_params
+# retrieve the current user ID
+RUN UID=`whoami`
 
-# change user to root to add static files directory
+# switch to root
 USER root
 
+COPY ./http.conf /http.conf
+COPY ./https.conf.template /default.conf.template
+COPY ./uwsgi_params /etc/nginx/uwsgi_params
+COPY ./entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+
+# create a folder for the certificates
+RUN mkdir /certs
+
+# create a folder to service Django static content
 RUN mkdir -p /vol/static
 RUN chmod 755 /vol/static
 
-# switch back to unprivileged user
-USER nginx
+# expose also the HTTPS port
+EXPOSE 8443
+
+# switch back to the unprivileged user
+USER $UID
+
+# run the entry point script to select the nginx configuration
+CMD ["/bin/sh", "-c", "/entrypoint.sh"]
