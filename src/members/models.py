@@ -15,7 +15,8 @@ class Member(AbstractUser):
     date_joined = models.DateTimeField(null=True, blank=True)
     last_changed = models.DateTimeField(null=True, blank=True)
     last_login = models.DateTimeField(null=True, blank=True)
-    maidenhead_location = models.TextField(null=True, blank=True)
+    latitude = models.FloatField(null=True, blank=True)
+    longitude = models.FloatField(null=True, blank=True)
 
     def __str__(self):
         return self.username
