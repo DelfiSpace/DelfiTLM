@@ -3,9 +3,9 @@ import json
 from django.core.paginator import Paginator
 from django.http.response import JsonResponse
 from django.shortcuts import render
-from .models import Uplink, Downlink
+from .models import Uplink, Downlink, TLE
 from .save_frames import register_downlink_frames
-from .filters import TelemetryDownlinkFilter, TelemetryUplinkFilter
+from .filters import TelemetryDownlinkFilter, TelemetryUplinkFilter, TLEFilter
 
 QUERY_ROW_LIMIT = 100
 
@@ -45,11 +45,25 @@ def get_downlink_table(request):
     """Queries and filters the downlink table"""
     frames = Downlink.objects.all().order_by('frame_time')
     telemetry_filter = TelemetryDownlinkFilter(request.GET, queryset=frames)
-    return paginate_telemetry_table(request, telemetry_filter,  "Downlink")
+    return paginate_telemetry_table(request, telemetry_filter, "Downlink")
 
 
 def get_uplink_table(request):
     """Queries and filters the uplink table"""
     frames = Uplink.objects.all().order_by('frame_time')
     telemetry_filter = TelemetryUplinkFilter(request.GET, queryset=frames)
-    return paginate_telemetry_table(request, telemetry_filter,  "Uplink")
+    return paginate_telemetry_table(request, telemetry_filter, "Uplink")
+
+
+def get_tle_table(request):
+    """Queries and filters the TLEs table"""
+    frames = TLE.objects.all().order_by('valid_from')
+    tle_filter = TLEFilter(request.GET, queryset=frames)
+
+    data = tle_filter.qs
+    paginator = Paginator(data, QUERY_ROW_LIMIT)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
+    context = {'telemetry_filter': tle_filter, 'page_obj': page_obj, 'table_name': 'TLE'}
+    return render(request, "ewilgs/tle_table.html", context)
