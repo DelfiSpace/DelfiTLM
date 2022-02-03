@@ -31,4 +31,3 @@ class TLEFilter(django_filters.FilterSet):
         """Meta class to specify model"""
         model = TLE
         fields = ["sat"]
-
