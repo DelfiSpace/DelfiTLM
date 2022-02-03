@@ -1,7 +1,7 @@
 """API request handling. Map requests to the corresponding HTMLs."""
 import json
+from json.decoder import JSONDecodeError
 from django.core.paginator import Paginator
-from django.http import HttpResponseBadRequest
 from django.http.response import JsonResponse
 from django.shortcuts import render
 from rest_framework_api_key.permissions import HasAPIKey
@@ -11,7 +11,6 @@ from .models import Uplink, Downlink
 from .save_frames import register_downlink_frames, add_frame
 from .filters import TelemetryDownlinkFilter, TelemetryUplinkFilter
 
-
 QUERY_ROW_LIMIT = 100
 
 @permission_classes([HasAPIKey,])
@@ -20,23 +19,26 @@ def submit_frame(request):
     HTTP request."""
 
     if request.method == 'POST':
-
+        
         key = request.META["HTTP_AUTHORIZATION"]
+        userAgent = request.META['HTTP_USER_AGENT']
 
         try: # try to find key match
-
             api_key_name = APIKey.objects.get_from_key(key)
             frame_to_add = json.loads(request.body)
-            add_frame(frame_to_add, username=api_key_name)
-            return JsonResponse({"frame_added": frame_to_add['frame']})
-
-        except:  #pylint:disable=W0702
-            # no match, no access
-            return HttpResponseBadRequest("Unauthorized")
-
-    return JsonResponse({"frame_added": {}})
-
-
+            add_frame(frame_to_add, username=api_key_name, application=userAgent)
+            return JsonResponse({"result": "success", "message": ""}, status=201)
+        except APIKey.DoesNotExist as e: 
+            # catch a wrong API key
+            return JsonResponse({"result": "failure", "message": str(e)}, status=401)
+        except JSONDecodeError as e:
+            # catch an error in the JSON request
+            return JsonResponse({"result": "failure", "message": "Invalid JSON structure"}, status=400)
+        except Exception as e:  #pylint:disable=W0702
+            # catch other exceptions
+            return JsonResponse({"result": "failure", "message": type(e).__qualname__+": "+str(e)}, status=500)
+    # POST is the only supported method, return error
+    return JsonResponse({"result": "failure", "message": "Method not allowed"}, status=405)
 
 def add_dummy_downlink_frames(request):
     """Add frames to Downlink table. The input is a list of json objects embedded in to the

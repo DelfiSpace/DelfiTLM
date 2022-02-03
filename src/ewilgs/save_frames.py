@@ -14,7 +14,7 @@ def register_downlink_frames(frames_to_add, username=None) -> None:
     for frame in frames_to_add['frames']:
         add_frame(frame, username)
 
-def add_frame(frame, username=None) -> None:
+def add_frame(frame, username=None, application=None) -> None:
     """Adds one json frame to the downlink table"""
     downlink_entry = Downlink()
 
@@ -26,10 +26,12 @@ def add_frame(frame, username=None) -> None:
     if username is not None:
         downlink_entry.radio_amateur = Member.objects.get(username=username)
 
-    if 'processed' not in frame or frame['processed'] is None:
-        downlink_entry.processed = False
-    else:
-        downlink_entry.processed = frame['processed']
+    # if present, store the application name/version used to submit the data
+    if application is not None:
+        downlink_entry.version = application
+
+    # always mark the frame to be processed
+    downlink_entry.processed = False
 
     if 'frame_time' not in frame or frame['frame_time'] is None:
         downlink_entry.received_at = dt.datetime.utcnow()
