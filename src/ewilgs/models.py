@@ -30,3 +30,10 @@ class Uplink(models.Model):
     frame = models.TextField(default=None, null=True)
     frame_binary = models.BinaryField(default=None, null=True)
 
+
+class TLE(models.Model):
+    """Table for satellite TLEs history"""
+    valid_from = models.DateTimeField(null=False, auto_now=False, auto_now_add=False)
+    valid_until = models.DateTimeField(null=False, auto_now=False, auto_now_add=False)
+    sat = models.CharField(null=False, max_length=70)
+    tle = models.TextField(null=False)
