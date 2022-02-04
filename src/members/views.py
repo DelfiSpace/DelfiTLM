@@ -1,5 +1,7 @@
 """API request handling. Map requests to the corresponding HTMLs."""
+import json
 import os
+from django.http.response import JsonResponse
 from django.utils import timezone
 from django.shortcuts import redirect, render
 from django.contrib.auth import login, authenticate, logout
@@ -8,7 +10,8 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth import update_session_auth_hash
 from django.core.mail import send_mail
 from .forms import RegisterForm, LoginForm, ChangePasswordForm
-from .models import Member
+from .models import APIKey, Member
+
 
 @login_required(login_url='/members/login')
 def profile(request):
@@ -68,6 +71,32 @@ def login_member(request):
         messages.info(request, "Invalid username or password")
 
     return render(request, "members/home/login.html", { 'form': form })
+
+
+@login_required(login_url='/members/login')
+def generate_key(request):
+    """Generates an API key"""
+
+    if len(APIKey.objects.filter(name=request.user.username))!=0:
+        key = APIKey.objects.filter(name=request.user.username)
+        key.delete()
+
+
+    api_key_name, generated_key = APIKey.objects.create_key(
+                            name=request.user.username,
+                            username=Member.objects.get(username=request.user.username),
+    )
+
+    return JsonResponse({"api_key": str(api_key_name), "generated_key": str(generated_key)})
+
+
+@login_required(login_url='/members/login')
+def get_new_key(request):
+    """Render profile page with API key"""
+
+    key = json.loads(generate_key(request).content)['generated_key']
+    context = {'key': key}
+    return render(request, "members/home/profile.html", context)
 
 
 @login_required(login_url='/members/login')

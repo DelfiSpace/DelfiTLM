@@ -67,6 +67,8 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'django_filters',
+    'rest_framework',
+    'rest_framework_api_key',
     'davinci',
     'delfic3',
     'delfin3xt',
@@ -74,6 +76,15 @@ INSTALLED_APPS = [
     'ewilgs',
     'members'
 ]
+
+# REST_FRAMEWORK = {
+#     "DEFAULT_PERMISSION_CLASSES": [
+#         "rest_framework_api_key.permissions.HasAPIKey",
+#     ]
+# }
+
+API_KEY_CUSTOM_HEADER = "HTTP_AUTHORIZATION"
+
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -128,7 +139,6 @@ DATABASES = {
 
 if 'test' in sys.argv or 'test_coverage' in sys.argv:  # Covers regular testing and django-coverage
     DATABASES['default']['ENGINE'] = 'django.db.backends.sqlite3'
-
 
 
 # Password validation
