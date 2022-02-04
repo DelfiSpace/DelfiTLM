@@ -37,7 +37,7 @@ class TestSubmitFrames(TestCase):
         self.assertEqual(len(Downlink.objects.all()), 0) # downlink table empty
 
         response = self.client.post(reverse('login'), {'username': 'user', 'password': 'delfispace4242'})
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, 201)
         frame = '{ "qos": 98.6, "pass": "qwerty", "frequency": 2455.66, "processed": true, "frame": "A8989A40404000888C9C66B0A80003F0890FFDAD776500001E601983C008C39C10D02911E2F0FF71230DECE70032044C09500311119B8CA092A08B5E85919492938285939C7900000000000000000000005602F637005601F3380000006D70000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000434B1345B440BF3C9736D0301D240E000004B82C4050B26DDB942EB4D0CFE4E9D64946"}'
         frame_json = json.loads(frame)
 
@@ -55,7 +55,7 @@ class TestSubmitFrames(TestCase):
 
         response = submit_frame(request)
 
-        self.assertEquals(response.status_code, 200)
+        self.assertEquals(response.status_code, 201)
         self.assertEqual(len(Downlink.objects.all()), 1) # dowlink table has 1 entry
 
 
@@ -82,7 +82,7 @@ class TestSubmitFrames(TestCase):
 
         response = submit_frame(request)
 
-        self.assertEquals(response.status_code, 200)
+        self.assertEquals(response.status_code, 201)
         self.assertEqual(len(Downlink.objects.all()), 1) # dowlink table has 1 entry
 
 
@@ -110,5 +110,5 @@ class TestSubmitFrames(TestCase):
 
         response = submit_frame(request)
 
-        self.assertEquals(response.status_code, 400)
+        self.assertEquals(response.status_code, 401)
         self.assertEqual(len(Downlink.objects.all()), 0) # dowlink table has 1 entry
