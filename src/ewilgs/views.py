@@ -19,13 +19,17 @@ def submit_frame(request):
     HTTP request."""
 
     if request.method == 'POST':
-        
-        key = request.META["HTTP_AUTHORIZATION"]
-        userAgent = request.META['HTTP_USER_AGENT']
+        try:
+            # retrieve the authorization header (if present, empty otherwise)
+            key = request.META.get("HTTP_AUTHORIZATION",'')
+            # retrieve the user agent (if present, empty otherwise)
+            userAgent = request.META.get('HTTP_USER_AGENT', '')
 
-        try: # try to find key match
+            # search for the user name matching the API key
             api_key_name = APIKey.objects.get_from_key(key)
+            # retrieve the JSON frame just submitted
             frame_to_add = json.loads(request.body)
+            # add the frame to the database
             add_frame(frame_to_add, username=api_key_name, application=userAgent)
             return JsonResponse({"result": "success", "message": ""}, status=201)
         except APIKey.DoesNotExist as e: 
