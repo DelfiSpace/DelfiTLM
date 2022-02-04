@@ -84,7 +84,7 @@ class TestSubmitFrames(TestCase):
 
         self.assertEquals(response.status_code, 201)
         self.assertEqual(len(Downlink.objects.all()), 1) # dowlink table has 1 entry
-        print(Downlink.objects.all())
+        print(Downlink.objects.first()['receive_time'])
 
     def test_submit_bad_key(self):
 
