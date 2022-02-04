@@ -23,24 +23,30 @@ def submit_frame(request):
             # retrieve the authorization header (if present, empty otherwise)
             key = request.META.get("HTTP_AUTHORIZATION",'')
             # retrieve the user agent (if present, empty otherwise)
-            userAgent = request.META.get('HTTP_USER_AGENT', '')
+            user_agent = request.META.get('HTTP_USER_AGENT', '')
 
             # search for the user name matching the API key
             api_key_name = APIKey.objects.get_from_key(key)
             # retrieve the JSON frame just submitted
             frame_to_add = json.loads(request.body)
             # add the frame to the database
-            add_frame(frame_to_add, username=api_key_name, application=userAgent)
+            add_frame(frame_to_add, username=api_key_name, application=user_agent)
             return JsonResponse({"result": "success", "message": ""}, status=201)
-        except APIKey.DoesNotExist as e: 
+
+        except APIKey.DoesNotExist as e: #pylint:disable=C0103
             # catch a wrong API key
             return JsonResponse({"result": "failure", "message": str(e)}, status=401)
-        except JSONDecodeError as e:
+
+        except JSONDecodeError as e: #pylint:disable=C0103, W0612
             # catch an error in the JSON request
-            return JsonResponse({"result": "failure", "message": "Invalid JSON structure"}, status=400)
-        except Exception as e:  #pylint:disable=W0702
+            message_text = "Invalid JSON structure"
+            return JsonResponse({"result": "failure", "message": message_text}, status=400)
+
+        except Exception as e:  #pylint:disable=C0103, W0703
             # catch other exceptions
-            return JsonResponse({"result": "failure", "message": type(e).__qualname__+": "+str(e)}, status=500)
+            message_text = type(e).__qualname__+": "+str(e)
+            return JsonResponse({"result": "failure", "message": message_text}, status=500)
+
     # POST is the only supported method, return error
     return JsonResponse({"result": "failure", "message": "Method not allowed"}, status=405)
 
