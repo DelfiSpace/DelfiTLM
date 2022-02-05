@@ -2,8 +2,10 @@
 import datetime as dt
 from .models import Downlink, TLE
 from skyfield.api import load, EarthSatellite
+from django.utils import timezone
+from members.models import Member
 
-def register_downlink_frames(frames_to_add) -> None:
+def register_downlink_frames(frames_to_add, username=None) -> None:
     """Adds a list of json frames to the downlink table
 
     Args:
@@ -11,42 +13,49 @@ def register_downlink_frames(frames_to_add) -> None:
         to be added to the downlink table.
     """
     for frame in frames_to_add['frames']:
-        downlink_entry = Downlink()
+        add_frame(frame, username)
 
-        # assign values
+def add_frame(frame, username=None, application=None) -> None:
+    """Adds one json frame to the downlink table"""
+    downlink_entry = Downlink()
+
+    # assign values
+    if 'frequency' in frame or frame['frequency'] is not None:
         downlink_entry.frequency = frame['frequency']
-        downlink_entry.frame = frame['frame']
+    downlink_entry.frame = frame['frame']
+    if 'qos' in frame or frame['qos'] is not None:
         downlink_entry.qos = frame['qos']
 
-        if 'username' in frame and frame['username'] is not None:
-            downlink_entry.radio_amateur = frame['username']
+    if username is not None:
+        downlink_entry.radio_amateur = Member.objects.get(username=username)
 
-        if 'processed' not in frame or frame['processed'] is None:
-            downlink_entry.processed = False
-        else:
-            downlink_entry.processed = frame['processed']
+    # if present, store the application name/version used to submit the data
+    if application is not None:
+        downlink_entry.version = application
 
-        if 'frame_time' not in frame or frame['frame_time'] is None:
-            downlink_entry.received_at = dt.datetime.utcnow()
-        else:
-            time_format = '%Y-%m-%dT%H:%M:%S.%fZ'
-            downlink_entry.received_at = dt.datetime.strptime(frame['frame_time'], time_format)
+    # always mark the frame to be processed
+    downlink_entry.processed = False
 
-        if 'send_time' not in frame or frame['send_time'] is None:
-            downlink_entry.received_at = dt.datetime.utcnow()
-        else:
-            time_format = '%Y-%m-%dT%H:%M:%S.%fZ'
-            downlink_entry.received_at = dt.datetime.strptime(frame['send_time'], time_format)
+    if 'frame_time' not in frame or frame['frame_time'] is None:
+        downlink_entry.frame_time = timezone.now()
+    else:
+        time_format = '%Y-%m-%dT%H:%M:%S.%fZ'
+        downlink_entry.frame_time = dt.datetime.strptime(frame['frame_time'], time_format)
 
-        if 'receive_time' not in frame or frame['receive_time'] is None:
-            downlink_entry.received_at = dt.datetime.utcnow()
-        else:
-            time_format = '%Y-%m-%dT%H:%M:%S.%fZ'
-            downlink_entry.received_at = dt.datetime.strptime(frame['receive_time'], time_format)
+    if 'send_time' not in frame or frame['send_time'] is None:
+        downlink_entry.send_time = timezone.now()
+    else:
+        time_format = '%Y-%m-%dT%H:%M:%S.%fZ'
+        downlink_entry.send_time = dt.datetime.strptime(frame['send_time'], time_format)
 
-        # save entry
-        downlink_entry.save()
+    if 'receive_time' not in frame or frame['receive_time'] is None:
+        downlink_entry.receive_time = timezone.now()
+    else:
+        time_format = '%Y-%m-%dT%H:%M:%S.%fZ'
+        downlink_entry.receive_time = dt.datetime.strptime(frame['receive_time'], time_format)
 
+    # save entry
+    downlink_entry.save()
 
 def save_tle(tle):
     """Insert a TLE into the database.

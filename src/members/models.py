@@ -2,6 +2,7 @@
 import uuid
 from django.db import models
 from django.contrib.auth.models import AbstractUser
+from rest_framework_api_key.models import AbstractAPIKey
 
 class Member(AbstractUser):
     """Extended custom user from User"""
@@ -20,3 +21,14 @@ class Member(AbstractUser):
 
     def __str__(self):
         return self.username
+
+
+class APIKey(AbstractAPIKey):
+    """API keys table"""
+    username = models.ForeignKey(
+        Member,
+        on_delete=models.CASCADE,
+        to_field="username",
+        db_column="username",
+        related_name="api_keys",
+    )

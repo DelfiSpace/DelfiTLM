@@ -11,6 +11,14 @@
         <br>
         <br>
         <button type="button"><a href="{% url 'change_password' %}">Change Password</a></button>
+        <button type="button"><a href="{% url 'get_new_key' %}">Create an API key</a></button>
         <button type="button"><a href="{% url 'logout' %}">Logout</a></button>
+        <br>
+        {% if key is not null %}
+        <p>API KEY:  {{ key }}</p>
+        <p>Please save this key in a secure place, it will not be displayed on this page in the future.</p>
+        <p>If lost, a new key needs to be generated.</p>
+        {% endif %}
+
     </body>
 </html>

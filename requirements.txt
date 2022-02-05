@@ -3,6 +3,8 @@ asgiref==3.4.1
 astroid==2.8.0
 Django==3.2.8
 django-pandas==0.6.6
+djangorestframework==3.13.1
+djangorestframework-api-key==2.1.0
 isort==5.9.3
 lazy-object-proxy==1.6.0
 mccabe==0.6.1
