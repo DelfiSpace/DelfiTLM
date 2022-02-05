@@ -1,6 +1,7 @@
-"""Scripts for saving the frames into the database"""
+"""Scripts for saving frames and TLEs into the database"""
 import datetime as dt
-from .models import Downlink
+from .models import Downlink, TLE
+from skyfield.api import load, EarthSatellite
 
 def register_downlink_frames(frames_to_add) -> None:
     """Adds a list of json frames to the downlink table
@@ -45,3 +46,30 @@ def register_downlink_frames(frames_to_add) -> None:
 
         # save entry
         downlink_entry.save()
+
+
+def save_tle(tle):
+    """Insert a TLE into the database.
+        TLE format:
+        ISS (ZARYA)
+        1 25544U 98067A   08264.51782528 -.00002182  00000-0 -11606-4 0  2927
+        2 25544  51.6416 247.4627 0006703 130.5360 325.0288 15.72125391563537
+    """
+    ts = load.timescale()
+    tle_split_lines = tle.splitlines()
+    sat = tle_split_lines[0]
+    line1 = tle_split_lines[1]
+    line2 = tle_split_lines[2]
+
+    satellite = EarthSatellite(line1, line2, sat, ts)
+
+    epoch = satellite.epoch.utc_jpl()
+
+    tle_instance = TLE()
+    tle_instance.valid_from = epoch
+    tle_instance.sat = sat
+    tle_instance.tle = tle
+
+    tle_instance.save()
+
+    return tle_instance
