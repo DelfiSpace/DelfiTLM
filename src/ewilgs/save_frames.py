@@ -1,5 +1,5 @@
 """Scripts for saving the frames into the database"""
-import datetime as dt
+from django.utils.dateparse import parse_datetime
 from django.utils import timezone
 from members.models import Member
 from .models import Downlink
@@ -39,19 +39,17 @@ def add_frame(frame, username=None, application=None) -> None:
         downlink_entry.frame_time = timezone.now()
     else:
         time_format = '%Y-%m-%dT%H:%M:%S.%fZ'
-        downlink_entry.frame_time = dt.datetime.strptime(frame['frame_time'], time_format)
+        downlink_entry.frame_time = parse_datetime(frame['frame_time'])
 
     if 'send_time' not in frame or frame['send_time'] is None:
         downlink_entry.send_time = timezone.now()
     else:
-        time_format = '%Y-%m-%dT%H:%M:%S.%fZ'
-        downlink_entry.send_time = dt.datetime.strptime(frame['send_time'], time_format)
+        downlink_entry.send_time = parse_datetime(frame['send_time'])
 
     if 'receive_time' not in frame or frame['receive_time'] is None:
         downlink_entry.receive_time = timezone.now()
     else:
-        time_format = '%Y-%m-%dT%H:%M:%S.%fZ'
-        downlink_entry.receive_time = dt.datetime.strptime(frame['receive_time'], time_format)
+        downlink_entry.receive_time = parse_datetime(frame['receive_time'])
 
     # save entry
     downlink_entry.save()
