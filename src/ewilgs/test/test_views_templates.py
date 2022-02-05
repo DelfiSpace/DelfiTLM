@@ -84,7 +84,7 @@ class TestSubmitFrames(TestCase):
 
         self.assertEquals(response.status_code, 201)
         self.assertEqual(len(Downlink.objects.all()), 1) # dowlink table has 1 entry
-        print(Downlink.objects.first().receive_time)
+        self.assertEqual(str(Downlink.objects.first().receive_time), "2021-12-19 02:20:14.959630+00:00")
 
     def test_submit_bad_key(self):
 
@@ -111,4 +111,4 @@ class TestSubmitFrames(TestCase):
         response = submit_frame(request)
 
         self.assertEquals(response.status_code, 401)
-        self.assertEqual(len(Downlink.objects.all()), 0) # dowlink table has 1 entry
+        self.assertEqual(len(Downlink.objects.all()), 0) # dowlink table has no entry
