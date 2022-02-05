@@ -38,7 +38,6 @@ def add_frame(frame, username=None, application=None) -> None:
     if 'frame_time' not in frame or frame['frame_time'] is None:
         downlink_entry.frame_time = timezone.now()
     else:
-        time_format = '%Y-%m-%dT%H:%M:%S.%fZ'
         downlink_entry.frame_time = parse_datetime(frame['frame_time'])
 
     if 'send_time' not in frame or frame['send_time'] is None:
