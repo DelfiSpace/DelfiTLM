@@ -1,10 +1,21 @@
-from django.test import SimpleTestCase, Client
-from django.urls import reverse
-
+from django.test import TestCase
+from ewilgs.models import TLE
+from ewilgs.save_data import save_tle
+import datetime as dt
+import pytz
 
 # pylint: disable=all
 
-class TestTLE(SimpleTestCase):
+class TestTLE(TestCase):
 
     def test_insert_tle(self):
-        pass
+        tle= """ISS (ZARYA)
+1 25544U 98067A   08264.51782528 -.00002182  00000-0 -11606-4 0  2927
+2 25544  51.6416 247.4627 0006703 130.5360 325.0288 15.72125391563537"""
+
+        save_tle(tle)
+        tle_instance = TLE.objects.all()[0]
+        self.assertEqual(tle_instance.sat, "ISS (ZARYA)")
+        self.assertEqual(tle_instance.tle, tle)
+        self.assertEqual(tle_instance.valid_from, dt.datetime(2008, 9, 20, 12, 25, 40, 104187, tzinfo=pytz.UTC))
+        self.assertEqual(len(TLE.objects.all()), 1)
