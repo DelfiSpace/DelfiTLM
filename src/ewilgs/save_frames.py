@@ -3,6 +3,7 @@ from django.utils.dateparse import parse_datetime
 from django.utils import timezone
 from members.models import Member
 from .models import Downlink
+import re
 
 def register_downlink_frames(frames_to_add, username=None) -> None:
     """Adds a list of json frames to the downlink table
@@ -18,10 +19,22 @@ def add_frame(frame, username=None, application=None) -> None:
     """Adds one json frame to the downlink table"""
     downlink_entry = Downlink()
 
-    # assign values
+    # check if the frame exists and it is a HEX string
+    nonHex = re.match("[^0-9A-Fa-f]", frame['frame'])
+    if nonHex:
+        raise ValueError("Invalid frame, not an hexadecimal value.")
+
+    # assign the frame HEX values
+    downlink_entry.frame = frame['frame']
+
+    # assign the timestamp
+    downlink_entry.receive_time = parse_datetime(frame['timestamp'])
+
+    # assign frequency, if present
     if 'frequency' in frame or frame['frequency'] is not None:
         downlink_entry.frequency = frame['frequency']
-    downlink_entry.frame = frame['frame']
+
+    # assign qos, if present
     if 'qos' in frame or frame['qos'] is not None:
         downlink_entry.qos = frame['qos']
 
@@ -35,20 +48,6 @@ def add_frame(frame, username=None, application=None) -> None:
     # always mark the frame to be processed
     downlink_entry.processed = False
 
-    if 'frame_time' not in frame or frame['frame_time'] is None:
-        downlink_entry.frame_time = timezone.now()
-    else:
-        downlink_entry.frame_time = parse_datetime(frame['frame_time'])
-
-    if 'send_time' not in frame or frame['send_time'] is None:
-        downlink_entry.send_time = timezone.now()
-    else:
-        downlink_entry.send_time = parse_datetime(frame['send_time'])
-
-    if 'receive_time' not in frame or frame['receive_time'] is None:
-        downlink_entry.receive_time = timezone.now()
-    else:
-        downlink_entry.receive_time = parse_datetime(frame['receive_time'])
-
     # save entry
     downlink_entry.save()
+
