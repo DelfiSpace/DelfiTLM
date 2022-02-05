@@ -18,19 +18,16 @@
 
                 <!-- <th>id</th> -->
                 <th>valid_from</th>
-                <th>valid_until</th>
                 <th>satellite</th>
                 <th>TLE</th>
 
-                <!-- <th>frame_binary</th> -->
               </tr>
             </thead>
             <tbody>
                 <tr>
             {% for field in page_obj %}
             <td>{{ field.valid_from }}</td>
-            <td>{{ field.valid_until}}</td>
-            <!-- <td>{{ field.valid_until|upper}}</td> USE |upper to view the timestamp in full-->
+            <!-- <td>{{ field.valid_from|upper}}</td> USE |upper to view the timestamp in full-->
             <td>{{ field.sat}}</td>
             <td>{{ field.tle}}</td>
             </tr>

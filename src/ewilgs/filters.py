@@ -26,7 +26,6 @@ class TelemetryUplinkFilter(django_filters.FilterSet):
 class TLEFilter(django_filters.FilterSet):
     """Filter TLEs by date and satellite"""
     valid_from = django_filters.DateFromToRangeFilter(field_name="valid_from")
-    valid_until = django_filters.DateFromToRangeFilter(field_name="valid_until")
     class Meta:
         """Meta class to specify model"""
         model = TLE
