@@ -14,6 +14,7 @@ class TestTLE(TestCase):
 2 25544  51.6416 247.4627 0006703 130.5360 325.0288 15.72125391563537"""
         new_sat = Satellite()
         new_sat.sat = "ISS (ZARYA)"
+        new_sat.norad_id = 25544
         new_sat.save()
 
         save_tle(tle)
