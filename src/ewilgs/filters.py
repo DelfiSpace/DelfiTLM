@@ -12,6 +12,7 @@ class TelemetryDownlinkFilter(django_filters.FilterSet):
         model = Downlink
         fields = ["processed", "radio_amateur"]
 
+
 class TelemetryUplinkFilter(django_filters.FilterSet):
     """Filter uplink telemetry by frame date interval, frequency and qos ranges"""
     frame_date = django_filters.DateFromToRangeFilter(field_name="frame_time")
