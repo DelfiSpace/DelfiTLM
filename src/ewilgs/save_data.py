@@ -2,9 +2,10 @@
 from django.utils.dateparse import parse_datetime
 from django.utils import timezone
 from skyfield.api import load, EarthSatellite
+import pytz
 from ewilgs.models import Downlink, TLE, Satellite
 from members.models import Member
-# import pytz
+
 
 def register_downlink_frames(frames_to_add, username=None) -> None:
     """Adds a list of json frames to the downlink table
@@ -38,19 +39,19 @@ def add_frame(frame, username=None, application=None) -> None:
     downlink_entry.processed = False
 
     if 'frame_time' not in frame or frame['frame_time'] is None:
-        downlink_entry.frame_time = timezone.now()
+        downlink_entry.frame_time = timezone.now().astimezone(pytz.utc)
     else:
-        downlink_entry.frame_time = parse_datetime(frame['frame_time'])
+        downlink_entry.frame_time = parse_datetime(frame['frame_time']).astimezone(pytz.utc)
 
     if 'send_time' not in frame or frame['send_time'] is None:
-        downlink_entry.send_time = timezone.now()
+        downlink_entry.send_time = timezone.now().astimezone(pytz.utc)
     else:
-        downlink_entry.send_time = parse_datetime(frame['send_time'])
+        downlink_entry.send_time = parse_datetime(frame['send_time']).astimezone(pytz.utc)
 
     if 'receive_time' not in frame or frame['receive_time'] is None:
-        downlink_entry.receive_time = timezone.now()
+        downlink_entry.receive_time = timezone.now().astimezone(pytz.utc)
     else:
-        downlink_entry.receive_time = parse_datetime(frame['receive_time'])
+        downlink_entry.receive_time = parse_datetime(frame['receive_time']).astimezone(pytz.utc)
 
     # save entry
     downlink_entry.save()
