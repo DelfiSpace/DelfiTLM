@@ -9,6 +9,7 @@ from members.models import Member
 class Satellite(models.Model):
     """Table contaning all satellites managed in this db"""
     sat = models.CharField(null=False, max_length=70, unique=True)
+    norad_id = models.IntegerField(unique=True)
 
     def __str__(self) -> str:
         return self.sat
