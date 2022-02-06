@@ -3,12 +3,22 @@
     <head>
         <title>{{table_name}}</title>
     <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    <script src="https://code.jquery.com/jquery-1.12.4.js"></script>
+    <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+    <link rel="stylesheet" href="//code.jquery.com/ui/1.13.1/themes/base/jquery-ui.css">
+    <link rel="stylesheet" href="/resources/demos/style.css">
     </head>
     <body>
         <h1>{{table_name}} </h1>
 
         <form method="get">
         {{telemetry_filter.form}}
+
+        <script>
+            $( function() {
+                $( "#datepicker" ).datepicker();
+            } );
+        </script>
 
         <button type="submit">Search</button>
         </form>
