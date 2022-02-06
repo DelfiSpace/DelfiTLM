@@ -2,7 +2,7 @@
 import datetime as dt
 from django.utils import timezone
 from skyfield.api import load, EarthSatellite
-from ewilgs.models import Downlink, TLE
+from ewilgs.models import Downlink, TLE, Satellite
 from members.models import Member
 # import pytz
 
@@ -78,7 +78,7 @@ def save_tle(tle):
     # epoch = satellite.epoch.astimezone(tz)
     tle_instance = TLE()
     tle_instance.valid_from = epoch
-    tle_instance.sat = sat
+    tle_instance.sat = Satellite.objects.get(sat=sat)
     tle_instance.tle = tle
 
     tle_instance.save()
