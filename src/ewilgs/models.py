@@ -5,6 +5,16 @@ from django.utils import timezone
 from members.models import Member
 
 #pylint: disable=all
+
+class Satellite(models.Model):
+    """Table contaning all satellites managed in this db"""
+    sat = models.CharField(null=False, max_length=70, unique=True)
+    norad_id = models.IntegerField(null=False, unique=True)
+
+    def __str__(self) -> str:
+        return self.sat
+
+
 class Downlink(models.Model):
     """Table for downlink data frames"""
     frame_time = models.DateTimeField(null=False, default=timezone.now, auto_now=False, auto_now_add=False)
@@ -15,6 +25,7 @@ class Downlink(models.Model):
     processed = models.BooleanField(default=False, null=False)
     frequency = models.FloatField(default=None, null=True)
     qos = models.FloatField(default=None, null=True)
+    sat = models.ForeignKey(Satellite, to_field="sat", db_column="sat", null=True, on_delete=DO_NOTHING)
     frame = models.TextField(default=None, null=True)
     frame_binary = models.BinaryField(default=None, null=True)
 
@@ -26,7 +37,13 @@ class Uplink(models.Model):
     send_time = models.DateTimeField(null=False, default=timezone.now, auto_now=False, auto_now_add=False)
     frequency = models.FloatField(null=False)
     qos = models.FloatField(default=None, null=True)
-    sat = models.CharField(max_length=70, null=False)
+    sat = models.ForeignKey(Satellite, to_field="sat", db_column="sat", null=False, on_delete=DO_NOTHING)
     frame = models.TextField(default=None, null=True)
     frame_binary = models.BinaryField(default=None, null=True)
 
+
+class TLE(models.Model):
+    """Table for satellite TLEs history"""
+    valid_from = models.DateTimeField(null=True, auto_now=False, auto_now_add=False)
+    sat = models.ForeignKey(Satellite, to_field="sat", db_column="sat", null=False, on_delete=DO_NOTHING)
+    tle = models.TextField(null=False)

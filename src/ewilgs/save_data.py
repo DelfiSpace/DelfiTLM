@@ -1,8 +1,10 @@
 """Scripts for saving the frames into the database"""
 from django.utils.dateparse import parse_datetime
 from django.utils import timezone
+from skyfield.api import load, EarthSatellite
+from ewilgs.models import Downlink, TLE, Satellite
 from members.models import Member
-from .models import Downlink
+# import pytz
 
 def register_downlink_frames(frames_to_add, username=None) -> None:
     """Adds a list of json frames to the downlink table
@@ -52,3 +54,30 @@ def add_frame(frame, username=None, application=None) -> None:
 
     # save entry
     downlink_entry.save()
+
+def save_tle(tle):
+    """Insert a TLE into the database.
+        TLE format:
+        ISS (ZARYA)
+        1 25544U 98067A   08264.51782528 -.00002182  00000-0 -11606-4 0  2927
+        2 25544  51.6416 247.4627 0006703 130.5360 325.0288 15.72125391563537
+    """
+    time_scale = load.timescale()
+    tle_split_lines = tle.splitlines()
+    sat = tle_split_lines[0]
+    line1 = tle_split_lines[1]
+    line2 = tle_split_lines[2]
+
+    satellite = EarthSatellite(line1, line2, sat, time_scale)
+
+    epoch = satellite.epoch.utc_datetime()
+    # tz = pytz.timezone('Europe/Amsterdam')
+    # epoch = satellite.epoch.astimezone(tz)
+    tle_instance = TLE()
+    tle_instance.valid_from = epoch
+    tle_instance.sat = Satellite.objects.get(sat=sat)
+    tle_instance.tle = tle
+
+    tle_instance.save()
+
+    return tle_instance
