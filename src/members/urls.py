@@ -12,4 +12,5 @@ urlpatterns = [
     path('members/logout/', views.logout_member, name='logout'),
     path('members/key/', views.generate_key, name='generate_key'),
     path('members/newkey/', views.get_new_key, name='get_new_key'),
+    path(r'^members/activate/(?P<uidb64>[0-9A-Za-z_\-]+)/(?P<token>[0-9A-Za-z]{1,13}-[0-9A-Za-z]{1,20})/$', views.activate, name='activate')
 ]
