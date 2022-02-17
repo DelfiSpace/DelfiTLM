@@ -82,12 +82,12 @@ def register(request):
 def activate(request, uidb64, token):
     try:
         uid = force_text(urlsafe_base64_decode(uidb64))
-        user = User.objects.get(pk=uid)
+        user = Member.objects.get(pk=uid)
     # except(TypeError, ValueError, OverflowError, User.DoesNotExist):
     except(TypeError, ValueError, OverflowError):
         user = None
     if user is not None and account_activation_token.check_token(user, token):
-        user.is_active = True
+        user.verified = True
         user.save()
         login(request, user)
         Member.objects.filter(username=user.username).update(
@@ -113,7 +113,14 @@ def login_member(request):
                 username=entered_username,
                 password=entered_password
             )
+            print("member",member)
+            if member is not None and member.verified is False:
+                messages.info(request, "User not verified")
+                print("I LOVE YOU ANDREI")
+                return render(request, "members/home/login.html", {'form': form})
+
             if member is not None and member.is_active is True:
+                print("this should work")
                 login(request, member)
                 Member.objects.filter(username=member.username).update(
                         last_login=timezone.now()
