@@ -37,7 +37,6 @@ def register(request):
     if request.method == "POST":
         if form.is_valid():
             user = form.save(commit=False)
-            user.is_active = False
             user.save()
             # login(request, user)
             # Member.objects.filter(username=user.username).update(
@@ -55,7 +54,7 @@ def register(request):
             #     fail_silently=True,
             #     )
             current_site = get_current_site(request)
-            mail_subject = 'Activation link has been sent to your email id'
+
             message = render_to_string('members/set/Register_email_verification.html', {
                 'user': user,
                 'domain': current_site.domain,
@@ -63,10 +62,6 @@ def register(request):
                 'token': account_activation_token.make_token(user),
             })
             to_email = user.email
-            # email = EmailMessage(
-            #     mail_subject, message, to=[to_email]
-            # )
-            # email.send()
             send_mail( subject="Welcome to DelfiTLM",
                 message=message,
                 from_email = None,
@@ -74,7 +69,7 @@ def register(request):
                 fail_silently=True,
                 )
             return HttpResponse('Please confirm your email address to complete the registration')
-            # return render(request, "members/home/profile.html")
+
         messages.error(request, "Unsuccessful registration. Invalid information.")
 
     return render(request, "members/set/register.html", {'form': form })
@@ -83,7 +78,7 @@ def activate(request, uidb64, token):
     try:
         uid = force_text(urlsafe_base64_decode(uidb64))
         user = Member.objects.get(pk=uid)
-    # except(TypeError, ValueError, OverflowError, User.DoesNotExist):
+
     except(TypeError, ValueError, OverflowError):
         user = None
     if user is not None and account_activation_token.check_token(user, token):
@@ -113,14 +108,12 @@ def login_member(request):
                 username=entered_username,
                 password=entered_password
             )
-            print("member",member)
+
             if member is not None and member.verified is False:
                 messages.info(request, "User not verified")
-                print("I LOVE YOU ANDREI")
                 return render(request, "members/home/login.html", {'form': form})
 
             if member is not None and member.is_active is True:
-                print("this should work")
                 login(request, member)
                 Member.objects.filter(username=member.username).update(
                         last_login=timezone.now()
