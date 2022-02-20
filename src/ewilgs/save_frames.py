@@ -1,9 +1,8 @@
 """Scripts for saving the frames into the database"""
+import re
 from django.utils.dateparse import parse_datetime
-from django.utils import timezone
 from members.models import Member
 from .models import Downlink
-import re
 
 def register_downlink_frames(frames_to_add, username=None) -> None:
     """Adds a list of json frames to the downlink table
@@ -20,8 +19,8 @@ def add_frame(frame, username=None, application=None) -> None:
     downlink_entry = Downlink()
 
     # check if the frame exists and it is a HEX string
-    nonHex = re.match("[^0-9A-Fa-f]", frame['frame'])
-    if nonHex:
+    non_hex = re.match("[^0-9A-Fa-f]", frame['frame'])
+    if non_hex:
         raise ValueError("Invalid frame, not an hexadecimal value.")
 
     # assign the frame HEX values
@@ -50,4 +49,3 @@ def add_frame(frame, username=None, application=None) -> None:
 
     # save entry
     downlink_entry.save()
-
