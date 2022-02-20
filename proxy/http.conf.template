@@ -12,7 +12,7 @@ server {
 
     location /dbmanager/ {
         proxy_set_header X-Script-Name /dbmanager;
-        proxy_set_header Host delfitlm.tudelft.nl;
+        proxy_set_header Host ${MY_HOST};
         proxy_pass http://pgadmin/;
         proxy_redirect off;
     }
