@@ -31,11 +31,11 @@ def add_frame(frame, username=None, application=None) -> None:
     downlink_entry.receive_time = parse_datetime(frame['timestamp'])
 
     # assign frequency, if present
-    if 'frequency' in frame or frame['frequency'] is not None:
+    if 'frequency' in frame and frame['frequency'] is not None:
         downlink_entry.frequency = frame['frequency']
 
     # assign qos, if present
-    if 'qos' in frame or frame['qos'] is not None:
+    if 'qos' in frame and frame['qos'] is not None:
         downlink_entry.qos = frame['qos']
 
     if username is not None:
