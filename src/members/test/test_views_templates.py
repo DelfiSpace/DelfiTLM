@@ -20,7 +20,7 @@ class TestViews(SimpleTestCase):
 class TestLogin(TestCase):
     def setUp(self):
         self.client = Client()
-        self.user = Member.objects.create_user(username='user', email='user@email.com')
+        self.user = Member.objects.create_user(username='user', email='user@email.com',verified=True)
         self.user.set_password('delfispace4242')
         self.user.save()
 
@@ -140,7 +140,7 @@ class TestRegister(TestCase):
                                                           'password2': 'delfispace4242'})
         self.assertEqual(response.status_code, 200)
         # self.assertTemplateUsed(response, 'members/home/profile.html')
-        self.assertTemplateUsed(response, 'members/set/Register_email_verification.html')
+        self.assertTemplateUsed(response, 'members/set/register_email_verification.html') #when creating an account we receive an e-mail for verification
 
     def test_register_user_already_exists(self):
         # register form successfully retrieved
@@ -298,3 +298,30 @@ class TestChangePassword(TestCase):
         messages = list(response.context['messages'])
         self.assertTrue(len(messages)>0)
         self.assertTemplateUsed(response, 'members/set/change_password.html')
+
+class TestAccountVerification(TestCase):
+    def setUp(self):
+        self.client = Client()
+        self.user = Member.objects.create_user(username='user', email='user@email.com')
+        self.user.set_password('delfispace4242')
+        self.user.save()
+
+    def tearDown(self):
+        self.client.logout()
+
+    def test_login(self):
+        # login form retrieved
+        response = self.client.get(reverse('login'))
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'members/home/login.html')
+
+        response = self.client.post(reverse('login'), {'username': 'user', 'password': 'delfispace4242'})
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'members/home/login.html') #account is not verified so we return to login
+
+        self.user.verified = True #the user verified the account
+        self.user.save()
+        response = self.client.post(reverse('login'), {'username': 'user', 'password': 'delfispace4242'})
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'members/home/profile.html')  # account is verified so we proceed to profile page
+

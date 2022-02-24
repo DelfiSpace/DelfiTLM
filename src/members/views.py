@@ -35,7 +35,7 @@ def register(request):
             user.save()
             current_site = get_current_site(request)
 
-            message = render_to_string('members/set/Register_email_verification.html', {
+            message = render_to_string('members/set/register_email_verification.html', {
                 'user': user,
                 'domain': current_site.domain,
                 'uid': urlsafe_base64_encode(force_bytes(user.pk)),
