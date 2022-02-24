@@ -139,7 +139,8 @@ class TestRegister(TestCase):
                                                           'password1': 'delfispace4242',
                                                           'password2': 'delfispace4242'})
         self.assertEqual(response.status_code, 200)
-        self.assertTemplateUsed(response, 'members/home/profile.html')
+        # self.assertTemplateUsed(response, 'members/home/profile.html')
+        self.assertTemplateUsed(response, 'members/set/Register_email_verification.html')
 
     def test_register_user_already_exists(self):
         # register form successfully retrieved
