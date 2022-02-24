@@ -3,6 +3,8 @@ from django.test import SimpleTestCase, Client, TestCase
 from django.urls import reverse
 from django.test.client import Client
 from ..models import Member
+import re
+import django
 # import unittest
 # from django.contrib.auth.models import User
 
@@ -244,7 +246,7 @@ class TestChangePassword(TestCase):
 
     def test_password_changed(self):
         # user is logged in and password reset is login protected
-        # the user receives the change password form
+        # the user receives the changedjango password form
         self.client.login(username='user', password='delfispace4242')
         response = self.client.get(reverse('change_password'))
         self.assertEqual(response.status_code, 200)
@@ -324,4 +326,49 @@ class TestAccountVerification(TestCase):
         response = self.client.post(reverse('login'), {'username': 'user', 'password': 'delfispace4242'})
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'members/home/profile.html')  # account is verified so we proceed to profile page
+
+    def test_verify_email(self):
+        # Verify email address
+        username = 'userTest'
+        payload = {
+            'email': 'test@example.com',
+            'password1': 'TestpassUltra1',
+            'password2': 'TestpassUltra1',
+            'username': username,
+        }
+        response = self.client.post(reverse('register'), payload)
+        self.assertEqual(response.status_code, 200)
+
+        # Get token from email
+        # members/activate/
+        token_regex = r"members\/activate\/([A-Za-z0-9:\-]+)/([A-Za-z0-9:\-]+)"
+        email_content = django.core.mail.outbox[0].body
+        match = re.search(token_regex, email_content)
+
+        uid = match.group(1)
+        token = match.group(2)
+
+        response = self.client.post(reverse('activate', args=[uid, token]))
+        self.assertEqual(response.status_code, 200)
+
+
+
+    def test_verify_email_invalid_link(self):
+        # Verify email address
+        username = 'userTest'
+        payload = {
+            'email': 'test@example.com',
+            'password1': 'TestpassUltra1',
+            'password2': 'TestpassUltra1',
+            'username': username,
+        }
+        response = self.client.post(reverse('register'), payload)
+        self.assertEqual(response.status_code, 200)
+
+        # Get token from email
+        uid = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        token = "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+
+        response = self.client.post(reverse('activate', args=[uid, token]))
+        self.assertEqual(response.status_code, 400)
 
