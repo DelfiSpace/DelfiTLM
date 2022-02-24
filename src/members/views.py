@@ -1,6 +1,5 @@
 """API request handling. Map requests to the corresponding HTMLs."""
 import json
-import os
 from django.http.response import JsonResponse
 from django.utils import timezone
 from django.shortcuts import redirect, render
@@ -9,18 +8,14 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import update_session_auth_hash
 from django.core.mail import send_mail
-from .forms import RegisterForm, LoginForm, ChangePasswordForm
-from .models import APIKey, Member
 from django.http import HttpResponse
-from django.shortcuts import render, redirect
-from django.contrib.auth import login, authenticate
 from django.contrib.sites.shortcuts import get_current_site
 from django.utils.encoding import force_bytes, force_text
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.template.loader import render_to_string
 from .tokens import account_activation_token
-from django.contrib.auth.models import User
-from django.core.mail import EmailMessage
+from .forms import RegisterForm, LoginForm, ChangePasswordForm
+from .models import APIKey, Member
 
 
 @login_required(login_url='/members/login')
@@ -38,21 +33,6 @@ def register(request):
         if form.is_valid():
             user = form.save(commit=False)
             user.save()
-            # login(request, user)
-            # Member.objects.filter(username=user.username).update(
-            #             date_joined=timezone.now(),
-            #             last_login=timezone.now()
-            #         )
-
-            # send_mail(
-            #     'Welcome to the DelfiTLM portal!',
-            #     'Dear ' + user.username +
-            #     ',\n thank you for joining the DelfiTLM portal: with this portal,'
-            #     ' you can submit telemetry for all the DelfiSpace satellites. ',
-            #     os.environ.get('EMAIL_FROM',''),
-            #     [user.email],
-            #     fail_silently=True,
-            #     )
             current_site = get_current_site(request)
 
             message = render_to_string('members/set/Register_email_verification.html', {
@@ -75,6 +55,7 @@ def register(request):
     return render(request, "members/set/register.html", {'form': form })
 
 def activate(request, uidb64, token):
+    """Activate user email"""
     try:
         uid = force_text(urlsafe_base64_decode(uidb64))
         user = Member.objects.get(pk=uid)
@@ -89,9 +70,10 @@ def activate(request, uidb64, token):
                     date_joined=timezone.now(),
                     last_login=timezone.now()
                 )
-        return HttpResponse('Thank you for your email confirmation. Now you can login your account.')
-    else:
-        return HttpResponse('Activation link is invalid!')
+        return HttpResponse('Thank you for your email confirmation. \
+                            Now you can login your account.')
+    return HttpResponse('Activation link is invalid!')
+
 
 def login_member(request):
     """Render login page"""
