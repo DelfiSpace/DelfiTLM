@@ -1,0 +1,10 @@
+{% autoescape off %}
+Hi {{ user.username }},
+
+Welcome to the DelfiTLM portal!
+
+Thank you for joining the DelfiTLM portal: with this portal you can submit telemetry for all the DelfiSpace satellites.
+
+Please click on the link to confirm your registration: http://{{ domain }}{% url 'activate' uidb64=uid token=token %}
+
+{% endautoescape %}
