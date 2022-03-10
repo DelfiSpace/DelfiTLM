@@ -25,11 +25,13 @@ RUN chmod +x /scripts/*
 RUN mkdir -p /vol/web/media
 RUN mkdir -p /vol/web/static
 
-
 # create a new user in the docker image to run the server, not as root
 RUN adduser user
 RUN chown -R user:user /vol
 RUN chmod -R 755 /vol/web
+
+# switch to unprivileged user
 USER user
 
+# run the startup script
 CMD ["entrypoint.sh"]

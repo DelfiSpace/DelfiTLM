@@ -34,7 +34,12 @@ POSTGRES_PORT       = int(os.environ.get('POSTGRES_PORT', 5432))
 # configure the email backend to relay email
 EMAIL_BACKEND           = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST              = os.environ.get('SMTP_HOST', '')
-EMAIL_PORT              = int(os.environ.get('SMTP_PORT', 25))
+
+if os.environ.get('SMTP_PORT') in ['', None]:
+    EMAIL_PORT          = 25
+else:
+    EMAIL_PORT          = int(os.environ.get('SMTP_PORT'))
+
 EMAIL_HOST_USER         = os.environ.get('SMTP_USER', '')
 EMAIL_HOST_PASSWORD     = os.environ.get('SMTP_PASSWORD', '')
 EMAIL_USE_TLS           = False
@@ -63,6 +68,8 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'django_filters',
     'channels',
+    'rest_framework',
+    'rest_framework_api_key',
     'davinci',
     'delfic3',
     'delfin3xt',
@@ -70,6 +77,15 @@ INSTALLED_APPS = [
     'ewilgs',
     'members'
 ]
+
+# REST_FRAMEWORK = {
+#     "DEFAULT_PERMISSION_CLASSES": [
+#         "rest_framework_api_key.permissions.HasAPIKey",
+#     ]
+# }
+
+API_KEY_CUSTOM_HEADER = "HTTP_AUTHORIZATION"
+
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -126,7 +142,6 @@ if 'test' in sys.argv or 'test_coverage' in sys.argv:  # Covers regular testing 
     DATABASES['default']['ENGINE'] = 'django.db.backends.sqlite3'
 
 
-
 # Password validation
 # https://docs.djangoproject.com/en/3.2/ref/settings/#auth-password-validators
 
@@ -179,9 +194,9 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/3.2/howto/static-files/
 
-STATIC_URL = '/static/static/'
+STATIC_URL = '/static/'
 
-MEDIA_URL = '/static/media/'
+MEDIA_URL = '/media/'
 
 STATIC_ROOT = '/vol/web/static'
 MEDIA_ROOT = '/vol/web/media'

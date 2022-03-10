@@ -2,6 +2,7 @@
 import uuid
 from django.db import models
 from django.contrib.auth.models import AbstractUser
+from rest_framework_api_key.models import AbstractAPIKey
 
 class Member(AbstractUser):
     """Extended custom user from User"""
@@ -15,6 +16,21 @@ class Member(AbstractUser):
     date_joined = models.DateTimeField(null=True, blank=True)
     last_changed = models.DateTimeField(null=True, blank=True)
     last_login = models.DateTimeField(null=True, blank=True)
+    latitude = models.FloatField(null=True, blank=True)
+    longitude = models.FloatField(null=True, blank=True)
+    #by Default, when creating an use, the account is not verified
+    verified = models.BooleanField(default=False)
 
     def __str__(self):
         return self.username
+
+
+class APIKey(AbstractAPIKey):
+    """API keys table"""
+    username = models.ForeignKey(
+        Member,
+        on_delete=models.CASCADE,
+        to_field="username",
+        db_column="username",
+        related_name="api_keys",
+    )
