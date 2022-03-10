@@ -135,3 +135,5 @@ dmypy.json
 # The database
 data/
 
+# Visual Studio Code
+.vscode/
