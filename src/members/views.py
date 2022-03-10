@@ -52,7 +52,7 @@ def register(request):
 
         messages.error(request, "Unsuccessful registration. Invalid information.")
 
-    return render(request, "members/set/register.html", {'form': form })
+    return render(request, "members/set/register.html", {'form': form})
 
 def activate(request, uidb64, token):
     """Activate user email"""
@@ -162,7 +162,3 @@ def change_password(request):
     return render(request, "members/set/change_password.html", {'form': form })
 
 
-def reset_password(request):
-    """Todo Render reset password page and reset password"""
-
-    return redirect('homepage')
