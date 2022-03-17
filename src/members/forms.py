@@ -1,7 +1,7 @@
 """Customized forms for view/html files"""
 
 from django import forms
-from django.contrib.auth.forms import UserCreationForm, PasswordChangeForm, PasswordResetForm
+from django.contrib.auth.forms import UserCreationForm, PasswordResetForm, PasswordChangeForm
 from .models import Member
 
 class RegisterForm(UserCreationForm):

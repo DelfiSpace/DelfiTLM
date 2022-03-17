@@ -17,7 +17,7 @@
         {% if user.is_authenticated %}
         <button type="button"><a href="{% url 'profile' %}">Profile</a></button>
         {% else %}
-        <button type="button"><a href="{% url 'profile' %}">Login</a></button>
+        <button type="button"><a href="{% url 'login' %}">Login</a></button>
         <button type="button"><a href="{% url 'register' %}">Register</a></button>
         {% endif %}
     </body>
