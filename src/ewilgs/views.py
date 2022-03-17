@@ -2,6 +2,7 @@
 import json
 from json.decoder import JSONDecodeError
 from django.core.paginator import Paginator
+from django.http import HttpResponseBadRequest
 from django.http.response import JsonResponse
 from django.shortcuts import render
 from rest_framework_api_key.permissions import HasAPIKey
@@ -16,8 +17,10 @@ QUERY_ROW_LIMIT = 100
 
 @permission_classes([HasAPIKey,])
 def submit_frame(request):
-    """Add frames to Downlink table. The input is a list of json objects embedded in to the
+    """Add frames to Uplink/Downlink table. The input is a list of json objects embedded in to the
     HTTP request."""
+
+    #  TO DO: Add uplink/downlink identifier in the http request
 
     if request.method == 'POST':
         try:
@@ -50,6 +53,7 @@ def submit_frame(request):
 
     # POST is the only supported method, return error
     return JsonResponse({"result": "failure", "message": "Method not allowed"}, status=405)
+
 
 def add_dummy_downlink_frames(request):
     """Add frames to Downlink table. The input is a list of json objects embedded in to the
@@ -89,12 +93,12 @@ def get_downlink_table(request):
 
 def get_uplink_table(request):
     """Queries and filters the uplink table"""
-
-    if request.user.has_perm('uplink.view_uplink'):
+    if request.user.has_perm('ewilgs.view_uplink'):
         frames = Uplink.objects.all().order_by('frame_time')
         telemetry_filter = TelemetryUplinkFilter(request.GET, queryset=frames)
         return paginate_telemetry_table(request, telemetry_filter, "Uplink")
-    return 
+
+    return HttpResponseBadRequest()
 
 def get_tle_table(request):
     """Queries and filters the TLEs table"""
