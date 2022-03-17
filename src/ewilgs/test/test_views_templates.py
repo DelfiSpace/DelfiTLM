@@ -2,6 +2,7 @@
 import json
 from django.test import SimpleTestCase, Client, TestCase, RequestFactory
 from rest_framework.test import force_authenticate
+from django.contrib.auth.models import Permission
 from django.urls import reverse
 from ewilgs.models import Downlink
 from ewilgs.views import submit_frame
@@ -27,6 +28,8 @@ class TestSubmitFrames(TestCase):
         self.client = Client()
         self.user = Member.objects.create_user(username='user', email='user@email.com')
         self.user.set_password('delfispace4242')
+        permission = Permission.objects.get(codename='add_downlink')
+        self.user.user_permissions.add(permission)
         self.user.save()
 
     def tearDown(self):
