@@ -1,7 +1,7 @@
 {% extends "admin/base_site.html" %}
 {% load i18n %}
 
-{% block breadcrumbs %}<div class="breadcrumbs"><a href="{% url 'admin:index' %}">{% translate 'Home' %}</a></div>{% endblock %}
+{% block breadcrumbs %}<div class="breadcrumbs"><a href="{% url 'homepage' %}">{% translate 'Home' %}</a></div>{% endblock %}
 
 {% block nav-sidebar %}{% endblock %}
 
@@ -9,6 +9,6 @@
 
 <p>{% translate "Thanks for spending some quality time with the Da Vinci Satellite today." %}</p>
 
-<p><a href="{% url 'admin:index' %}">{% translate 'Log in again' %}</a></p>
+<p><a href="{% url 'login' %}">{% translate 'Log in again' %}</a></p>
 
 {% endblock %}

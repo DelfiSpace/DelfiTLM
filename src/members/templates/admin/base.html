@@ -30,7 +30,7 @@
     <!-- Header -->
     <div id="header">
         <div id="branding">
-        {% block branding %}{% endblock %}
+<!--        {% block branding %}{% endblock %}-->
         </div>
         {% block usertools %}
         {% if has_permission %}
@@ -62,7 +62,7 @@
     <!-- END Header -->
     {% block breadcrumbs %}
     <div class="breadcrumbs">
-    <a href="{% url 'admin:index' %}">{% translate 'Home' %}</a>
+    <a href="{% url 'homepage' %}">{% translate 'Home' %}</a>
     {% if title %} &rsaquo; {{ title }}{% endif %}
     </div>
     {% endblock %}
