@@ -89,10 +89,12 @@ def get_downlink_table(request):
 
 def get_uplink_table(request):
     """Queries and filters the uplink table"""
-    frames = Uplink.objects.all().order_by('frame_time')
-    telemetry_filter = TelemetryUplinkFilter(request.GET, queryset=frames)
-    return paginate_telemetry_table(request, telemetry_filter, "Uplink")
 
+    if request.user.has_perm('uplink.view_uplink'):
+        frames = Uplink.objects.all().order_by('frame_time')
+        telemetry_filter = TelemetryUplinkFilter(request.GET, queryset=frames)
+        return paginate_telemetry_table(request, telemetry_filter, "Uplink")
+    return 
 
 def get_tle_table(request):
     """Queries and filters the TLEs table"""

@@ -32,6 +32,11 @@ class Downlink(models.Model):
 
 class Uplink(models.Model):
     """Table for uplink data frames"""
+    class Meta:
+        permissions = (
+                    # ("view_uplink", "can view uplink data"),
+                    ("submit_uplink", "can submit uplink data"),
+                    )
     radio_amateur = models.ForeignKey(Member, to_field="username", db_column="radio_amateur", null=False, on_delete=DO_NOTHING)
     frame_time = models.DateTimeField(null=False, default=timezone.now, auto_now=False, auto_now_add=False)
     send_time = models.DateTimeField(null=False, default=timezone.now, auto_now=False, auto_now_add=False)

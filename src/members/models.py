@@ -7,11 +7,21 @@ from rest_framework_api_key.models import AbstractAPIKey
 class Member(AbstractUser):
     """Extended custom user from User"""
 
+    RADIO_AMATEUR = 'radio_amateur'
+    OPERATOR = 'operator'
+    LICENSED_OPERATOR = 'licensed_operator'
+
+    ROLE_CHOICES = (
+          (RADIO_AMATEUR, 'radio_amateur'),         # can view and submit Downlink data
+          (OPERATOR, 'operator'),                   # can view and submit Downlink data & can view Downlink data
+          (LICENSED_OPERATOR, 'licensed_operator'), # can view and submit both Uplink and Downlink data
+      )
+
     UUID = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     username = models.CharField(max_length=191, unique=True)
     email = models.EmailField(max_length=320, unique=True, null=False, blank=False)
     password = models.CharField(max_length=120, null=False, blank=False)
-    role = models.CharField(max_length=60, default="radio_amateur")
+    role = models.CharField(choices=ROLE_CHOICES, max_length=60, default="radio_amateur")
     is_active = models.BooleanField(default=True)
     date_joined = models.DateTimeField(null=True, blank=True)
     last_changed = models.DateTimeField(null=True, blank=True)
