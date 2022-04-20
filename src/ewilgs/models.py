@@ -17,29 +17,29 @@ class Satellite(models.Model):
 
 class Downlink(models.Model):
     """Table for downlink data frames"""
-    frame_time = models.DateTimeField(null=False, default=timezone.now, auto_now=False, auto_now_add=False)
-    send_time = models.DateTimeField(null=False, default=timezone.now, auto_now=False, auto_now_add=False)
-    receive_time = models.DateTimeField(null=False, default=timezone.now, auto_now=False, auto_now_add=False)
+    timestamp = models.DateTimeField(null=False, default=timezone.now, auto_now=False, auto_now_add=False)
     radio_amateur = models.ForeignKey(Member, to_field="username", db_column="radio_amateur", default=None, null=True, on_delete=DO_NOTHING)
-    version = models.TextField(null=True)
+    application = models.TextField(null=True, blank=True)
     processed = models.BooleanField(default=False, null=False)
-    frequency = models.FloatField(default=None, null=True)
-    qos = models.FloatField(default=None, null=True)
+    frequency = models.FloatField(null=True, blank=True)
+    qos = models.FloatField(null=True, blank=True)
     sat = models.ForeignKey(Satellite, to_field="sat", db_column="sat", null=True, on_delete=DO_NOTHING)
     frame = models.TextField(default=None, null=True)
     frame_binary = models.BinaryField(default=None, null=True)
+    metadata = models.JSONField(null=True, blank=True)
 
 
 class Uplink(models.Model):
     """Table for uplink data frames"""
     radio_amateur = models.ForeignKey(Member, to_field="username", db_column="radio_amateur", null=False, on_delete=DO_NOTHING)
-    frame_time = models.DateTimeField(null=False, default=timezone.now, auto_now=False, auto_now_add=False)
-    send_time = models.DateTimeField(null=False, default=timezone.now, auto_now=False, auto_now_add=False)
+    timestamp = models.DateTimeField(null=False, default=timezone.now, auto_now=False, auto_now_add=False)
+    application = models.TextField(null=True, blank=True)
     frequency = models.FloatField(null=False)
-    qos = models.FloatField(default=None, null=True)
+    qos = models.FloatField(null=True, blank=True)
     sat = models.ForeignKey(Satellite, to_field="sat", db_column="sat", null=False, on_delete=DO_NOTHING)
     frame = models.TextField(default=None, null=True)
     frame_binary = models.BinaryField(default=None, null=True)
+    metadata = models.JSONField(null=True, blank=True)
 
 
 class TLE(models.Model):

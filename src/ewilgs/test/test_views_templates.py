@@ -87,7 +87,7 @@ class TestSubmitFrames(TestCase):
 
         self.assertEquals(response.status_code, 201)
         self.assertEqual(len(Downlink.objects.all()), 1) # dowlink table has 1 entry
-        self.assertEqual(str(Downlink.objects.first().receive_time), "2021-12-19 02:20:14.959630+00:00")
+        self.assertEqual(str(Downlink.objects.first().timestamp), "2021-12-19 02:20:14.959630+00:00")
 
 
     def test_submit_with_non_utc_timestamps(self):
@@ -115,7 +115,7 @@ class TestSubmitFrames(TestCase):
 
         self.assertEquals(response.status_code, 201)
         self.assertEqual(len(Downlink.objects.all()), 1) # dowlink table has 1 entry
-        self.assertEqual(str(Downlink.objects.first().receive_time), "2022-02-06 16:49:05.421398+00:00")
+        self.assertEqual(str(Downlink.objects.first().timestamp), "2022-02-06 16:49:05.421398+00:00")
 
 
     def test_submit_bad_key(self):
