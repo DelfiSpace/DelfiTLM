@@ -3,7 +3,7 @@
 from django.test import TestCase
 from django.test import SimpleTestCase
 from django.urls import resolve, reverse
-from ewilgs.views import *
+from transmission.views import *
 
 
 # pylint: disable=all

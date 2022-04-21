@@ -17,7 +17,7 @@ class TestViews(SimpleTestCase):
         self.list_url = reverse('home')
         response = self.client.get(self.list_url)
         self.assertEquals(response.status_code, 200)
-        self.assertTemplateUsed(response, 'ewilgs/home/index.html')
+        self.assertTemplateUsed(response, 'transmission/home/index.html')
 
 class TestLogin(TestCase):
     def setUp(self):

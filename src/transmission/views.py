@@ -1,6 +1,7 @@
 """API request handling. Map requests to the corresponding HTMLs."""
 import json
 from json.decoder import JSONDecodeError
+import os
 from django.core.paginator import Paginator
 from django.http import HttpResponseBadRequest
 from django.http.response import JsonResponse
@@ -59,7 +60,7 @@ def add_dummy_downlink_frames(request):
     """Add frames to Downlink table. The input is a list of json objects embedded in to the
     HTTP request."""
 
-    with open('src/ewilgs/dummy_downlink.json', 'r', encoding="utf-8") as file:
+    with open("src/transmission/dummy_downlink.json", 'r', encoding="utf-8") as file:
         dummy_data = json.load(file)
         register_downlink_frames(dummy_data)
 
@@ -68,7 +69,7 @@ def add_dummy_downlink_frames(request):
 
 def home(request):
     """render index.html page"""
-    ren = render(request, "ewilgs/home/index.html")
+    ren = render(request, "transmission/home/index.html")
     return ren
 
 
@@ -81,20 +82,20 @@ def paginate_telemetry_table(request, telemetry_filter, table_name):
     page_obj = paginator.get_page(page_number)
 
     context = {'telemetry_filter': telemetry_filter, 'page_obj': page_obj, 'table_name': table_name}
-    return render(request, "ewilgs/table.html", context)
+    return render(request, "transmission/table.html", context)
 
 
 def get_downlink_table(request):
     """Queries and filters the downlink table"""
-    frames = Downlink.objects.all().order_by('frame_time')
+    frames = Downlink.objects.all().order_by('timestamp')
     telemetry_filter = TelemetryDownlinkFilter(request.GET, queryset=frames)
     return paginate_telemetry_table(request, telemetry_filter, "Downlink")
 
 
 def get_uplink_table(request):
     """Queries and filters the uplink table"""
-    if request.user.has_perm('ewilgs.view_uplink'):
-        frames = Uplink.objects.all().order_by('frame_time')
+    if request.user.has_perm('transmission.view_uplink'):
+        frames = Uplink.objects.all().order_by('timestamp')
         telemetry_filter = TelemetryUplinkFilter(request.GET, queryset=frames)
         return paginate_telemetry_table(request, telemetry_filter, "Uplink")
 
@@ -111,4 +112,4 @@ def get_tle_table(request):
     page_obj = paginator.get_page(page_number)
 
     context = {'telemetry_filter': tle_filter, 'page_obj': page_obj, 'table_name': 'TLE'}
-    return render(request, "ewilgs/tle_table.html", context)
+    return render(request, "transmission/tle_table.html", context)

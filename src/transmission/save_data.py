@@ -5,7 +5,7 @@ import json
 from django.utils.dateparse import parse_datetime
 from skyfield.api import load, EarthSatellite
 import pytz
-from ewilgs.models import Uplink, Downlink, TLE, Satellite
+from transmission.models import Uplink, Downlink, TLE, Satellite
 from members.models import Member
 
 
@@ -17,7 +17,10 @@ def register_downlink_frames(frames_to_add, username=None) -> None:
         to be added to the downlink table.
     """
     for frame in frames_to_add["frames"]:
-        add_frame(frame, username)
+        frame_entry = Downlink()
+        frame_entry = parse_frame(frame, frame_entry)
+        frame_entry.save()
+
 
 def add_frame(frame, identifier="downlink", username=None, application=None) -> None:
     """Adds one json frame to the downlink table"""
@@ -28,12 +31,12 @@ def add_frame(frame, identifier="downlink", username=None, application=None) -> 
         user = Member.objects.get(username=username)
 
         if identifier == "uplink":
-            if not user.has_perm("ewilgs.add_uplink"):
+            if not user.has_perm("transmission.add_uplink"):
                 return
             frame_entry = Uplink()
 
         elif identifier == "downlink":
-            if not user.has_perm("ewilgs.add_downlink"):
+            if not user.has_perm("transmission.add_downlink"):
                 return
             frame_entry = Downlink()
         else:
@@ -60,7 +63,7 @@ def parse_frame(frame, frame_entry):
         raise ValueError("Invalid frame, not an hexadecimal value.")
 
     # assign the frame HEX values
-    frame_entry.frame = frame["frame"]
+    frame_entry.frame = frame['frame']
 
     # check is a timestamp is attached
     if "timestamp" not in frame or frame["timestamp"] is None:

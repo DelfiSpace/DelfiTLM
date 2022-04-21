@@ -5,7 +5,7 @@ from .models import Downlink, Uplink, TLE
 
 class TelemetryDownlinkFilter(django_filters.FilterSet):
     """Filter downlink telemetry by frame date interval, frequency and qos ranges"""
-    frame_date = django_filters.DateFromToRangeFilter(field_name="frame_time",
+    frame_date = django_filters.DateFromToRangeFilter(field_name="timestamp",
         widget=forms.DateInput(
             attrs={
                 'id': 'datepicker',
@@ -22,7 +22,7 @@ class TelemetryDownlinkFilter(django_filters.FilterSet):
 
 class TelemetryUplinkFilter(django_filters.FilterSet):
     """Filter uplink telemetry by frame date interval, frequency and qos ranges"""
-    frame_date = django_filters.DateFromToRangeFilter(field_name="frame_time",
+    frame_date = django_filters.DateFromToRangeFilter(field_name="timestamp",
         widget=forms.DateInput(
             attrs={
                 'id': 'datepicker',

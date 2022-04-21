@@ -4,8 +4,8 @@ from django.test import SimpleTestCase, Client, TestCase, RequestFactory
 from rest_framework.test import force_authenticate
 from django.contrib.auth.models import Permission
 from django.urls import reverse
-from ewilgs.models import Downlink
-from ewilgs.views import submit_frame
+from transmission.models import Downlink
+from transmission.views import submit_frame
 
 from members.models import Member
 from members.views import generate_key
@@ -20,7 +20,7 @@ class TestViews(SimpleTestCase):
         self.list_url = reverse('home')
         response = self.client.get(self.list_url)
         self.assertEquals(response.status_code, 200)
-        self.assertTemplateUsed(response, 'ewilgs/home/index.html')
+        self.assertTemplateUsed(response, 'transmission/home/index.html')
 
 class TestSubmitFrames(TestCase):
     def setUp(self):

@@ -9,9 +9,9 @@
         <button type="button"><a href="{% url 'delfic3_home' %}">Delfi-C3</a></button>
         <button type="button"><a href="{% url 'delfin3xt_home' %}">Delfi-n3Xt</a></button>
         <button type="button"><a href="{% url 'delfipq_home' %}">Delfi-PQ</a></button>
-        <button type="button"><a href="{% url 'ewilgs_downlink' %}">Downlink Frames</a></button>
-        {% if perms.ewilgs.view_uplink %}
-        <button type="button"><a href="{% url 'ewilgs_uplink' %}">Uplink Frames</a></button>
+        <button type="button"><a href="{% url 'transmission_downlink' %}">Downlink Frames</a></button>
+        {% if perms.transmission.view_uplink %}
+        <button type="button"><a href="{% url 'transmission_uplink' %}">Uplink Frames</a></button>
         {% endif %}
         <br>
         <br>

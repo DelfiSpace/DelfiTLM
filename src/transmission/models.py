@@ -1,4 +1,4 @@
-"""EWILGS models for uplink and downlink data"""
+"""Models for uplink and downlink data"""
 from django.db import models
 from django.db.models.deletion import DO_NOTHING
 from django.utils import timezone

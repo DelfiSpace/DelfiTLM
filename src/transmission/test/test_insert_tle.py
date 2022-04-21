@@ -1,6 +1,6 @@
 from django.test import TestCase
-from ewilgs.models import TLE, Satellite
-from ewilgs.save_data import save_tle
+from transmission.models import TLE, Satellite
+from transmission.save_data import save_tle
 import datetime as dt
 import pytz
 
