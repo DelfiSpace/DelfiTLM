@@ -1,7 +1,6 @@
 """API request handling. Map requests to the corresponding HTMLs."""
 import json
 from json.decoder import JSONDecodeError
-import os
 from django.core.paginator import Paginator
 from django.http import HttpResponseBadRequest
 from django.http.response import JsonResponse

@@ -9,8 +9,8 @@ from transmission.models import Uplink, Downlink, TLE, Satellite
 from members.models import Member
 
 
-def register_downlink_frames(frames_to_add, username=None) -> None:
-    """Adds a list of json frames to the downlink table
+def register_downlink_frames(frames_to_add) -> None:
+    """Adds a list of json frames to the downlink table (dummy data)
 
     Args:
         input: a json containing a list of json object, each of them being a frame
