@@ -2,7 +2,8 @@
 import json
 from json.decoder import JSONDecodeError
 from django.core.paginator import Paginator
-from django.http import HttpResponseBadRequest
+from django.forms import ValidationError
+from django.core.exceptions import BadRequest
 from django.http.response import JsonResponse
 from django.shortcuts import render
 from rest_framework_api_key.permissions import HasAPIKey
@@ -10,7 +11,7 @@ from rest_framework.decorators import permission_classes
 from members.models import APIKey
 from .models import Uplink, Downlink, TLE
 from .filters import TelemetryDownlinkFilter, TelemetryUplinkFilter, TLEFilter
-from .save_data import register_downlink_frames, add_frame
+from .save_data import parse_frame, add_frame
 
 
 QUERY_ROW_LIMIT = 100
@@ -29,22 +30,35 @@ def submit_frame(request):
             # retrieve the user agent (if present, empty otherwise)
             user_agent = request.META.get('HTTP_USER_AGENT', '')
 
+            qualifier = 'downlink'
+
+            if 'HTTP_FRAME_TYPE' in request.META and request.META.get('HTTP_FRAME_TYPE', '') is not None:
+                qualifier = request.META.get('HTTP_FRAME_TYPE', '')
+
             # search for the user name matching the API key
             api_key_name = APIKey.objects.get_from_key(key)
             # retrieve the JSON frame just submitted
             frame_to_add = json.loads(request.body)
             # add the frame to the database
-            add_frame(frame_to_add, username=api_key_name, application=user_agent)
+            add_frame(frame_to_add, qualifier=qualifier, username=api_key_name,  application=user_agent)
             return JsonResponse({"result": "success", "message": ""}, status=201)
 
         except APIKey.DoesNotExist as e: #pylint:disable=C0103
             # catch a wrong API key
             return JsonResponse({"result": "failure", "message": str(e)}, status=401)
 
+        except BadRequest as e: #pylint:disable=C0103, W0612
+            # catch submission without right permission
+            return JsonResponse({"result": "failure", "message": str(e)}, status=401)
+
         except JSONDecodeError as e: #pylint:disable=C0103, W0612
             # catch an error in the JSON request
             message_text = "Invalid JSON structure"
             return JsonResponse({"result": "failure", "message": message_text}, status=400)
+
+        except ValidationError as e: #pylint:disable=C0103, W0612
+            # catch an error in the frame fromatting
+            return JsonResponse({"result": "failure", "message": str(e)}, status=400)
 
         except Exception as e:  #pylint:disable=C0103, W0703
             # catch other exceptions
@@ -61,7 +75,10 @@ def add_dummy_downlink_frames(request):
 
     with open("src/transmission/dummy_downlink.json", 'r', encoding="utf-8") as file:
         dummy_data = json.load(file)
-        register_downlink_frames(dummy_data)
+        for frame in dummy_data["frames"]:
+            frame_entry = Downlink()
+            frame_entry = parse_frame(frame, frame_entry)
+            frame_entry.save()
 
     return JsonResponse({"len": len(Downlink.objects.all())})
 

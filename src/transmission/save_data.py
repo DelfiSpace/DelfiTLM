@@ -2,6 +2,8 @@
 import re
 import copy
 import json
+from django.forms import ValidationError
+from django.core.exceptions import BadRequest
 from django.utils.dateparse import parse_datetime
 from skyfield.api import load, EarthSatellite
 import pytz
@@ -9,20 +11,7 @@ from transmission.models import Uplink, Downlink, TLE, Satellite
 from members.models import Member
 
 
-def register_downlink_frames(frames_to_add) -> None:
-    """Adds a list of json frames to the downlink table (dummy data)
-
-    Args:
-        input: a json containing a list of json object, each of them being a frame
-        to be added to the downlink table.
-    """
-    for frame in frames_to_add["frames"]:
-        frame_entry = Downlink()
-        frame_entry = parse_frame(frame, frame_entry)
-        frame_entry.save()
-
-
-def add_frame(frame, identifier="downlink", username=None, application=None) -> None:
+def add_frame(frame, qualifier="downlink", username=None, application=None) -> None:
     """Adds one json frame to the downlink table"""
 
     frame_entry = None
@@ -30,17 +19,17 @@ def add_frame(frame, identifier="downlink", username=None, application=None) -> 
     if username is not None:
         user = Member.objects.get(username=username)
 
-        if identifier == "uplink":
+        if qualifier == "uplink":
             if not user.has_perm("transmission.add_uplink"):
-                return
+                raise BadRequest()
             frame_entry = Uplink()
 
-        elif identifier == "downlink":
+        elif qualifier == "downlink":
             if not user.has_perm("transmission.add_downlink"):
-                return
+                raise BadRequest()
             frame_entry = Downlink()
         else:
-            return
+            raise ValueError("Invalid frame qualifier")
 
         frame_entry.radio_amateur = user
 
@@ -58,16 +47,16 @@ def parse_frame(frame, frame_entry):
     """Extract frame info from frame and stores it into frame_entry (database frame)"""
 
     # check if the frame exists and it is a HEX string
-    non_hex = re.match("[^0-9A-Fa-f]", frame["frame"])
-    if non_hex:
-        raise ValueError("Invalid frame, not an hexadecimal value.")
+    non_hex = re.match("^[A-Fa-f0-9]+$", frame["frame"])
+    if non_hex is None:
+        raise ValidationError("Invalid frame, not an hexadecimal value.")
 
     # assign the frame HEX values
     frame_entry.frame = frame['frame']
 
     # check is a timestamp is attached
     if "timestamp" not in frame or frame["timestamp"] is None:
-        raise ValueError("Invalid submission, no timestamp attached.")
+        raise ValidationError("Invalid submission, no timestamp attached.")
 
     # assign the timestamp
     frame_entry.timestamp = parse_datetime(frame["timestamp"]).astimezone(pytz.utc)
@@ -82,7 +71,8 @@ def parse_frame(frame, frame_entry):
 
     # assign sat, if present
     if "sat" in frame and frame["sat"] is not None:
-        frame_entry.sat = frame["sat"]
+        sat = Satellite.objects.get(sat=frame["sat"])
+        frame_entry.sat = sat
 
     # add metadata
     metadata = copy.deepcopy(frame)
