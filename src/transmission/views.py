@@ -4,6 +4,7 @@ from json.decoder import JSONDecodeError
 from django.core.paginator import Paginator
 from django.forms import ValidationError
 from django.core.exceptions import BadRequest
+from django.http import HttpResponseBadRequest
 from django.http.response import JsonResponse
 from django.shortcuts import render
 from rest_framework_api_key.permissions import HasAPIKey
@@ -17,7 +18,7 @@ from .save_data import parse_frame, add_frame
 QUERY_ROW_LIMIT = 100
 
 @permission_classes([HasAPIKey,])
-def submit_frame(request):
+def submit_frame(request): #pylint:disable=R0911
     """Add frames to Uplink/Downlink table. The input is a list of json objects embedded in to the
     HTTP request."""
 
@@ -32,7 +33,9 @@ def submit_frame(request):
 
             qualifier = 'downlink'
 
-            if 'HTTP_FRAME_TYPE' in request.META and request.META.get('HTTP_FRAME_TYPE', '') is not None:
+            if 'HTTP_FRAME_TYPE' in request.META and \
+                request.META.get('HTTP_FRAME_TYPE', '') is not None:
+
                 qualifier = request.META.get('HTTP_FRAME_TYPE', '')
 
             # search for the user name matching the API key
@@ -40,7 +43,7 @@ def submit_frame(request):
             # retrieve the JSON frame just submitted
             frame_to_add = json.loads(request.body)
             # add the frame to the database
-            add_frame(frame_to_add, qualifier=qualifier, username=api_key_name,  application=user_agent)
+            add_frame(frame_to_add, qualifier, username=api_key_name,  application=user_agent)
             return JsonResponse({"result": "success", "message": ""}, status=201)
 
         except APIKey.DoesNotExist as e: #pylint:disable=C0103
