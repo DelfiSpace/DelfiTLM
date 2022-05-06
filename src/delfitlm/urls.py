@@ -22,7 +22,7 @@ urlpatterns = [
     path('', include('delfic3.urls')),
     path('', include('delfin3xt.urls')),
     path('', include('delfipq.urls')),
-    path('', include('ewilgs.urls')),
+    path('', include('transmission.urls')),
     path('', include('members.urls')),
     path('', include('home.urls')),
 ]

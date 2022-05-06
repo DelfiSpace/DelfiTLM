@@ -28,9 +28,7 @@
               <tr style="text-align: left;">
 
                 <th>id</th>
-                <th>frame_time</th>
-                <th>send_time</th>
-                <th>receive_time</th>
+                <th>timestamp</th>
                 <th>radio_amateur</th>
                 <th>version</th>
                 <th>processed</th>
@@ -44,10 +42,8 @@
                 <tr>
             {% for frame in page_obj %}
             <td>{{ frame.id }}</td>
-            <td>{{ frame.frame_time}}</td>
-            <!-- <td>{{ frame.frame_time|upper}}</td> USE |upper to view the timestamp in full-->
-            <td>{{ frame.send_time}}</td>
-            <td>{{ frame.receive_time}}</td>
+            <td>{{ frame.timestamp}}</td>
+            <!-- <td>{{ frame.timestamp|upper}}</td> USE |upper to view the timestamp in full-->
             <td>{{ frame.radio_amateur}}</td>
             <td>{{ frame.version}}</td>
             <td>{{ frame.processed}}</td>
