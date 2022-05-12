@@ -24,6 +24,7 @@ services:
         volumes:
             - static_data:/vol:ro
             - certificates:/certs:ro
+            - logs:/var/log/nginx
         ports:
             - "80:8080"
             - "443:8443"
@@ -48,6 +49,9 @@ services:
             - "db"
         volumes:
             - pgadmin_persistent:/var/lib/pgadmin
+        networks:
+            crowdsec_test:
+                ipv4_address: 172.0.0.4
 
     crowdsec:
         image: crowdsecurity/crowdsec:v1.0.8
@@ -66,7 +70,7 @@ services:
             - crowdsec-config:/etc/crowdsec/
         networks:
             crowdsec_test:
-                ipv4_address: 172.0.0.4
+                ipv4_address: 172.0.0.5
     #metabase, because security is cool, but dashboards are cooler
     dashboard:
         #we're using a custom Dockerfile so that metabase pops with pre-configured dashboards
@@ -83,15 +87,13 @@ services:
             - crowdsec-db:/metabase-data/
         networks:
             crowdsec_test:
-                ipv4_address: 172.0.0.5
-
-
+                ipv4_address: 172.0.0.6
 
 volumes:
+    logs:
     static_data:
     certificates:
     pgadmin_persistent:
-    logs:
     crowdsec-db:
     crowdsec-config:
 
