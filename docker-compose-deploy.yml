@@ -54,7 +54,7 @@ services:
                 ipv4_address: 172.0.0.4
 
     crowdsec:
-        image: crowdsecurity/crowdsec:v1.0.8
+        image: crowdsecurity/crowdsec:v1.3.4
         restart: always
         environment:
             #this is the list of collections we want to install
@@ -65,7 +65,7 @@ services:
             - 'proxy'
         volumes:
             - ./crowdsec/acquis.yaml:/etc/crowdsec/acquis.yaml
-            - logs:/var/log/nginx
+            - logs:/var/log/nginx/:ro
             - crowdsec-db:/var/lib/crowdsec/data/
             - crowdsec-config:/etc/crowdsec/
         networks:

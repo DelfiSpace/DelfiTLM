@@ -63,6 +63,10 @@ To reset the container and remove the volumes run the `./reset_docker.sh` script
 
 Note: remove `--build` to skip building the container, will use the cached one (last build)
 
+# Crowdsec
+
+Metabase runs on http://127.0.0.5:3000/. The default credentials are `crowdsec@crowdsec.net` and `!!Cr0wdS3c_M3t4b4s3??`.
+
 # Testing
 
 1. To run the unit tests execute `python manage.py test` from within the `src` folder
