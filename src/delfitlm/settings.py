@@ -67,13 +67,14 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'django_filters',
+    'channels',
     'rest_framework',
     'rest_framework_api_key',
     'davinci',
     'delfic3',
     'delfin3xt',
     'delfipq',
-    'ewilgs',
+    'transmission',
     'members'
 ]
 
@@ -106,7 +107,7 @@ TEMPLATES = [
                  os.path.join(BASE_DIR, 'delfipq/templates'),
                  os.path.join(BASE_DIR, 'davinci/templates'),
                  os.path.join(BASE_DIR, 'members/templates'),
-                 os.path.join(BASE_DIR, 'ewilgs/templates'),
+                 os.path.join(BASE_DIR, 'transmission/templates'),
                  os.path.join(BASE_DIR, 'home/templates')],
         'APP_DIRS': True,
         'OPTIONS': {
@@ -120,7 +121,7 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = 'delfitlm.wsgi.application'
+ASGI_APPLICATION = 'delfitlm.asgi.application'
 
 
 # Database

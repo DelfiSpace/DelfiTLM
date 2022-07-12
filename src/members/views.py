@@ -8,7 +8,7 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import update_session_auth_hash
 from django.core.mail import send_mail
-from django.http import HttpResponse
+from django.http import HttpResponse, HttpResponseBadRequest
 from django.contrib.sites.shortcuts import get_current_site
 from django.utils.encoding import force_bytes, force_text
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
@@ -72,7 +72,7 @@ def activate(request, uidb64, token):
                 )
         return HttpResponse('Thank you for your email confirmation. \
                             Now you can login your account.')
-    return HttpResponse('Activation link is invalid!')
+    return HttpResponseBadRequest('Activation link is invalid!')
 
 
 def login_member(request):

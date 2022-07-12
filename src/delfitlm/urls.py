@@ -15,7 +15,6 @@ Including another URLconf
 """
 from django.urls import path, include
 from django.contrib import admin
-from django.conf.urls import url
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -23,7 +22,7 @@ urlpatterns = [
     path('', include('delfic3.urls')),
     path('', include('delfin3xt.urls')),
     path('', include('delfipq.urls')),
-    path('', include('ewilgs.urls')),
+    path('', include('transmission.urls')),
     path('', include('members.urls')),
     path('', include('home.urls')),
 ]

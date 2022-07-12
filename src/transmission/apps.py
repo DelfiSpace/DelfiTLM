@@ -3,6 +3,6 @@
 from django.apps import AppConfig
 
 # pylint: disable=all
-class EwilgsConfig(AppConfig):
+class TransmissionConfig(AppConfig):
     default_auto_field = 'django.db.models.BigAutoField'
-    name = 'ewilgs'
+    name = 'transmission'
