@@ -1,21 +1,29 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Registration Page</title>
-</head>
+{% extends "admin/base.html" %}
+{% load i18n static %}
+{% block extrastyle %}{{ block.super }}<link rel="stylesheet" type="text/css" href="{% static "admin/css/forms.css" %}">{% endblock %}
+
+{% block breadcrumbs %}
+<div class="breadcrumbs">
+    <a href="{% url 'homepage' %}">{% translate 'Home' %}</a>
+    &rsaquo; {% translate 'Register' %}
+</div>
+{% endblock %}
+{% block nav-sidebar %}{% endblock %}
+
+{% block content %}
 <body>
     <h1>Register</h1>
-    <form class="post-form" method="POST">
-        {% csrf_token %}
-          {% for field in form %}
-    <div class="fieldWrapper">
-        {{ field.errors }}
-        {{ field.label_tag }}
-        {{ field }}
-    </div>
+    <form class="post-form" method="POST">{% csrf_token %}
+        <fieldset class="module aligned wide">
+        {% for field in form %}
+            <div class="form-row">
+                {{ field.errors }}
+                {{ field.label_tag }}
+                {{ field }}
+            </div>
         {% endfor %}
         <input type="submit" value="Register">
+    </fieldset>
     </form>
     <ul>
         <li> The username can be 150 characters or fewer. Letters, digits and @/./+/-/_ only.</li>
@@ -24,14 +32,14 @@
         <li> Your password cannot be a commonly used password.</li>
         <li> Your password cannot be entirely numeric.</li>
     </ul>
-    {% if messages %}
+    <!-- {% if messages %}
     <ul class="messages">
         {% for message in messages %}
         <li {% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
         {% endfor %}
-    </ul>
+    </ul> -->
     {% endif %}
-    <h5>Do you already have an account?</h5>
-    <button type="button"><a href="{% url 'login' %}">Login Existing Account</a></button>
-</body>
-</html>
+    <h5>Already have an account?</h5>
+    <a href="{% url 'login' %}"><input type="submit" value="Login"></input></a>
+
+{% endblock %}

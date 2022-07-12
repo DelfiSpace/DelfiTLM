@@ -1,24 +1,34 @@
-<!DOCTYPE html>
-<html>
-    <head>
-        <title>Profile Page</title>
-    </head>
-    <body>
-        {% if user.is_authenticated %}
-        <h1>Welcome {{ user.username }}!</h1>
-        {% endif %}
-        <button type="button"><a href="{% url 'homepage' %}">Missions Dashboard</a></button>
-        <br>
-        <br>
-        <button type="button"><a href="{% url 'change_password' %}">Change Password</a></button>
-        <button type="button"><a href="{% url 'get_new_key' %}">Create an API key</a></button>
-        <button type="button"><a href="{% url 'logout' %}">Logout</a></button>
-        <br>
-        {% if key is not null %}
-        <p>API KEY:  {{ key }}</p>
-        <p>Please save this key in a secure place, it will not be displayed on this page in the future.</p>
-        <p>If lost, a new key needs to be generated.</p>
-        {% endif %}
+{% extends "admin/base.html" %}
+{% load i18n static %}
 
-    </body>
-</html>
+{% block extrastyle %}{{ block.super }}<link rel="stylesheet" type="text/css" href="{% static "admin/css/login.css" %}">
+{{ form.media }}
+{% endblock %}
+
+{% block breadcrumbs %}
+<div class="breadcrumbs">
+    <a href="{% url 'homepage' %}">{% translate 'Home' %}</a>
+    &rsaquo; {% translate 'Profile' %}
+</div>
+{% endblock %}
+
+{% block nav-sidebar %}{% endblock %}
+
+{% block content %}
+{% if user.is_authenticated %}
+<h1>Welcome {{ user.username }}!</h1>
+{% endif %}
+<br>
+
+<a href="{% url 'change_password' %}"><input type="submit" value="Change Password"></input></a>
+<a href="{% url 'get_new_key' %}"><input type="submit" value="Create an API key"></input></a>
+<a href="{% url 'logout' %}"><input type="submit" value="Logout"></input></a>
+<br>
+<br>
+{% if key is not null %}
+<p>API KEY:  {{ key }}</p>
+<p>Please save this key in a secure place, it will not be displayed on this page in the future.</p>
+<p>If lost, a new key needs to be generated.</p>
+{% endif %}
+
+{% endblock %}

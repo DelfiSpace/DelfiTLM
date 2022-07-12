@@ -1,28 +1,28 @@
-<!DOCTYPE html>
-<html>
-    <head>
-        <title>EWI Ground Station Home Page</title>
-    </head>
-    <body>
-        <h1>Select your mission:</h1>
-        <button type="button"><a href="{% url 'davinci_home' %}">DaVinci Satellite</a></button>
-        <button type="button"><a href="{% url 'delfic3_home' %}">Delfi-C3</a></button>
-        <button type="button"><a href="{% url 'delfin3xt_home' %}">Delfi-n3Xt</a></button>
-        <button type="button"><a href="{% url 'delfipq_home' %}">Delfi-PQ</a></button>
-        <button type="button"><a href="{% url 'transmission_downlink' %}">Downlink Frames</a></button>
-        {% if perms.transmission.view_uplink %}
-        <button type="button"><a href="{% url 'transmission_uplink' %}">Uplink Frames</a></button>
-        {% endif %}
-        <br>
-        <br>
+{% extends "admin/base.html" %}
+{% load i18n static %}
 
-        {% if user.is_authenticated %}
-        <button type="button"><a href="{% url 'profile' %}">Profile</a></button>
-        {% else %}
-        <button type="button"><a href="{% url 'login' %}">Login</a></button>
-        <button type="button"><a href="{% url 'register' %}">Register</a></button>
-        {% endif %}
+{% block nav-sidebar %}{% endblock %}
 
+{% block content %}
 
-    </body>
-</html>
+<a href="{% url 'delfic3_home' %}"><input type="submit" value="Delfi-C3"></input></a>
+<a href="{% url 'delfin3xt_home' %}"><input type="submit" value="Delfi-n3Xt"></input></a>
+<a href="{% url 'delfipq_home' %}"><input type="submit" value="Delfi-PQ"></input></a>
+<a href="{% url 'davinci_home' %}"><input type="submit" value="Da Vinci Satellite"></input></a>
+
+<a href="{% url 'transmission_downlink' %}"><input type="submit" value="Downlink Frames"></input></a>
+{% if perms.transmission.view_uplink %}
+<a href="{% url 'transmission_uplink' %}"><input type="submit" value="Uplink Frames"></input></a>
+
+{% endif %}
+<br>
+<br>
+
+{% if user.is_authenticated %}
+<a href="{% url 'profile' %}"><input type="submit" value="Profile"></input></a>
+<a href="{% url 'logout' %}"><input type="submit" value="Logout"></input></a>
+{% else %}
+<a href="{% url 'login' %}"><input type="submit" value="Login"></input></a>
+<a href="{% url 'register' %}"><input type="submit" value="Register"></input></a>
+{% endif %}
+{% endblock %}

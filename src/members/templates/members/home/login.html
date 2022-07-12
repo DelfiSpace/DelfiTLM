@@ -1,35 +1,42 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Login Page</title>
-</head>
-<body>
-    <h1>Login</h1>
-    <form class="post-form" method="POST">
-        {% csrf_token %}
-        {% for field in form %}
-    <div class="fieldWrapper">
-        {{ field.errors }}
-        {{ field.label_tag }}
-        {{ field }}
-    </div>
-{% endfor %}
-        <input type="submit" value="Login">
-    </form>
-    {% if messages %}
-    <ul class="messages">
-        {% for message in messages %}
-        <li {% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
-        {% endfor %}
-    </ul>
-    {% endif %}
+{% extends "admin/base.html" %}
+{% load i18n static %}
+{% block extrastyle %}{{ block.super }}<link rel="stylesheet" type="text/css" href="{% static "admin/css/forms.css" %}">{% endblock %}
+{% block breadcrumbs %}
+<div class="breadcrumbs">
+    <a href="{% url 'homepage' %}">{% translate 'Home' %}</a>
+    &rsaquo; {% translate 'Login' %}
+</div>
+{% endblock %}
 
-    <h5>You do not have an account?</h5>
-        <button type="button"><a href="{% url 'register' %}">Register New Account</a></button>
+{% block nav-sidebar %}{% endblock %}
 
-    <h5>Forgot your password?</h5>
-    <button type="button"><a href="{% url 'password_reset' %}">Reset Password</a></button>
+{% block content %}
 
-</body>
-</html>
+<h1>Login</h1>
+<form class="post-form" method="POST">{% csrf_token %}
+    <fieldset class="module aligned wide">
+    {% for field in form %}
+        <div class="form-row">
+            {{ field.errors }}
+            {{ field.label_tag }}
+            {{ field }}
+        </div>
+    {% endfor %}
+    <input type="submit" value="Login">
+</fieldset>
+</form>
+<!-- {% if messages %}
+<ul class="messages">
+    {% for message in messages %}
+    <li {% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+    {% endfor %}
+</ul>
+{% endif %} -->
+
+<h5>Don't have an account??</h5>
+    <a href="{% url 'register' %}"><input type="submit" value="Register"></input></a>
+
+<h5>Forgot your username or password?</h5>
+<a href="{% url 'password_reset' %}"><input type="submit" value="Reset Password"></input></a>
+
+{% endblock %}

@@ -48,9 +48,10 @@ def register(request):
                 recipient_list = [to_email],
                 fail_silently=True,
                 )
-            return HttpResponse('Please confirm your email address to complete the registration')
-
-        messages.error(request, "Unsuccessful registration. Invalid information.")
+            messages.info(request, "Please confirm your email address to complete the registration")
+        else:
+            messages.error(request, "Unsuccessful registration")
+            return redirect("register")
 
     return render(request, "members/set/register.html", {'form': form})
 
@@ -92,7 +93,7 @@ def login_member(request):
             )
 
             if member is not None and member.verified is False:
-                messages.info(request, "User not verified")
+                messages.error(request, "User not verified")
                 return render(request, "members/home/login.html", {'form': form})
 
             if member is not None and member.is_active is True:
@@ -102,7 +103,7 @@ def login_member(request):
                     )
                 return render(request, "members/home/profile.html")
 
-        messages.info(request, "Invalid username or password")
+        messages.error(request, "Invalid username or password")
 
     return render(request, "members/home/login.html", { 'form': form })
 
@@ -160,5 +161,3 @@ def change_password(request):
         messages.info(request, "Invalid password")
 
     return render(request, "members/set/change_password.html", {'form': form })
-
-
