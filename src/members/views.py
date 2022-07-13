@@ -8,7 +8,6 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import update_session_auth_hash
 from django.core.mail import send_mail
-from django.http import HttpResponse, HttpResponseBadRequest
 from django.contrib.sites.shortcuts import get_current_site
 from django.utils.encoding import force_bytes, force_text
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
@@ -49,9 +48,9 @@ def register(request):
                 fail_silently=True,
                 )
             messages.info(request, "Please confirm your email address to complete the registration")
+            return redirect("homepage")
         else:
             messages.error(request, "Unsuccessful registration")
-            return redirect("register")
 
     return render(request, "members/set/register.html", {'form': form})
 
@@ -71,9 +70,11 @@ def activate(request, uidb64, token):
                     date_joined=timezone.now(),
                     last_login=timezone.now()
                 )
-        return HttpResponse('Thank you for your email confirmation. \
-                            Now you can login your account.')
-    return HttpResponseBadRequest('Activation link is invalid!')
+        messages.info(request, "Thank you for your email confirmation. \
+                            Now you can login into your account.")
+    else:
+        messages.error(request, 'Activation link is invalid!')
+    return render(request, "home/index.html")
 
 
 def login_member(request):
@@ -93,7 +94,7 @@ def login_member(request):
             )
 
             if member is not None and member.verified is False:
-                messages.error(request, "User not verified")
+                messages.error(request, "Email not verified")
                 return render(request, "members/home/login.html", {'form': form})
 
             if member is not None and member.is_active is True:
@@ -156,8 +157,9 @@ def change_password(request):
             Member.objects.filter(username=user.username).update(
                         last_changed=timezone.now()
                     )
+            messages.info(request, "Password has been changed successfully")
             return redirect('profile')
 
-        messages.info(request, "Invalid password")
+        messages.error(request, "Invalid password")
 
     return render(request, "members/set/change_password.html", {'form': form })

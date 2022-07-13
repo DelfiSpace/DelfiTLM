@@ -10,15 +10,6 @@ import django
 
 # pylint: disable=all
 
-class TestViews(SimpleTestCase):
-
-    def test_index(self):
-        self.client = Client()
-        self.list_url = reverse('home')
-        response = self.client.get(self.list_url)
-        self.assertEquals(response.status_code, 200)
-        self.assertTemplateUsed(response, 'transmission/home/index.html')
-
 class TestLogin(TestCase):
     def setUp(self):
         self.client = Client()
@@ -140,7 +131,7 @@ class TestRegister(TestCase):
                                                           'email': 'test2@email.com',
                                                           'password1': 'delfispace4242',
                                                           'password2': 'delfispace4242'})
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, 302)
         # self.assertTemplateUsed(response, 'members/home/profile.html')
         self.assertTemplateUsed(response, 'members/set/register_email_verification.html') #when creating an account we receive an e-mail for verification
 
@@ -155,7 +146,7 @@ class TestRegister(TestCase):
                                                           'password1': 'delfispace4242',
                                                           'password2': 'delfispace4242'})
         messages = list(response.context['messages'])
-        self.assertEqual(str(messages[0]), 'Unsuccessful registration. Invalid information.')
+        self.assertEqual(str(messages[0]), 'Unsuccessful registration')
         self.assertTemplateUsed(response, 'members/set/register.html')
 
     def test_register_invalid_email(self):
@@ -337,7 +328,7 @@ class TestAccountVerification(TestCase):
             'username': username,
         }
         response = self.client.post(reverse('register'), payload)
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, 302)
 
         # Get token from email
         # members/activate/
@@ -349,26 +340,18 @@ class TestAccountVerification(TestCase):
         token = match.group(2)
 
         response = self.client.post(reverse('activate', args=[uid, token]))
+        messages = list(response.context['messages'])
+        self.assertEqual(str(messages[0]), 'Please confirm your email address to complete the registration')
+
         self.assertEqual(response.status_code, 200)
 
-
-
-    def test_verify_email_invalid_link(self):
-        # Verify email address
-        username = 'userTest'
-        payload = {
-            'email': 'test@example.com',
-            'password1': 'TestpassUltra1',
-            'password2': 'TestpassUltra1',
-            'username': username,
-        }
-        response = self.client.post(reverse('register'), payload)
-        self.assertEqual(response.status_code, 200)
-
-        # Get token from email
+        # Invalid link
         uid = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
         token = "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
 
         response = self.client.post(reverse('activate', args=[uid, token]))
-        self.assertEqual(response.status_code, 400)
+        messages = list(response.context['messages'])
+        self.assertTrue(len(messages)>0)
+        self.assertEqual(str(messages[0]), 'Activation link is invalid!')
+        self.assertEqual(response.status_code, 200)
 
