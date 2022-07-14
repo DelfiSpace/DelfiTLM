@@ -20,7 +20,7 @@ crossorigin="anonymous">
 {% endif %}
 
     {% if user.is_authenticated %}
-        <a href="{% url 'profile' %}">{% translate 'Account' %}</a>
+        <a href="{% url 'account' %}">{% translate 'Account' %}</a>
         <!-- <a href="{% url 'logout' %}">{% translate 'Logout' %}</a> -->
         {% else %}
         <a href="{% url 'login' %}">{% translate 'Login' %}</a>
@@ -82,7 +82,7 @@ justify-content: center;">
             <!-- <p class="card-text">Intro...</p> -->
             <br>
             <a href="https://davincisatellite.nl/?page_id=937&lang=en"><input type="submit" value="About"></input></a>
-            <!-- <a href="{% url 'davinci_home' %}"><input type="submit" value="Dashboard"></input></a> -->
+            <a href="{% url 'davinci_home' %}"><input type="submit" value="Dashboard"></input></a>
         </div>
       </div>
 
