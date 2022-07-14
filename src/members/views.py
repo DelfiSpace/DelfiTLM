@@ -49,8 +49,8 @@ def register(request):
                 )
             messages.info(request, "Please confirm your email address to complete the registration")
             return redirect("homepage")
-        else:
-            messages.error(request, "Unsuccessful registration")
+
+        messages.error(request, "Unsuccessful registration")
 
     return render(request, "members/set/register.html", {'form': form})
 

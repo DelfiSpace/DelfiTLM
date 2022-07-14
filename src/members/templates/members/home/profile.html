@@ -5,10 +5,14 @@
 {{ form.media }}
 {% endblock %}
 
+{% block usertools %}
+<a href="{% url 'logout' %}">{% translate 'Logout' %}</input></a>
+{% endblock %}
+
 {% block breadcrumbs %}
 <div class="breadcrumbs">
     <a href="{% url 'homepage' %}">{% translate 'Home' %}</a>
-    &rsaquo; {% translate 'Profile' %}
+    &rsaquo; {% translate 'Account' %}
 </div>
 {% endblock %}
 
@@ -22,7 +26,6 @@
 
 <a href="{% url 'change_password' %}"><input type="submit" value="Change Password"></input></a>
 <a href="{% url 'get_new_key' %}"><input type="submit" value="Create an API key"></input></a>
-<a href="{% url 'logout' %}"><input type="submit" value="Logout"></input></a>
 <br>
 <br>
 {% if key is not null %}
