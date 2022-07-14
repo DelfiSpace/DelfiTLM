@@ -1,0 +1,8 @@
+{% autoescape off %}
+Hello,
+
+Thank you for joining the DelfiTLM portal: here you can submit telemetry for all the Delfi Space satellites.
+
+Please click the following link to confirm your registration: {{ protocol }}://{{ domain }}{% url 'activate' uidb64=uid token=token %}
+
+{% endautoescape %}

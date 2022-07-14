@@ -1,7 +1,7 @@
 """Customized forms for view/html files"""
 
 from django import forms
-from django.contrib.auth.forms import UserCreationForm, PasswordChangeForm
+from django.contrib.auth.forms import UserCreationForm, PasswordResetForm, PasswordChangeForm
 from .models import Member
 
 class RegisterForm(UserCreationForm):
@@ -31,6 +31,13 @@ class LoginForm(forms.Form):
 
 class ChangePasswordForm(PasswordChangeForm):
     """Change password form"""
+    class Meta:
+        """Meta class to specify db model"""
+        model = Member
+
+
+class ForgotPasswordForm(PasswordResetForm):
+    """reset password form"""
     class Meta:
         """Meta class to specify db model"""
         model = Member

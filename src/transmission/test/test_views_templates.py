@@ -13,14 +13,6 @@ from members.views import generate_key
 
 # pylint: disable=all
 
-class TestViews(SimpleTestCase):
-
-    def test_index(self):
-        self.client = Client()
-        self.list_url = reverse('home')
-        response = self.client.get(self.list_url)
-        self.assertEquals(response.status_code, 200)
-        self.assertTemplateUsed(response, 'transmission/home/index.html')
 
 class TestSubmitFrames(TestCase):
     def setUp(self):
