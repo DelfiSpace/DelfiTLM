@@ -1,0 +1,37 @@
+{% extends "admin/base.html" %}
+{% load i18n static %}
+
+{% block extrastyle %}{{ block.super }}<link rel="stylesheet" type="text/css" href="{% static "admin/css/login.css" %}">
+{{ form.media }}
+{% endblock %}
+
+{% block usertools %}
+<a href="{% url 'logout' %}">{% translate 'Logout' %}</input></a>
+{% endblock %}
+
+{% block breadcrumbs %}
+<div class="breadcrumbs">
+    <a href="{% url 'homepage' %}">{% translate 'Home' %}</a>
+    &rsaquo; {% translate 'Account' %}
+</div>
+{% endblock %}
+
+{% block nav-sidebar %}{% endblock %}
+
+{% block content %}
+{% if user.is_authenticated %}
+<h1>Hello {{ user.username }}!</h1>
+{% endif %}
+<br>
+
+<a href="{% url 'change_password' %}"><input type="submit" value="Change Password"></input></a>
+<a href="{% url 'get_new_key' %}"><input type="submit" value="Create an API key"></input></a>
+<br>
+<br>
+{% if key is not null %}
+<p>API KEY:  {{ key }}</p>
+<p>Please save this key in a secure place, it will not be displayed on this page in the future.</p>
+<p>If lost, a new key needs to be generated.</p>
+{% endif %}
+
+{% endblock %}

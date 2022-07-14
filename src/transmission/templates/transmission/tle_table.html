@@ -1,5 +1,15 @@
-<!DOCTYPE html>
-<html>
+{% extends "admin/base.html" %}
+{% load i18n static %}
+{% block breadcrumbs %}
+<div class="breadcrumbs">
+    <a href="{% url 'homepage' %}">{% translate 'Home' %}</a>
+    &rsaquo; {% translate 'table_name' %}
+</div>
+{% endblock %}
+
+{% block nav-sidebar %}{% endblock %}
+
+{% block content %}
     <head>
         <title>{{table_name}}</title>
     <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
@@ -20,7 +30,8 @@
             } );
         </script>
 
-        <button type="submit">Search</button>
+        <input type="submit" value="Search"></input>
+
         </form>
         <table border="1" class="dataframe">
             <thead>
@@ -67,5 +78,4 @@
         <table id="table" border="1" class="dataframe">
           </table>
 
-</html>
-
+          {% endblock %}

@@ -1,16 +1,27 @@
 """API urls"""
 from django.urls import path
 
+from django.contrib.auth import views as auth_views
 from . import views
 
 urlpatterns = [
-    path('members/profile/', views.profile, name='profile'),
-    path('members/register/', views.register, name='register'),
-    path('members/login/', views.login_member, name='login'),
-    path('members/change/', views.change_password, name='change_password'),
-    path('members/reset/', views.reset_password, name='reset_password'),
-    path('members/logout/', views.logout_member, name='logout'),
-    path('members/key/', views.generate_key, name='generate_key'),
-    path('members/newkey/', views.get_new_key, name='get_new_key'),
-    path('members/activate/<uidb64>/<token>/', views.activate, name='activate')
+    path('account/', views.account, name='account'),
+    path('register/', views.register, name='register'),
+    path('login/', views.login_member, name='login'),
+    path('logout/', views.logout_member, name='logout'),
+    path('change_password/', views.change_password, name='change_password'),
+
+    path('key/', views.generate_key, name='generate_key'),
+    path('newkey/', views.get_new_key, name='get_new_key'),
+    path('activate/<uidb64>/<token>/', views.activate, name='activate'),
+
+    path('password_reset/', views.password_reset_request, name='password_reset'),
+    path('reset/<uidb64>/<token>/',
+        auth_views.PasswordResetConfirmView.as_view(),
+        name='password_reset_confirm'
+        ),
+    path('reset/done/',
+         auth_views.PasswordResetCompleteView.as_view(),
+         name='password_reset_complete'
+         ),
 ]
