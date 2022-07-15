@@ -5,7 +5,8 @@ import json
 from datetime import datetime, timedelta
 # pylint: disable=all
 
-cookieAuth = open("src/tokens/satnogs_token.txt", "r")
+with open("src/tokens/satnogs_token.txt", "r") as file:
+	cookieAuth = file.read()
 
 path = "https://db.satnogs.org/api/telemetry/"
 headers = {'accept': 'application/json', 'Authorization': 'Token ' + cookieAuth}

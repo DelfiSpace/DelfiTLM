@@ -61,7 +61,8 @@ telemetryFields = ["TotalUptime",
 
 bucket = "delfi_pq"
 org = "Delfi Space"
-token = open("src/tokens/influxdb_token.txt", "r")
+with open("src/tokens/influxdb_token.txt", "r") as file:
+    token = file.read()
 
 client = InfluxDBClient(url="http://localhost:8086", token=token, org=org)
 
@@ -113,7 +114,7 @@ def process_frame(parser, frame):
                 # query = "select * from delfi_pq"
                 # print(query_api.query(query))
 
-parser = XTCEParser("Delfi-PQ.xml", "Radio")
+parser = XTCEParser("src/delfipq/Delfi-PQ.xml", "Radio")
 
 
 # open the data file
