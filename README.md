@@ -35,6 +35,8 @@
 
 9. Setup InfluxDB at http://localhost:8086/. Create an organization called "Delfi Space" and a bucket. Afterwards, go to Load Data > API tokens from the side menu and paste the admin token to `src/tokens/influxdb_token.txt` (or create a new token and add that one). Note that the tokens folder is ignored by git.
 
+10. Setup a Grafana account at http://localhost:3000/ and add an InfluxDB datasource with the following config:
+![image](https://user-images.githubusercontent.com/43474282/179267387-554aeb2e-b789-408f-ad24-74f1afd281e2.png)
 
 # Setup (Run via docker)
 
