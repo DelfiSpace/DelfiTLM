@@ -137,3 +137,9 @@ data/
 
 # Visual Studio Code
 .vscode/
+
+# auth tokens
+tokens/
+
+# xml files
+*.xml

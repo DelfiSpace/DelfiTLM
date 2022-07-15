@@ -2,6 +2,10 @@
 # this is not used for deployment
 version: '3.7'
 
+networks:
+  monitoring:
+    driver: bridge
+
 services:
   db:
     image: postgres
@@ -12,7 +16,7 @@ services:
       - POSTGRES_USER=${POSTGRES_DB:-postgres}
       - POSTGRES_PASSWORD=${POSTGRES_DB:-postgres}
     restart: always
-  
+
   app:
     build:
         context: .
@@ -26,5 +30,40 @@ services:
     depends_on:
       - "db"
 
+  influxdb:
+    image: influxdb:latest
+    container_name: influxdb_container
+    ports:
+      - 8086:8086
+    volumes:
+      - influxdb-storage:/var/lib/influxdb
+    environment:
+      # - INFLUXDB_ADMIN_USER=admin
+      # - INFLUXDB_ADMIN_PASSWORD=adminadmin
+      - INFLUXDB_HTTP_FLUX_ENABLED=true
+    networks:
+      - monitoring
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana_container
+    ports:
+      - '3000:3000'
+    volumes:
+      - grafana-storage:/var/lib/grafana
+      - ./grafana/provisioning/:/etc/grafana/provisioning/
+      - ./grafana/dashboards/:/var/lib/grafana/dashboards/
+    depends_on:
+      - influxdb
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      # - GF_AUTH_ANONYMOUS_ENABLED=true
+      # - GF_AUTH_DISABLE_LOGIN_FORM=true
+    networks:
+      - monitoring
+
 volumes:
     db_data:
+    influxdb-storage:
+    grafana-storage:

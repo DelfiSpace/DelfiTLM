@@ -9,8 +9,6 @@
 
 # Setup (Run locally/on host machine)
 
-This method
-
 1. Create a python environment (one time instruction):
 `python3 -m venv env`
 
@@ -34,6 +32,9 @@ This method
 
 8. To run pylint:
 `find src -name "*.py" | xargs pylint`
+
+9. Setup InfluxDB at http://localhost:8086/. Create an organization called "Delfi Space" and a bucket. Afterwards, go to Load Data > API tokens from the side menu and paste the admin token to `src/tokens/influxdb_token.txt` (or create a new token and add that one). Note that the tokens folder is ignored by git.
+
 
 # Setup (Run via docker)
 
