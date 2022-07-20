@@ -29,6 +29,7 @@ services:
         depends_on:
             - app
             - pgadmin
+            - grafana
         restart: always
 
     pgadmin:

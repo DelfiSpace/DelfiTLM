@@ -14,6 +14,7 @@ daphne==3.0.2
 Django==3.2.12
 django-filter==21.1
 django-pandas==0.6.6
+django-revproxy==0.10.0
 django-tables2==2.4.1
 djangorestframework==3.13.1
 djangorestframework-api-key==2.1.0

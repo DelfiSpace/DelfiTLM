@@ -1,3 +1,8 @@
+
+upstream grafana {
+  server localhost:3000;
+}
+
 server {
     listen 8080;
 
@@ -16,4 +21,11 @@ server {
         proxy_pass http://pgadmin/;
         proxy_redirect off;
     }
+
+    location /grafana/ {
+        rewrite  ^/grafana/(.*)  /$1 break;
+        proxy_set_header Host ${MY_HOST};
+        proxy_pass http://grafana;
+    }
+
 }
