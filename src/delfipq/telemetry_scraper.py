@@ -46,6 +46,10 @@ def commit_frame(write_api, query_api, satellite: str, tlm: dict):
     bucket = satellite + "_raw_data"
     tags = {}
 
+    time_format = '%Y-%m-%dT%H:%M:%SZ'
+
+    time = datetime.strptime(tlm['timestamp'], time_format)
+
     db_fields = {
         "measurement": satellite + "_raw_data",
         "time": tlm["timestamp"],
@@ -58,18 +62,16 @@ def commit_frame(write_api, query_api, satellite: str, tlm: dict):
     for field in fields:
         db_fields["fields"][field] = tlm[field]
 
+    time_range_lower_bound = (time - timedelta(seconds=1)).strftime(time_format)
+    time_range_upper_bound = (time + timedelta(seconds=1)).strftime(time_format)
     # check if frame already exists
-    query = f'''from(bucket: {bucket})
-    |> range(start: {tlm["timestamp"]}, stop: {tlm["timestamp"]})
-    |> filter(fn: (r) => r["_measurement"] == {bucket})
-    |> filter(fn: (r) => r["_field"] == "frame")
-    |> filter(fn: (r) => r["_value"] == {tlm["frame"]})
+    query = f'''from(bucket: "{bucket}")
+    |> range(start: {time_range_lower_bound},stop: {time_range_upper_bound})
+    |> filter(fn: (r) => r["_field"] == "frame" and r["_value"] == "{tlm["frame"]}")
     '''
-    # store frame only if not stored already
-
-    print(query_api.query(query=query))
-    # if len(query_api.query(query=query)) == 0:
-    #     return
+    # # store frame only if not stored already
+    if len(query_api.query(query=query)) == 0:
+        return
 
     write_api.write(bucket, INFLUX_ORG, db_fields)
 
@@ -112,9 +114,6 @@ def scrape(satellite: str, save_to_db=True, save_to_file=True):
             satellite), headers=get_satnogs_headers())
         telemetry_tmp = response.json()
         # print(telemetry_tmp)
-        if save_to_db:
-            save_raw_frame_to_influxdb(satellite, telemetry_tmp)
-
         try:
             last = telemetry_tmp[-1]
             last_time = last['timestamp']
@@ -122,10 +121,12 @@ def scrape(satellite: str, save_to_db=True, save_to_file=True):
             # concatenate telemetry
             telemetry = telemetry + telemetry_tmp
 
-            last_time = datetime.strptime(
-                last['timestamp'], '%Y-%m-%dT%H:%M:%SZ')
+            last_time = datetime.strptime(last['timestamp'], '%Y-%m-%dT%H:%M:%SZ')
             next_time = last_time - timedelta(seconds=1)
             now = next_time.strftime("%Y-%m-%dT%H:%M:%SZ")
+
+            if save_to_db:
+                save_raw_frame_to_influxdb(satellite, telemetry_tmp)
 
             print("Next " + now)
 
