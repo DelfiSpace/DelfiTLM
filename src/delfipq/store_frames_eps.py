@@ -5,8 +5,10 @@ from influxdb_client import InfluxDBClient
 from influxdb_client.client.write_api import SYNCHRONOUS
 from XTCEParser import XTCEParser, XTCEException
 
-INPUT_FILE = 'delfi-pq.txt'
-OUTPUT_FILE = 'EPS_telemetry.csv'
+# pylint: disable = W0621
+
+INPUT_FILE = 'src/delfipq/delfi-pq.txt'
+OUTPUT_FILE = 'src/delfipq/EPS_telemetry.csv'
 
 framesList = []
 
@@ -112,33 +114,29 @@ def store_frame(parser, frame):
                     db_fields["fields"][field] = value
 
                     write_api.write(BUCKET, ORG, db_fields)
+                    print(db_fields)
                     db_fields["fields"] = {}
-                # print(db_fields)
                 # query = "select * from delfi_pq"
                 # print(query_api.query(query))
 
-def process_frames():
-    """Process Delfi-PQ telemetry"""
-    parser = XTCEParser("src/delfipq/Delfi-PQ.xml", "Radio")
+parser = XTCEParser("src/delfipq/Delfi-PQ.xml", "Radio")
 
 
-    # open the data file
-    with open(INPUT_FILE, encoding="utf-8") as input_file:
-        data = json.load(input_file)
+# open the data file
+with open(INPUT_FILE, encoding="utf-8") as input_file:
+    data = json.load(input_file)
 
-        # sort messages in chronological order
-        data.sort(key=lambda x: x["timestamp"])
+    # sort messages in chronological order
+    data.sort(key=lambda x: x["timestamp"])
 
-        # process each frame
-        for frame in data:
-            try:
-                store_frame(parser, frame)
-            except XTCEException as ex:
-                # ignore
-                print(ex)
-                # pass
+    # process each frame
+    for frame in data:
+        try:
+            store_frame(parser=parser, frame=frame)
+        except XTCEException as ex:
+            # ignore
+            pass
 
-process_frames()
 
 # sample query in flux
 # from(bucket: "delfi_pq")

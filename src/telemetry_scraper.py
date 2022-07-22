@@ -25,9 +25,7 @@ def get_satnogs_headers():
     with open("src/tokens/satnogs_token.txt", "r", encoding="utf-8") as file:
         cookie_auth = file.read()
 
-    headers = {'accept': 'application/json',
-               'Authorization': 'Token ' + cookie_auth}
-
+    headers = {'accept': 'application/json', 'Authorization': 'Token ' + cookie_auth}
     return headers
 
 
@@ -47,14 +45,15 @@ def commit_frame(write_api, query_api, satellite: str, tlm: dict):
     tags = {}
 
     time_format = '%Y-%m-%dT%H:%M:%SZ'
-
-    time = datetime.strptime(tlm['timestamp'], time_format)
+    tlm_time = datetime.strptime(tlm['timestamp'], time_format)
 
     db_fields = {
         "measurement": satellite + "_raw_data",
         "time": tlm["timestamp"],
         "tags": tags,
-        "fields": {}
+        "fields": {
+            "processed": False,
+        }
     }
 
     fields = ["norad_cat_id", "observer", "version", "sat_id", "frame"]
@@ -62,15 +61,16 @@ def commit_frame(write_api, query_api, satellite: str, tlm: dict):
     for field in fields:
         db_fields["fields"][field] = tlm[field]
 
-    time_range_lower_bound = (time - timedelta(seconds=1)).strftime(time_format)
-    time_range_upper_bound = (time + timedelta(seconds=1)).strftime(time_format)
+    time_range_lower_bound = (tlm_time - timedelta(seconds=1)).strftime(time_format)
+    time_range_upper_bound = (tlm_time + timedelta(seconds=1)).strftime(time_format)
+
     # check if frame already exists
     query = f'''from(bucket: "{bucket}")
-    |> range(start: {time_range_lower_bound},stop: {time_range_upper_bound})
+    |> range(start: {time_range_lower_bound}, stop: {time_range_upper_bound})
     |> filter(fn: (r) => r["_field"] == "frame" and r["_value"] == "{tlm["frame"]}")
     '''
     # # store frame only if not stored already
-    if len(query_api.query(query=query)) == 0:
+    if len(query_api.query(query=query)) != 0:
         return
 
     write_api.write(bucket, INFLUX_ORG, db_fields)
@@ -82,8 +82,7 @@ def save_raw_frame_to_influxdb(satellite: str, telemetry) -> None:
     with open("src/tokens/influxdb_token.txt", "r", encoding="utf-8") as file:
         token = file.read()
 
-    client = InfluxDBClient(url="http://localhost:8086",
-                            token=token, org=INFLUX_ORG)
+    client = InfluxDBClient(url="http://localhost:8086", token=token, org=INFLUX_ORG)
 
     write_api = client.write_api(write_options=SYNCHRONOUS)
     query_api = client.query_api()
@@ -98,7 +97,7 @@ def save_raw_frame_to_influxdb(satellite: str, telemetry) -> None:
 def dump_telemetry_to_file(satellite: str, telemetry: list) -> None:
     """Dump json telemetry to file"""
 
-    with open(satellite+".json", "w", encoding="utf-8") as file:
+    with open(satellite + ".json", "w", encoding="utf-8") as file:
         file.write(json.dumps(telemetry, indent=4, sort_keys=True))
 
 
@@ -110,8 +109,11 @@ def scrape(satellite: str, save_to_db=True, save_to_file=True):
 
     while True:
 
-        response = requests.get(PATH, params=get_satnogs_params(
-            satellite), headers=get_satnogs_headers())
+        response = requests.get(
+            PATH,
+            params=get_satnogs_params(satellite),
+            headers=get_satnogs_headers()
+            )
         telemetry_tmp = response.json()
         # print(telemetry_tmp)
         try:
@@ -145,7 +147,9 @@ def scrape(satellite: str, save_to_db=True, save_to_file=True):
             else:
                 break
 
-    if save_to_file:
-        dump_telemetry_to_file(satellite, telemetry)
+        if save_to_file:
+            dump_telemetry_to_file(satellite, telemetry)
 
 scrape("delfi_pq")
+# scrape("delfi_next")
+# scrape("delfi_c3")
