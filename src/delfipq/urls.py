@@ -1,5 +1,5 @@
 """API urls"""
-from django.urls import path, URLPattern
+from django.urls import path
 
 from . import views
 

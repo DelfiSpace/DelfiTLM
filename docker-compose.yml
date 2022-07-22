@@ -50,14 +50,14 @@ services:
       - ./grafana.ini:/etc/grafana/grafana.ini
       depends_on:
       - influxdb
-      environment:
-      - GF_SECURITY_ADMIN_USER=admin
-      - GF_SECURITY_ADMIN_PASSWORD=admin
+      # environment:
+      # - GF_SECURITY_ADMIN_USER=admin
+      # - GF_SECURITY_ADMIN_PASSWORD=admin
 
-      - GF_AUTH_ANONYMOUS_ENABLED=true
-      - GF_AUTH_ANONYMOUS_ORG_NAME="delfi"
-      - GF_AUTH_ANONYMOUS_ORG_ROLE=View
-      - GF_USERS_ALLOW_SIGN_UP=false
+      # - GF_AUTH_ANONYMOUS_ENABLED=true
+      # - GF_AUTH_ANONYMOUS_ORG_NAME="delfi"
+      # - GF_AUTH_ANONYMOUS_ORG_ROLE=View
+      # - GF_USERS_ALLOW_SIGN_UP=false
       restart: always
 
 volumes:
