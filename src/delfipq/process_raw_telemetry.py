@@ -1,9 +1,9 @@
 """Script to store Delfi-PQ telemetry frames"""
 # pylint: disable=E0401, W0621
-import json
 import importlib.util
 from XTCEParser import XTCEParser, XTCEException
 
+BUCKET = "delfi_pq"
 
 def module_from_file(module_name, file_path):
     """Import module form file"""
@@ -13,8 +13,6 @@ def module_from_file(module_name, file_path):
     return module
 
 tlm_scraper = module_from_file("tlm_scraper", "src/telemetry_scraper.py")
-
-BUCKET = "delfi_pq"
 
 write_api, query_api = tlm_scraper.get_influx_db_read_and_query_api()
 
@@ -58,10 +56,7 @@ def store_frame(parser, timestamp, frame, observer):
 
 parser = XTCEParser("src/delfipq/Delfi-PQ.xml", "Radio")
 
-scraped_telemetry = {}
-
-with open("scraped_telemetry.json", encoding="utf-8") as input_file:
-    scraped_telemetry = json.load(input_file)
+scraped_telemetry = tlm_scraper.read_scraped_tlm()
 
 if scraped_telemetry['delfi_pq'] != []:
 
@@ -92,4 +87,4 @@ if scraped_telemetry['delfi_pq'] != []:
             # ignore
             pass
 
-tlm_scraper.reset_scraped_tlm_timestamps("delfi_pq")
+    tlm_scraper.reset_scraped_tlm_timestamps("delfi_pq")

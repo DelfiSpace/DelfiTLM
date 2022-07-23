@@ -9,7 +9,7 @@ from influxdb_client.client.write_api import SYNCHRONOUS
 
 PATH = "https://db.satnogs.org/api/telemetry/"
 INFLUX_ORG = "Delfi Space"
-
+SCRAPED_TLM_FILE = "scraped_telemetry.json"
 
 SATELLITES = {
     "delfi_pq": '51074',
@@ -34,17 +34,18 @@ def get_influx_db_read_and_query_api() -> tuple:
 def read_scraped_tlm() -> dict:
     """Read scraped_telemetry.json."""
     scraped_telemetry = {}
-    with open("scraped_telemetry.json", "r", encoding="utf-8") as file:
+    with open(SCRAPED_TLM_FILE, "r", encoding="utf-8") as file:
         scraped_telemetry = json.load(file)
 
     return scraped_telemetry
+
 
 def reset_scraped_tlm_timestamps(satellite: str) -> None:
     """Replace timestamps in scraped_telemetry.json with []."""
     scraped_telemetry = read_scraped_tlm()
     scraped_telemetry[satellite] = []
 
-    with open(satellite + ".json", "w", encoding="utf-8") as file:
+    with open(SCRAPED_TLM_FILE, "w", encoding="utf-8") as file:
         file.write(json.dumps(scraped_telemetry, indent=4))
 
 
@@ -57,7 +58,7 @@ def update_scraped_tlm_timestamps(satellite, start_time, end_time) -> None:
         scraped_telemetry[satellite][0] = min(scraped_telemetry[satellite][0], start_time)
         scraped_telemetry[satellite][1] = max(scraped_telemetry[satellite][1], end_time)
 
-    with open("scraped_telemetry.json", "w", encoding="utf-8") as file:
+    with open(SCRAPED_TLM_FILE, "w", encoding="utf-8") as file:
         json.dump(scraped_telemetry, file, indent=4)
 
 
