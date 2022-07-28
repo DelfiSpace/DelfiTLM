@@ -3,6 +3,8 @@ import json
 from json.decoder import JSONDecodeError
 from django.core.paginator import Paginator
 from django.forms import ValidationError
+from django.contrib import messages
+from django.contrib.auth.decorators import login_required
 from django.core.exceptions import BadRequest
 from django.http import HttpResponseBadRequest
 from django.http.response import JsonResponse
@@ -90,6 +92,26 @@ def add_dummy_downlink_frames(request):
     return JsonResponse({"len": len(Downlink.objects.all())})
 
 
+@login_required(login_url='/login')
+def delete_processed_frames(request, link):
+    """Remove the processed frames that are already stored in influxdb"""
+    if request.method == 'POST':
+        user = request.user
+        if link == "uplink":
+            if user.has_perm("transmission.delete_uplink"):
+                removed_data_len = len(Uplink.objects.all().filter(processed=True))
+                Uplink.objects.all().filter(processed=True).delete()
+                messages.info(request, f"{removed_data_len} processed {link} frames were removed.")
+
+        elif link == "downlink":
+            if user.has_perm("transmission.delete_downlink"):
+                removed_data_len = len(Downlink.objects.all().filter(processed=True))
+                Downlink.objects.all().filter(processed=True).delete()
+                messages.info(request, f"{removed_data_len} processed {link} frames were removed.")
+
+    return HttpResponseBadRequest()
+
+
 def home(request):
     """render index.html page"""
     ren = render(request, "transmission/home/index.html")
@@ -108,21 +130,20 @@ def paginate_telemetry_table(request, telemetry_filter, table_name):
     return render(request, "transmission/table.html", context)
 
 
-def get_downlink_table(request):
-    """Queries and filters the downlink table"""
-    frames = Downlink.objects.all().order_by('timestamp')
-    telemetry_filter = TelemetryDownlinkFilter(request.GET, queryset=frames)
-    return paginate_telemetry_table(request, telemetry_filter, "Downlink")
+def get_frames_table(request, link):
+    """Queries and filters the uplink/downlink table"""
+    if link == "downlink" and request.user.has_perm('transmission.view_downlink'):
+        frames = Downlink.objects.all().order_by('timestamp')
+        telemetry_filter = TelemetryDownlinkFilter(request.GET, queryset=frames)
+        return paginate_telemetry_table(request, telemetry_filter, "Downlink")
 
-
-def get_uplink_table(request):
-    """Queries and filters the uplink table"""
-    if request.user.has_perm('transmission.view_uplink'):
+    if link == "uplink" and request.user.has_perm('transmission.uplink_downlink'):
         frames = Uplink.objects.all().order_by('timestamp')
         telemetry_filter = TelemetryUplinkFilter(request.GET, queryset=frames)
         return paginate_telemetry_table(request, telemetry_filter, "Uplink")
 
     return HttpResponseBadRequest()
+
 
 def get_tle_table(request):
     """Queries and filters the TLEs table"""

@@ -34,8 +34,6 @@ def store_frame(frame, link, username, application=None) -> None:
         else:
             raise ValueError("Invalid frame link.")
 
-
-
     # if present, store the application name/version used to submit the data
     if application is not None:
         frame_entry.application = application

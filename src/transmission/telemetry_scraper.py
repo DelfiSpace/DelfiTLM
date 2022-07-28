@@ -211,7 +211,6 @@ def scrape(satellite: str, save_to_db=True, save_to_file=True) -> None:
                     update_scraped_tlm_timestamps(satellite, "downlink",
                                                   first["timestamp"], last["timestamp"])
 
-
         except IndexError:
             break
 

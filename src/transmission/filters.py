@@ -13,7 +13,6 @@ class TelemetryDownlinkFilter(django_filters.FilterSet):
             }
         ))
     frequency = django_filters.RangeFilter(field_name="frequency")
-    qos = django_filters.RangeFilter(field_name="qos")
     class Meta:
         """Meta class to specify model"""
         model = Downlink
@@ -30,7 +29,6 @@ class TelemetryUplinkFilter(django_filters.FilterSet):
             }
         ))
     frequency = django_filters.RangeFilter(field_name="frequency")
-    qos = django_filters.RangeFilter(field_name="qos")
     class Meta:
         """Meta class to specify model"""
         model = Uplink

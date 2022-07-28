@@ -6,7 +6,7 @@
 {% endblock %}
 
 {% block usertools %}
-<a href="{% url 'logout' %}">{% translate 'Logout' %}</input></a>
+    <a href="{% url 'logout' %}">{% translate 'Logout' %}</input></a>
 {% endblock %}
 
 {% block breadcrumbs %}
@@ -20,12 +20,26 @@
 
 {% block content %}
 {% if user.is_authenticated %}
-<h1>Hello {{ user.username }}!</h1>
+    <h1>Hello {{ user.username }}!</h1>
 {% endif %}
 <br>
 
 <a href="{% url 'change_password' %}"><input type="submit" value="Change Password"></input></a>
 <a href="{% url 'get_new_key' %}"><input type="submit" value="Create an API key"></input></a>
+<br>
+<br>
+
+{% if perms.transmission.delete_downlink %}
+    <a href="{% url 'delete_processed_frames' link='downlink'%}" >{% translate 'Delete Processed Frames: Downlink' %}</a>
+    <br>
+    <br>
+{% endif %}
+
+{% if perms.transmission.delete_uplink %}
+    <a href="{% url 'delete_processed_frames' link='uplink'%}" >{% translate 'Delete Processed Frames: Uplink' %}</a>
+
+{% endif %}
+
 <br>
 <br>
 {% if key is not null %}

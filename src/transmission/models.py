@@ -29,7 +29,7 @@ class Downlink(models.Model):
     application = models.TextField(null=True, blank=True)
     processed = models.BooleanField(default=False, null=False)
     frequency = models.FloatField(null=True, blank=True)
-    frame = models.TextField(default=None, null=True)
+    frame = models.TextField(default=None, null=False)
     metadata = models.JSONField(null=True, blank=True)
 
     def to_dictionary(self):
@@ -53,7 +53,7 @@ class Uplink(models.Model):
     application = models.TextField(null=True, blank=True)
     processed = models.BooleanField(default=False, null=False)
     frequency = models.FloatField(null=False)
-    frame = models.TextField(default=None, null=True)
+    frame = models.TextField(default=None, null=False)
     metadata = models.JSONField(null=True, blank=True)
 
 
