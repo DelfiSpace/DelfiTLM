@@ -112,12 +112,6 @@ def delete_processed_frames(request, link):
     return HttpResponseBadRequest()
 
 
-def home(request):
-    """render index.html page"""
-    ren = render(request, "transmission/home/index.html")
-    return ren
-
-
 def paginate_telemetry_table(request, telemetry_filter, table_name):
     """Paginates a telemetry table and renders the filtering form"""
 
