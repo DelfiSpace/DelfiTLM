@@ -33,10 +33,13 @@ def submit_frame(request): #pylint:disable=R0911
 
             link = 'downlink'
 
-            if 'HTTP_FRAME_TYPE' in request.META and \
-                request.META.get('HTTP_FRAME_TYPE', '') is not None:
+            if 'HTTP_FRAME_LINK' in request.META and \
+                request.META.get('HTTP_FRAME_LINK', '') is not None:
 
-                link = request.META.get('HTTP_FRAME_TYPE', '')
+                link = request.META.get('HTTP_FRAME_LINK', '')
+
+                if link not in ["uplink", "downlink"]:
+                    raise BadRequest("HTTP_FRAME_LINK can be either 'uplink' or 'downlink'" )
 
             # search for the user name matching the API key
             api_key_name = APIKey.objects.get_from_key(key)
@@ -66,6 +69,7 @@ def submit_frame(request): #pylint:disable=R0911
         except Exception as e:  #pylint:disable=C0103, W0703
             # catch other exceptions
             message_text = type(e).__qualname__+": "+str(e)
+            print(message_text)
             return JsonResponse({"result": "failure", "message": message_text}, status=500)
 
     # POST is the only supported method, return error

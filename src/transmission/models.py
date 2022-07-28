@@ -36,14 +36,14 @@ class Downlink(models.Model):
         """Convert Downlink object to dict"""
         frame_dict = {}
         frame_dict["timestamp"] = self.timestamp
-        frame_dict["observer"] = self.observer
+        frame_dict["observer"] = self.observer.username
         frame_dict["application"] = self.application
         frame_dict["processed"] = self.processed
         frame_dict["frequency"] = self.frequency
         frame_dict["frame"] = self.frame
         frame_dict["metadata"] = self.metadata
 
-        return  frame_dict
+        return frame_dict
 
 
 class Uplink(models.Model):
@@ -61,11 +61,11 @@ class Uplink(models.Model):
         """Convert Uplink object to dict"""
         frame_dict = {}
         frame_dict["timestamp"] = self.timestamp
-        frame_dict["operator"] = self.operator
+        frame_dict["operator"] = self.operator.username
         frame_dict["application"] = self.application
         frame_dict["processed"] = self.processed
         frame_dict["frequency"] = self.frequency
         frame_dict["frame"] = self.frame
         frame_dict["metadata"] = self.metadata
 
-        return  frame_dict
+        return frame_dict

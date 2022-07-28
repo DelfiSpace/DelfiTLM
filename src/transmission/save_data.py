@@ -9,16 +9,7 @@ from skyfield.api import load, EarthSatellite
 import pytz
 from transmission.models import Uplink, Downlink, TLE, Satellite
 from members.models import Member
-import importlib.util
-
-def module_from_file(module_name, file_path):
-    """Import module form file"""
-    spec = importlib.util.spec_from_file_location(module_name, file_path)
-    module = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(module)
-    return module
-
-tlm_scraper = module_from_file("tlm_scraper", "src/telemetry_scraper.py")
+import transmission.telemetry_scraper as tlm_scraper
 
 
 def store_frame(frame, link, username, application=None) -> None:
@@ -33,15 +24,17 @@ def store_frame(frame, link, username, application=None) -> None:
             if not user.has_perm("transmission.add_uplink"):
                 raise BadRequest()
             frame_entry = Uplink()
+            frame_entry.operator = user
 
         elif link == "downlink":
             if not user.has_perm("transmission.add_downlink"):
                 raise BadRequest()
             frame_entry = Downlink()
+            frame_entry.observer = user
         else:
             raise ValueError("Invalid frame link.")
 
-        frame_entry.radio_amateur = user
+
 
     # if present, store the application name/version used to submit the data
     if application is not None:
@@ -127,8 +120,8 @@ def store_frame_to_influxdb(frame, link) -> bool:
 
 def get_satellite_from_frame_header(frame):
     """Find the corresponding satellite from the frame header"""
-    # TODO
-
+    # to be implemented
+    print(frame)
     return "delfi_pq"
 
 

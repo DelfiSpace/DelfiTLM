@@ -120,9 +120,11 @@ class TestSubmitFrames(TestCase):
         self.assertEqual(len(Downlink.objects.all()), 0) # dowlink table has no entry
 
 
-    def test_submit_with_timestamps_downlink(self):
+    def test_submit_with_timestamps(self):
 
         self.assertEqual(len(Downlink.objects.all()), 0) # downlink table empty
+        self.assertEqual(len(Uplink.objects.all()), 0) # uplink table empty
+
 
         response = self.client.post(reverse('login'), {'username': 'user', 'password': 'delfispace4242'})
         self.assertEqual(response.status_code, 200)
@@ -140,41 +142,20 @@ class TestSubmitFrames(TestCase):
         request = self.factory.post(path='submit_frame', data=frame_json, content_type='application/json')
         request.user = user
         request.META['HTTP_AUTHORIZATION'] = json.loads(response_key)['generated_key']
-        request.META['HTTP_FRAME_TYPE'] = 'downlink'
 
+        # test donwlink
+        request.META['HTTP_FRAME_LINK'] = 'downlink'
         response = submit_frame(request)
 
         self.assertEquals(response.status_code, 201)
         self.assertEqual(len(Downlink.objects.all()), 1) # dowlink table has 1 entry
         self.assertEqual(str(Downlink.objects.first().timestamp), "2021-12-19 02:20:14.959630+00:00")
 
-
-    def test_submit_with_timestamps_uplink(self):
-
-        self.assertEqual(len(Uplink.objects.all()), 0) # uplink table empty
-
-        response = self.client.post(reverse('login'), {'username': 'user', 'password': 'delfispace4242'})
-        self.assertEqual(response.status_code, 200)
-        frame = '{ "qos": 98.6, "sat": "delfic3", "timestamp": "2021-12-19T02:20:14.959630Z", "frequency": 2455.66, "frame": "A8989A40404000888C9C66B0A80003F0890FFDAD776500001E601983C008C39C10D02911E2F0FF71230DECE70032044C09500311119B8CA092A08B5E85919492938285939C7900000000000000000000005602F637005601F3380000006D70000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000434B1345B440BF3C9736D0301D240E000004B82C4050B26DDB942EB4D0CFE4E9D64946"}'
-
-        frame_json = json.loads(frame)
-        request_key = self.factory.get(path='members/key/', content_type='application/json')
-
-        user = Member.objects.get(username='user')
-        force_authenticate(request_key, user=user)
-
-        request_key.user = user
-        response_key = generate_key(request_key).content
-
-        request = self.factory.post(path='submit_frame', data=frame_json, content_type='application/json')
-        request.user = user
-        request.META['HTTP_AUTHORIZATION'] = json.loads(response_key)['generated_key']
-        request.META['HTTP_FRAME_TYPE'] = 'uplink'
-
+        # test uplink
+        request.META['HTTP_FRAME_LINK'] = 'uplink'
         response = submit_frame(request)
-
         self.assertEquals(response.status_code, 201)
-        self.assertEqual(len(Uplink.objects.all()), 1) # dowlink table has 1 entry
+        self.assertEqual(len(Uplink.objects.all()), 1) # uplink table has 1 entry
         self.assertEqual(str(Uplink.objects.first().timestamp), "2021-12-19 02:20:14.959630+00:00")
 
 
@@ -258,7 +239,7 @@ class TestSubmitFrames(TestCase):
         request = self.factory.post(path='submit_frame', data=frame_json, content_type='application/json')
         request.user = unauthorized_user
         request.META['HTTP_AUTHORIZATION'] = json.loads(response_key)['generated_key']
-        request.META['HTTP_FRAME_TYPE'] = 'uplink'
+        request.META['HTTP_FRAME_LINK'] = 'uplink'
 
         response = submit_frame(request)
 
@@ -268,7 +249,7 @@ class TestSubmitFrames(TestCase):
         request = self.factory.post(path='submit_frame', data=frame_json, content_type='application/json')
         request.user = unauthorized_user
         request.META['HTTP_AUTHORIZATION'] = json.loads(response_key)['generated_key']
-        request.META['HTTP_FRAME_TYPE'] = 'downlink'
+        request.META['HTTP_FRAME_LINK'] = 'downlink'
 
         response = submit_frame(request)
 
@@ -298,10 +279,10 @@ class TestSubmitFrames(TestCase):
         request = self.factory.post(path='submit_frame', data=frame_json, content_type='application/json')
         request.user = user
         request.META['HTTP_AUTHORIZATION'] = json.loads(response_key)['generated_key']
-        request.META['HTTP_FRAME_TYPE'] = 'foo'
+        request.META['HTTP_FRAME_LINK'] = 'foo'
 
         response = submit_frame(request)
 
-        self.assertEquals(response.status_code, 500)
+        self.assertEquals(response.status_code, 401)
         self.assertEqual(len(Uplink.objects.all()), 0)
 

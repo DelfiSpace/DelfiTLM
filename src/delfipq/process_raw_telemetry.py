@@ -12,7 +12,7 @@ def module_from_file(module_name, file_path):
     spec.loader.exec_module(module)
     return module
 
-tlm_scraper = module_from_file("tlm_scraper", "src/telemetry_scraper.py")
+tlm_scraper = module_from_file("tlm_scraper", "src/transmission/telemetry_scraper.py")
 
 write_api, query_api = tlm_scraper.get_influx_db_read_and_query_api()
 
@@ -57,15 +57,15 @@ def store_frame(parser, timestamp, frame, observer):
 parser = XTCEParser("src/delfipq/Delfi-PQ.xml", "Radio")
 
 scraped_telemetry = tlm_scraper.read_scraped_tlm()
-link = "downlink"
+LINK = "downlink"
 
 if scraped_telemetry['delfi_pq'] != []:
 
-    start_time = scraped_telemetry["delfi_pq"][1]
-    end_time = scraped_telemetry["delfi_pq"][0]
+    start_time = scraped_telemetry["delfi_pq"][LINK][1]
+    end_time = scraped_telemetry["delfi_pq"][LINK][0]
 
     get_unprocessed_frames_query = f'''
-    from(bucket: "{BUCKET + "_" + link +  "_raw_data"}")
+    from(bucket: "{BUCKET + "_" + LINK +  "_raw_data"}")
     |> range(start: {start_time}, stop: {end_time})
     |> filter(fn: (r) => r["_field"] == "processed" and r["_value"] == false or
                 r["_field"] == "frame" or r["_field"] == "observer")
@@ -77,12 +77,11 @@ if scraped_telemetry['delfi_pq'] != []:
         try:
             store_frame(parser, frame["_time"], frame["frame"], frame["observer"])
             frame["processed"] = True
-            tlm_scraper.override_raw_frame_processed_flag(
+            tlm_scraper.write_frame_to_raw_bucket(
                 write_api,
-                "delfi_pq_" + link,
+                "delfi_pq_" + LINK,
                 frame["_time"],
-                frame["frame"],
-                frame["observer"]
+                frame
                 )
         except XTCEException as ex:
             # ignore

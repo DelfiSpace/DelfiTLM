@@ -65,18 +65,18 @@ def include_timestamp_in_scraped_tlm_range(satellite, link, timestamp):
 
 def update_scraped_tlm_timestamps(satellite, link, start_time, end_time) -> None:
     """Bookkeep time range of unprocessed telemetry."""
-    scraped_telemetry = read_scraped_tlm()
+    scraped_tlm = read_scraped_tlm()
 
     # No time range saved
-    if scraped_telemetry[satellite][link] == []:
-        scraped_telemetry[satellite][link] = [start_time, end_time]
+    if scraped_tlm[satellite][link] == []:
+        scraped_tlm[satellite][link] = [start_time, end_time]
     # Update time range
     else:
-        scraped_telemetry[satellite][link][0] = min(scraped_telemetry[satellite][link][0], start_time)
-        scraped_telemetry[satellite][link][1] = max(scraped_telemetry[satellite][link][1], end_time)
+        scraped_tlm[satellite][link][0] = min(scraped_tlm[satellite][link][0], start_time)
+        scraped_tlm[satellite][link][1] = max(scraped_tlm[satellite][link][1], end_time)
 
     with open(SCRAPED_TLM_FILE, "w", encoding="utf-8") as file:
-        json.dump(scraped_telemetry, file, indent=4)
+        json.dump(scraped_tlm, file, indent=4)
 
 
 def get_satnogs_headers() -> dict:
@@ -99,19 +99,17 @@ def get_satnogs_params(satellite: str) -> dict:
     return params
 
 
-def override_raw_frame_processed_flag(write_api, satellite, link, timestamp, frame, observer) -> None:
-    """Mark raw data frame as processed."""
+def write_frame_to_raw_bucket(write_api, satellite, link, timestamp, frame_fields) -> None:
+    """Save frame given its fields. Note: to update/overwrite a field write the frame again
+    with the changed fields and the same timestamp as before."""
+
     tags = {}
 
     db_fields = {
     "measurement": satellite + "_" + link + "_raw_data",
     "time": timestamp,
     "tags": tags,
-    "fields": {
-        "processed": True,
-        "frame": frame,
-        "obeserver": observer,
-        }
+    "fields": frame_fields
     }
 
     write_api.write(satellite, INFLUX_ORG, db_fields)
@@ -119,24 +117,12 @@ def override_raw_frame_processed_flag(write_api, satellite, link, timestamp, fra
 
 def commit_frame(write_api, query_api, satellite: str, link: str, tlm: dict) -> bool:
     """Write frame to corresponding satellite table (if not already stored).
-    Returns True if the frame was stored and False otherwise (if the frame is already stored)."""
+    Returns True if the frame was stored and False otherwise (if the frame is already stored).
+    Also store the frame with processed = False."""
 
     bucket = satellite + "_" + link + "_raw_data"
-    tags = {}
-
     tlm_time = datetime.strptime(tlm['timestamp'], TIME_FORMAT)
 
-    db_fields = {
-        "measurement": satellite + "_" + link + "_raw_data",
-        "time": tlm["timestamp"],
-        "tags": tags,
-        "fields": {
-            "processed": False,
-        }
-    }
-
-    for field, value in tlm.items():
-        db_fields["fields"][field] = value
 
     time_range_lower_bound = (tlm_time - timedelta(seconds=1)).strftime(TIME_FORMAT)
     time_range_upper_bound = (tlm_time + timedelta(seconds=1)).strftime(TIME_FORMAT)
@@ -150,7 +136,8 @@ def commit_frame(write_api, query_api, satellite: str, link: str, tlm: dict) -> 
     if len(query_api.query(query=query)) != 0:
         return False
 
-    write_api.write(bucket, INFLUX_ORG, db_fields)
+    tlm["processed"] = False
+    write_frame_to_raw_bucket(write_api, satellite, link, tlm["timestamp"], tlm)
     return True
 
 
@@ -203,7 +190,6 @@ def scrape(satellite: str, save_to_db=True, save_to_file=True) -> None:
         # print(telemetry_tmp)
         try:
             last = telemetry_tmp[-1]
-            last_time = last['timestamp']
             first = telemetry_tmp[0]
 
             # concatenate telemetry
@@ -211,19 +197,20 @@ def scrape(satellite: str, save_to_db=True, save_to_file=True) -> None:
 
             last_time = datetime.strptime(last['timestamp'], TIME_FORMAT)
             next_time = last_time - timedelta(seconds=1)
-            now = next_time.strftime(TIME_FORMAT)
+            print("Next " + next_time.strftime(TIME_FORMAT))
 
             if save_to_db:
                 fields_to_save = ["frame", "timestamp", "observer"]
-                stored = save_raw_frame_to_influxdb(satellite, "downlink", strip_tlm(telemetry_tmp, fields_to_save))
+                stripped_tlm = strip_tlm(telemetry_tmp, fields_to_save)
+                stored = save_raw_frame_to_influxdb(satellite, "downlink", stripped_tlm)
                 # stop scraping if frames are already stored
                 if stored:
                     # print("DB successfully updated.")
                     # break
                     print("Stored frame")
-                    update_scraped_tlm_timestamps(satellite, "downlink", first["timestamp"], last["timestamp"])
+                    update_scraped_tlm_timestamps(satellite, "downlink",
+                                                  first["timestamp"], last["timestamp"])
 
-            print("Next " + now)
 
         except IndexError:
             break
