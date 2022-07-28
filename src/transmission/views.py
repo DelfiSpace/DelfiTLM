@@ -12,7 +12,7 @@ from rest_framework.decorators import permission_classes
 from members.models import APIKey
 from .models import Uplink, Downlink, TLE
 from .filters import TelemetryDownlinkFilter, TelemetryUplinkFilter, TLEFilter
-from .save_data import parse_frame, add_frame
+from .save_data import parse_submitted_frame, store_frame
 
 
 QUERY_ROW_LIMIT = 100
@@ -31,19 +31,19 @@ def submit_frame(request): #pylint:disable=R0911
             # retrieve the user agent (if present, empty otherwise)
             user_agent = request.META.get('HTTP_USER_AGENT', '')
 
-            qualifier = 'downlink'
+            link = 'downlink'
 
             if 'HTTP_FRAME_TYPE' in request.META and \
                 request.META.get('HTTP_FRAME_TYPE', '') is not None:
 
-                qualifier = request.META.get('HTTP_FRAME_TYPE', '')
+                link = request.META.get('HTTP_FRAME_TYPE', '')
 
             # search for the user name matching the API key
             api_key_name = APIKey.objects.get_from_key(key)
             # retrieve the JSON frame just submitted
             frame_to_add = json.loads(request.body)
             # add the frame to the database
-            add_frame(frame_to_add, qualifier, username=api_key_name,  application=user_agent)
+            store_frame(frame_to_add, link, username=api_key_name,  application=user_agent)
             return JsonResponse({"result": "success", "message": ""}, status=201)
 
         except APIKey.DoesNotExist as e: #pylint:disable=C0103
@@ -80,7 +80,7 @@ def add_dummy_downlink_frames(request):
         dummy_data = json.load(file)
         for frame in dummy_data["frames"]:
             frame_entry = Downlink()
-            frame_entry = parse_frame(frame, frame_entry)
+            frame_entry = parse_submitted_frame(frame, frame_entry)
             frame_entry.save()
 
     return JsonResponse({"len": len(Downlink.objects.all())})

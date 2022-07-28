@@ -9,37 +9,10 @@ from members.models import Member
 class Satellite(models.Model):
     """Table contaning all satellites managed in this db"""
     sat = models.CharField(null=False, max_length=70, unique=True)
-    norad_id = models.IntegerField(null=False, unique=True)
+    norad_id = models.IntegerField(null=True, unique=True)
 
     def __str__(self) -> str:
         return self.sat
-
-
-class Downlink(models.Model):
-    """Table for downlink data frames"""
-    timestamp = models.DateTimeField(null=False, default=timezone.now, auto_now=False, auto_now_add=False)
-    radio_amateur = models.ForeignKey(Member, to_field="username", db_column="radio_amateur", default=None, null=True, on_delete=DO_NOTHING)
-    application = models.TextField(null=True, blank=True)
-    processed = models.BooleanField(default=False, null=False)
-    frequency = models.FloatField(null=True, blank=True)
-    qos = models.FloatField(null=True, blank=True)
-    sat = models.ForeignKey(Satellite, to_field="sat", db_column="sat", null=True, on_delete=DO_NOTHING)
-    frame = models.TextField(default=None, null=True)
-    frame_binary = models.BinaryField(default=None, null=True)
-    metadata = models.JSONField(null=True, blank=True)
-
-
-class Uplink(models.Model):
-    """Table for uplink data frames"""
-    radio_amateur = models.ForeignKey(Member, to_field="username", db_column="radio_amateur", null=False, on_delete=DO_NOTHING)
-    timestamp = models.DateTimeField(null=False, default=timezone.now, auto_now=False, auto_now_add=False)
-    application = models.TextField(null=True, blank=True)
-    frequency = models.FloatField(null=False)
-    qos = models.FloatField(null=True, blank=True)
-    sat = models.ForeignKey(Satellite, to_field="sat", db_column="sat", null=False, on_delete=DO_NOTHING)
-    frame = models.TextField(default=None, null=True)
-    frame_binary = models.BinaryField(default=None, null=True)
-    metadata = models.JSONField(null=True, blank=True)
 
 
 class TLE(models.Model):
@@ -47,3 +20,52 @@ class TLE(models.Model):
     valid_from = models.DateTimeField(null=True, auto_now=False, auto_now_add=False)
     sat = models.ForeignKey(Satellite, to_field="sat", db_column="sat", null=False, on_delete=DO_NOTHING)
     tle = models.TextField(null=False)
+
+
+class Downlink(models.Model):
+    """Table for downlink data frames"""
+    timestamp = models.DateTimeField(null=False, default=timezone.now, auto_now=False, auto_now_add=False)
+    observer = models.ForeignKey(Member, to_field="username", db_column="observer", default=None, null=True, on_delete=DO_NOTHING)
+    application = models.TextField(null=True, blank=True)
+    processed = models.BooleanField(default=False, null=False)
+    frequency = models.FloatField(null=True, blank=True)
+    frame = models.TextField(default=None, null=True)
+    metadata = models.JSONField(null=True, blank=True)
+
+    def to_dictionary(self):
+        """Convert Downlink object to dict"""
+        frame_dict = {}
+        frame_dict["timestamp"] = self.timestamp
+        frame_dict["observer"] = self.observer
+        frame_dict["application"] = self.application
+        frame_dict["processed"] = self.processed
+        frame_dict["frequency"] = self.frequency
+        frame_dict["frame"] = self.frame
+        frame_dict["metadata"] = self.metadata
+
+        return  frame_dict
+
+
+class Uplink(models.Model):
+    """Table for uplink data frames"""
+    timestamp = models.DateTimeField(null=False, default=timezone.now, auto_now=False, auto_now_add=False)
+    operator = models.ForeignKey(Member, to_field="username", db_column="operator", null=False, on_delete=DO_NOTHING)
+    application = models.TextField(null=True, blank=True)
+    processed = models.BooleanField(default=False, null=False)
+    frequency = models.FloatField(null=False)
+    frame = models.TextField(default=None, null=True)
+    metadata = models.JSONField(null=True, blank=True)
+
+
+    def to_dictionary(self):
+        """Convert Uplink object to dict"""
+        frame_dict = {}
+        frame_dict["timestamp"] = self.timestamp
+        frame_dict["operator"] = self.operator
+        frame_dict["application"] = self.application
+        frame_dict["processed"] = self.processed
+        frame_dict["frequency"] = self.frequency
+        frame_dict["frame"] = self.frame
+        frame_dict["metadata"] = self.metadata
+
+        return  frame_dict

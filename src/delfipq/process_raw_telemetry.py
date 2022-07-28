@@ -57,6 +57,7 @@ def store_frame(parser, timestamp, frame, observer):
 parser = XTCEParser("src/delfipq/Delfi-PQ.xml", "Radio")
 
 scraped_telemetry = tlm_scraper.read_scraped_tlm()
+link = "downlink"
 
 if scraped_telemetry['delfi_pq'] != []:
 
@@ -64,7 +65,7 @@ if scraped_telemetry['delfi_pq'] != []:
     end_time = scraped_telemetry["delfi_pq"][0]
 
     get_unprocessed_frames_query = f'''
-    from(bucket: "{BUCKET + "_raw_data"}")
+    from(bucket: "{BUCKET + "_" + link +  "_raw_data"}")
     |> range(start: {start_time}, stop: {end_time})
     |> filter(fn: (r) => r["_field"] == "processed" and r["_value"] == false or
                 r["_field"] == "frame" or r["_field"] == "observer")
@@ -78,7 +79,7 @@ if scraped_telemetry['delfi_pq'] != []:
             frame["processed"] = True
             tlm_scraper.override_raw_frame_processed_flag(
                 write_api,
-                "delfi_pq",
+                "delfi_pq_" + link,
                 frame["_time"],
                 frame["frame"],
                 frame["observer"]

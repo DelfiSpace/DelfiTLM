@@ -18,6 +18,8 @@ SATELLITES = {
     "da_vinci": '51074'  #update id
 }
 
+TIME_FORMAT = '%Y-%m-%dT%H:%M:%SZ'
+
 def get_influx_db_read_and_query_api() -> tuple:
     """Connect to influxdb and return write_api and query_api."""
     with open("src/tokens/influxdb_token.txt", "r", encoding="utf-8") as file:
@@ -49,14 +51,29 @@ def reset_scraped_tlm_timestamps(satellite: str) -> None:
         file.write(json.dumps(scraped_telemetry, indent=4))
 
 
-def update_scraped_tlm_timestamps(satellite, start_time, end_time) -> None:
+def include_timestamp_in_scraped_tlm_range(satellite, link, timestamp):
+    """This function ensures that a given timestamp will be included in the scraped
+    telemetry time range such that it can then be processed and parsed from raw form."""
+
+    tlm_time = datetime.strptime(timestamp, TIME_FORMAT)
+
+    start_time = (tlm_time - timedelta(seconds=1)).strftime(TIME_FORMAT)
+    end_time = (tlm_time + timedelta(seconds=1)).strftime(TIME_FORMAT)
+
+    update_scraped_tlm_timestamps(satellite, link, start_time, end_time)
+
+
+def update_scraped_tlm_timestamps(satellite, link, start_time, end_time) -> None:
     """Bookkeep time range of unprocessed telemetry."""
     scraped_telemetry = read_scraped_tlm()
-    if scraped_telemetry[satellite] == []:
-        scraped_telemetry[satellite] = [start_time, end_time]
+
+    # No time range saved
+    if scraped_telemetry[satellite][link] == []:
+        scraped_telemetry[satellite][link] = [start_time, end_time]
+    # Update time range
     else:
-        scraped_telemetry[satellite][0] = min(scraped_telemetry[satellite][0], start_time)
-        scraped_telemetry[satellite][1] = max(scraped_telemetry[satellite][1], end_time)
+        scraped_telemetry[satellite][link][0] = min(scraped_telemetry[satellite][link][0], start_time)
+        scraped_telemetry[satellite][link][1] = max(scraped_telemetry[satellite][link][1], end_time)
 
     with open(SCRAPED_TLM_FILE, "w", encoding="utf-8") as file:
         json.dump(scraped_telemetry, file, indent=4)
@@ -75,19 +92,19 @@ def get_satnogs_headers() -> dict:
 def get_satnogs_params(satellite: str) -> dict:
     """Get satnogs request parameters"""
 
-    now = datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ")
+    now = datetime.utcnow().strftime(TIME_FORMAT)
     print("Now: " + now)
     #params = {'app_source':'network', 'end': now, 'format': 'json', 'satellite': '51074'}
     params = {'end': now, 'format': 'json', 'satellite': SATELLITES[satellite]}
     return params
 
 
-def override_raw_frame_processed_flag(write_api, satellite, timestamp, frame, observer) -> None:
+def override_raw_frame_processed_flag(write_api, satellite, link, timestamp, frame, observer) -> None:
     """Mark raw data frame as processed."""
     tags = {}
 
     db_fields = {
-    "measurement": satellite + "_raw_data",
+    "measurement": satellite + "_" + link + "_raw_data",
     "time": timestamp,
     "tags": tags,
     "fields": {
@@ -100,18 +117,17 @@ def override_raw_frame_processed_flag(write_api, satellite, timestamp, frame, ob
     write_api.write(satellite, INFLUX_ORG, db_fields)
 
 
-def commit_frame(write_api, query_api, satellite: str, tlm: dict) -> bool:
+def commit_frame(write_api, query_api, satellite: str, link: str, tlm: dict) -> bool:
     """Write frame to corresponding satellite table (if not already stored).
     Returns True if the frame was stored and False otherwise (if the frame is already stored)."""
 
-    bucket = satellite + "_raw_data"
+    bucket = satellite + "_" + link + "_raw_data"
     tags = {}
 
-    time_format = '%Y-%m-%dT%H:%M:%SZ'
-    tlm_time = datetime.strptime(tlm['timestamp'], time_format)
+    tlm_time = datetime.strptime(tlm['timestamp'], TIME_FORMAT)
 
     db_fields = {
-        "measurement": satellite + "_raw_data",
+        "measurement": satellite + "_" + link + "_raw_data",
         "time": tlm["timestamp"],
         "tags": tags,
         "fields": {
@@ -119,13 +135,11 @@ def commit_frame(write_api, query_api, satellite: str, tlm: dict) -> bool:
         }
     }
 
-    fields = ["observer", "frame"]
+    for field, value in tlm.items():
+        db_fields["fields"][field] = value
 
-    for field in fields:
-        db_fields["fields"][field] = tlm[field]
-
-    time_range_lower_bound = (tlm_time - timedelta(seconds=1)).strftime(time_format)
-    time_range_upper_bound = (tlm_time + timedelta(seconds=1)).strftime(time_format)
+    time_range_lower_bound = (tlm_time - timedelta(seconds=1)).strftime(TIME_FORMAT)
+    time_range_upper_bound = (tlm_time + timedelta(seconds=1)).strftime(TIME_FORMAT)
 
     # check if frame already exists
     query = f'''from(bucket: "{bucket}")
@@ -140,7 +154,7 @@ def commit_frame(write_api, query_api, satellite: str, tlm: dict) -> bool:
     return True
 
 
-def save_raw_frame_to_influxdb(satellite: str, telemetry) -> bool:
+def save_raw_frame_to_influxdb(satellite: str, link: str, telemetry) -> bool:
     """Connect to influxdb and process raw telemetry.
     Return True if telemetry was stored, False otherwise."""
 
@@ -150,9 +164,9 @@ def save_raw_frame_to_influxdb(satellite: str, telemetry) -> bool:
 
     if isinstance(telemetry, list):
         for tlm in telemetry:
-            stored = stored or commit_frame(write_api, query_api, satellite, tlm)
+            stored = stored or commit_frame(write_api, query_api, satellite, link, tlm)
     elif isinstance(telemetry, dict):
-        stored = stored or commit_frame(write_api, query_api, satellite, telemetry)
+        stored = stored or commit_frame(write_api, query_api, satellite, link, telemetry)
 
     return stored
 
@@ -161,6 +175,15 @@ def dump_telemetry_to_file(satellite: str, telemetry: list) -> None:
 
     with open(satellite + ".json", "w", encoding="utf-8") as file:
         file.write(json.dumps(telemetry, indent=4, sort_keys=True))
+
+
+def strip_tlm(telemetry: dict, fields: list) -> dict:
+    """Retrieve only a selection of fields from the telemetry dict."""
+    stripped_tlm = {}
+    for field in fields:
+        if field in telemetry.keys:
+            stripped_tlm[field] = telemetry[field]
+    return stripped_tlm
 
 
 def scrape(satellite: str, save_to_db=True, save_to_file=True) -> None:
@@ -186,18 +209,19 @@ def scrape(satellite: str, save_to_db=True, save_to_file=True) -> None:
             # concatenate telemetry
             telemetry = telemetry + telemetry_tmp
 
-            last_time = datetime.strptime(last['timestamp'], '%Y-%m-%dT%H:%M:%SZ')
+            last_time = datetime.strptime(last['timestamp'], TIME_FORMAT)
             next_time = last_time - timedelta(seconds=1)
-            now = next_time.strftime("%Y-%m-%dT%H:%M:%SZ")
+            now = next_time.strftime(TIME_FORMAT)
 
             if save_to_db:
-                stored = save_raw_frame_to_influxdb(satellite, telemetry_tmp)
+                fields_to_save = ["frame", "timestamp", "observer"]
+                stored = save_raw_frame_to_influxdb(satellite, "downlink", strip_tlm(telemetry_tmp, fields_to_save))
                 # stop scraping if frames are already stored
                 if stored:
                     # print("DB successfully updated.")
                     # break
                     print("Stored frame")
-                    update_scraped_tlm_timestamps(satellite, first["timestamp"], last["timestamp"])
+                    update_scraped_tlm_timestamps(satellite, "downlink", first["timestamp"], last["timestamp"])
 
             print("Next " + now)
 
