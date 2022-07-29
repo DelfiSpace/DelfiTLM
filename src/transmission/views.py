@@ -116,11 +116,12 @@ def process(request, link):
     """Process frames that are not already stored in influxdb"""
 
     user = request.user
-    if link == "uplink" and  user.has_perm("transmission.delete_uplink"):
+    if link == "uplink" and user.has_perm("transmission.view_uplink"):
         uplink_frames = Uplink.objects.all().filter(processed=False)
+        process_frames(uplink_frames, link)
         messages.info(request, f"{len(uplink_frames)} {link} frames were processed.")
 
-    elif link == "downlink" and user.has_perm("transmission.delete_downlink"):
+    elif link == "downlink" and user.has_perm("transmission.view_downlink"):
         downlink_frames = Downlink.objects.all().filter(processed=False)
         process_frames(downlink_frames, link)
         messages.info(request, f"{len(downlink_frames)} {link} frames were processed.")
