@@ -108,7 +108,7 @@ def delete_processed_frames(request, link):
     else:
         messages.error(request, "Operation not allowed.")
 
-    return redirect('account')
+    return redirect('get_frames_table', link)
 
 
 @login_required(login_url='/login')
@@ -127,7 +127,8 @@ def process(request, link):
     else:
         messages.error(request, "Operation not allowed.")
 
-    return redirect('account')
+    return redirect('get_frames_table', link)
+
 
 def paginate_telemetry_table(request, telemetry_filter, table_name):
     """Paginates a telemetry table and renders the filtering form"""

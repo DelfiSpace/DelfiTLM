@@ -32,7 +32,7 @@ class TelemetryUplinkFilter(django_filters.FilterSet):
     class Meta:
         """Meta class to specify model"""
         model = Uplink
-        fields = ["operator"]
+        fields = ["processed","operator"]
 
 
 class TLEFilter(django_filters.FilterSet):

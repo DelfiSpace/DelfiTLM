@@ -29,29 +29,7 @@
 <br>
 <br>
 
-{% if perms.transmission.view_downlink %}
-    <a href="{% url 'process' link='downlink'%}"><input type="submit" value="Process Frames: Downlink"></input></a>
-    <br>
-    <br>
-{% endif %}
 
-{% if perms.transmission.view_uplink %}
-    <a href="{% url 'process' link='uplink'%}"><input type="submit" value="Process Frames: Uplink"></input></a>
-    <br>
-    <br>
-{% endif %}
-
-{% if perms.transmission.delete_downlink %}
-    <a href="{% url 'delete_processed_frames' link='downlink'%}"><input type="submit" value="Delete Processed Frames: Downlink"></input></a>
-    <br>
-    <br>
-{% endif %}
-
-{% if perms.transmission.delete_uplink %}
-    <a href="{% url 'delete_processed_frames' link='uplink'%}"><input type="submit" value="Delete Processed Frames: Uplink"></input></a>
-    <br>
-    <br>
-{% endif %}
 
 {% if key is not null %}
     <p>API KEY:  {{ key }}</p>

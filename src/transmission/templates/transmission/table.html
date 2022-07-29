@@ -3,11 +3,27 @@
 {% block breadcrumbs %}
 <div class="breadcrumbs">
     <a href="{% url 'homepage' %}">{% translate 'Home' %}</a>
-    &rsaquo; {% translate 'table_name' %}
+    &rsaquo;  {{table_name}}
 </div>
 {% endblock %}
 
 {% block nav-sidebar %}{% endblock %}
+
+{% block usertools %}
+{% if perms.transmission.view_downlink %}
+<a href="{% url 'get_frames_table' link='downlink'%}" >{% translate 'Downlink Transmission' %}</a>
+{% endif %}
+
+{% if perms.transmission.view_uplink %}
+    <a href="{% url 'get_frames_table' link='uplink' %}" >{% translate 'Uplink Transmission' %}</a>
+{% endif %}
+
+    {% if user.is_authenticated %}
+        <a href="{% url 'account' %}">{% translate 'Account' %}</a>
+        {% else %}
+        <a href="{% url 'login' %}">{% translate 'Login' %}</a>
+    {% endif %}
+{% endblock %}
 
 {% block content %}
     <head>
@@ -21,6 +37,19 @@
     <body>
         <h1>{{table_name}} Frames</h1>
         <div>
+        {% if table_name == 'Downlink' and perms.transmission.view_downlink %}
+            <a href="{% url 'process' link='downlink'%}"><input type="submit" value="Process Frames"></input></a>
+        {% elif table_name == 'Uplink' and perms.transmission.view_uplink %}
+            <a href="{% url 'process' link='uplink'%}"><input type="submit" value="Process Frames"></input></a>
+        {% endif %}
+
+        {% if table_name == 'Downlink' and perms.transmission.delete_downlink %}
+            <a href="{% url 'delete_processed_frames' link='downlink'%}"><input type="submit" value="Delete Processed Frames"></input></a>
+        {%  elif table_name == 'Uplink' and perms.transmission.delete_uplink %}
+            <a href="{% url 'delete_processed_frames' link='uplink'%}"><input type="submit" value="Delete Processed Frames"></input></a>
+        {% endif %}
+        <br>
+        <br>
         <form method="get">
         {{telemetry_filter.form}}
 
@@ -33,38 +62,37 @@
         <input type="submit" value="Search"></input>
         </form>
         </div>
-        <table border="1" class="dataframe">
-            <thead>
-              <tr style="text-align: left;">
+        <div>
+            <table border="1" class="dataframe">
+                <thead>
+                <tr style="text-align: left;">
 
-                <th>id</th>
-                <th>timestamp</th>
-                <th>radio_amateur</th>
-                <th>version</th>
-                <th>processed</th>
-                <th>frequency</th>
-                <th>frame</th>
-                <!-- <th>frame_binary</th> -->
-              </tr>
-            </thead>
-            <tbody>
+                    <th>id</th>
+                    <th>timestamp</th>
+                    <th>radio_amateur</th>
+                    <th>version</th>
+                    <th>processed</th>
+                    <th>frequency</th>
+                    <th style=" max-width: 1000px; word-wrap: break-word;">frame</th>
+                </tr>
+                </thead>
+                <tbody>
+                {% for frame in page_obj %}
                 <tr>
-            {% for frame in page_obj %}
-            <td>{{ frame.id }}</td>
-            <td>{{ frame.timestamp}}</td>
-            <!-- <td>{{ frame.timestamp|upper}}</td> USE |upper to view the timestamp in full-->
-            <td>{{ frame.radio_amateur}}</td>
-            <td>{{ frame.version}}</td>
-            <td>{{ frame.processed}}</td>
-            <td>{{ frame.frequency}}</td>
-            <td>{{ frame.frame}}</td>
-            <!-- <td>{{ frame.frame_binary}}</td> -->
-            </tr>
-                {% endfor %}
+                    <td>{{ frame.id }}</td>
+                    <td>{{ frame.timestamp}}</td>
+                    <!-- <td>{{ frame.timestamp|upper}}</td> USE |upper to view the timestamp in full-->
+                    <td>{{ frame.radio_amateur}}</td>
+                    <td>{{ frame.version}}</td>
+                    <td>{{ frame.processed}}</td>
+                    <td>{{ frame.frequency}}</td>
+                    <td  style=" max-width: 1000px; word-wrap: break-word;">{{ frame.frame}}</td>
+                </tr>
+                    {% endfor %}
 
-            </tbody>
-        </table>
-
+                </tbody>
+            </table>
+        </div>
         <div class="pagination">
             {% load tags %}
             <span class="step-links">
@@ -83,7 +111,5 @@
                 {% endif %}
             </span>
         </div>
-        <table id="table" border="1" class="dataframe">
-          </table>
 
 {% endblock %}
