@@ -37,15 +37,14 @@
 
 {% if perms.transmission.delete_uplink %}
     <a href="{% url 'delete_processed_frames' link='uplink'%}" >{% translate 'Delete Processed Frames: Uplink' %}</a>
-
+    <br>
+    <br>
 {% endif %}
 
-<br>
-<br>
 {% if key is not null %}
-<p>API KEY:  {{ key }}</p>
-<p>Please save this key in a secure place, it will not be displayed on this page in the future.</p>
-<p>If lost, a new key needs to be generated.</p>
+    <p>API KEY:  {{ key }}</p>
+    <p>Please save this key in a secure place, it will not be displayed on this page in the future.</p>
+    <p>If lost, a new key needs to be generated.</p>
 {% endif %}
 
 {% endblock %}

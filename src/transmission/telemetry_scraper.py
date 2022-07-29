@@ -45,7 +45,10 @@ def read_scraped_tlm() -> dict:
 def reset_scraped_tlm_timestamps(satellite: str) -> None:
     """Replace timestamps in scraped_telemetry.json with []."""
     scraped_telemetry = read_scraped_tlm()
-    scraped_telemetry[satellite] = []
+    scraped_telemetry[satellite] = {
+        "uplink": [],
+        "downlink": []
+    }
 
     with open(SCRAPED_TLM_FILE, "w", encoding="utf-8") as file:
         file.write(json.dumps(scraped_telemetry, indent=4))
@@ -105,6 +108,8 @@ def write_frame_to_raw_bucket(write_api, satellite, link, timestamp, frame_field
 
     tags = {}
 
+    bucket = satellite + "_raw_data"
+
     db_fields = {
     "measurement": satellite + "_" + link + "_raw_data",
     "time": timestamp,
@@ -112,7 +117,7 @@ def write_frame_to_raw_bucket(write_api, satellite, link, timestamp, frame_field
     "fields": frame_fields
     }
 
-    write_api.write(satellite, INFLUX_ORG, db_fields)
+    write_api.write(bucket, INFLUX_ORG, db_fields)
 
 
 def commit_frame(write_api, query_api, satellite: str, link: str, tlm: dict) -> bool:
@@ -120,7 +125,7 @@ def commit_frame(write_api, query_api, satellite: str, link: str, tlm: dict) -> 
     Returns True if the frame was stored and False otherwise (if the frame is already stored).
     Also store the frame with processed = False."""
 
-    bucket = satellite + "_" + link + "_raw_data"
+    bucket = satellite + "_raw_data"
     tlm_time = datetime.strptime(tlm['timestamp'], TIME_FORMAT)
 
 
@@ -168,12 +173,19 @@ def strip_tlm(telemetry: dict, fields: list) -> dict:
     """Retrieve only a selection of fields from the telemetry dict."""
     stripped_tlm = {}
     for field in fields:
-        if field in telemetry.keys:
+        if field in telemetry.keys():
             stripped_tlm[field] = telemetry[field]
     return stripped_tlm
 
+def strip_tlm_list(telemetry: list, fields: list) -> list:
+    """Retrieve only a selection of fields from the telemetry dict for a list of tlm dicts."""
+    stripped_tlm_list = []
+    for tlm in telemetry:
+        stripped_tlm_list.append(strip_tlm(tlm, fields))
+    return stripped_tlm_list
 
-def scrape(satellite: str, save_to_db=True, save_to_file=True) -> None:
+
+def scrape(satellite: str, save_to_db=True, save_to_file=False) -> None:
     """Scrape satnogs for new telemetry"""
 
     telemetry = []
@@ -201,7 +213,7 @@ def scrape(satellite: str, save_to_db=True, save_to_file=True) -> None:
 
             if save_to_db:
                 fields_to_save = ["frame", "timestamp", "observer"]
-                stripped_tlm = strip_tlm(telemetry_tmp, fields_to_save)
+                stripped_tlm = strip_tlm_list(telemetry_tmp, fields_to_save)
                 stored = save_raw_frame_to_influxdb(satellite, "downlink", stripped_tlm)
                 # stop scraping if frames are already stored
                 if stored:

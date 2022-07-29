@@ -13,7 +13,7 @@ import transmission.telemetry_scraper as tlm_scraper
 
 
 def store_frame(frame, link, username, application=None) -> None:
-    """Adds one json frame to the downlink table"""
+    """Adds one json frame to the uplink/downlink table"""
 
     frame_entry = None
 
