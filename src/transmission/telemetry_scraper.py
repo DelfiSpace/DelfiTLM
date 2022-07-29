@@ -9,7 +9,18 @@ from influxdb_client.client.write_api import SYNCHRONOUS
 
 PATH = "https://db.satnogs.org/api/telemetry/"
 INFLUX_ORG = "Delfi Space"
-SCRAPED_TLM_FILE = "scraped_telemetry.json"
+# Django + docker paths and links:
+SCRAPED_TLM_FILE = "transmission/scraped_telemetry.json"
+INFLUXDB_TOKEN_PATH = "tokens/influxdb_token.txt"
+SATNOGS_TOKEN_PATH = "tokens/satnogs_token.txt"
+INFLUXDB_URL = "http://influxdb:8086"
+
+# To run this file as a stand alone script or with  use the settings below:
+
+# SCRAPED_TLM_FILE = "src/transmission/scraped_telemetry.json"
+# INFLUXDB_TOKEN_PATH = "src/tokens/influxdb_token.txt"
+# SATNOGS_TOKEN_PATH = "src/tokens/satnogs_token.txt"
+# INFLUXDB_URL = "http://localhost:8086"
 
 SATELLITES = {
     "delfi_pq": '51074',
@@ -22,10 +33,10 @@ TIME_FORMAT = '%Y-%m-%dT%H:%M:%SZ'
 
 def get_influx_db_read_and_query_api() -> tuple:
     """Connect to influxdb and return write_api and query_api."""
-    with open("src/tokens/influxdb_token.txt", "r", encoding="utf-8") as file:
+    with open(INFLUXDB_TOKEN_PATH, "r", encoding="utf-8") as file:
         token = file.read()
 
-    client = InfluxDBClient(url="http://localhost:8086", token=token, org=INFLUX_ORG)
+    client = InfluxDBClient(url=INFLUXDB_URL, token=token, org=INFLUX_ORG)
 
     write_api = client.write_api(write_options=SYNCHRONOUS)
     query_api = client.query_api()
@@ -85,7 +96,7 @@ def update_scraped_tlm_timestamps(satellite, link, start_time, end_time) -> None
 def get_satnogs_headers() -> dict:
     """Get satnogs request headers"""
 
-    with open("src/tokens/satnogs_token.txt", "r", encoding="utf-8") as file:
+    with open(SATNOGS_TOKEN_PATH, "r", encoding="utf-8") as file:
         cookie_auth = file.read()
 
     headers = {'accept': 'application/json', 'Authorization': 'Token ' + cookie_auth}
@@ -240,3 +251,8 @@ def scrape(satellite: str, save_to_db=True, save_to_file=False) -> None:
 
         if save_to_file:
             dump_telemetry_to_file(satellite, telemetry)
+
+# scrape("delfi_pq")
+# scrape("delfi_next")
+# scrape("delfi_c3")
+# scrape("da_vinci")

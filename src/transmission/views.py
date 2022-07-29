@@ -8,13 +8,13 @@ from django.contrib.auth.decorators import login_required
 from django.core.exceptions import BadRequest
 from django.http import HttpResponseBadRequest
 from django.http.response import JsonResponse
-from django.shortcuts import render
+from django.shortcuts import redirect, render
 from rest_framework_api_key.permissions import HasAPIKey
 from rest_framework.decorators import permission_classes
 from members.models import APIKey
 from .models import Uplink, Downlink, TLE
 from .filters import TelemetryDownlinkFilter, TelemetryUplinkFilter, TLEFilter
-from .save_data import parse_submitted_frame, store_frame
+from .save_data import parse_submitted_frame, process_frames, store_frame
 
 
 QUERY_ROW_LIMIT = 100
@@ -82,7 +82,7 @@ def add_dummy_downlink_frames(request):
     """Add frames to Downlink table. The input is a list of json objects embedded in to the
     HTTP request."""
 
-    with open("src/transmission/dummy_downlink.json", 'r', encoding="utf-8") as file:
+    with open("transmission/dummy_downlink.json", 'r', encoding="utf-8") as file:
         dummy_data = json.load(file)
         for frame in dummy_data["frames"]:
             frame_entry = Downlink()
@@ -95,22 +95,39 @@ def add_dummy_downlink_frames(request):
 @login_required(login_url='/login')
 def delete_processed_frames(request, link):
     """Remove the processed frames that are already stored in influxdb"""
-    if request.method == 'POST':
-        user = request.user
-        if link == "uplink":
-            if user.has_perm("transmission.delete_uplink"):
-                removed_data_len = len(Uplink.objects.all().filter(processed=True))
-                Uplink.objects.all().filter(processed=True).delete()
-                messages.info(request, f"{removed_data_len} processed {link} frames were removed.")
+    user = request.user
+    if link == "uplink" and  user.has_perm("transmission.delete_uplink"):
+        removed_data_len = len(Uplink.objects.all().filter(processed=True))
+        Uplink.objects.all().filter(processed=True).delete()
+        messages.info(request, f"{removed_data_len} processed {link} frames were removed.")
 
-        elif link == "downlink":
-            if user.has_perm("transmission.delete_downlink"):
-                removed_data_len = len(Downlink.objects.all().filter(processed=True))
-                Downlink.objects.all().filter(processed=True).delete()
-                messages.info(request, f"{removed_data_len} processed {link} frames were removed.")
+    elif link == "downlink" and user.has_perm("transmission.delete_downlink"):
+        removed_data_len = len(Downlink.objects.all().filter(processed=True))
+        Downlink.objects.all().filter(processed=True).delete()
+        messages.info(request, f"{removed_data_len} processed {link} frames were removed.")
+    else:
+        messages.error(request, "Operation not allowed.")
 
-    return HttpResponseBadRequest()
+    return redirect('account')
 
+
+@login_required(login_url='/login')
+def process(request, link):
+    """Process frames that are not already stored in influxdb"""
+
+    user = request.user
+    if link == "uplink" and  user.has_perm("transmission.delete_uplink"):
+        uplink_frames = Uplink.objects.all().filter(processed=False)
+        messages.info(request, f"{len(uplink_frames)} {link} frames were processed.")
+
+    elif link == "downlink" and user.has_perm("transmission.delete_downlink"):
+        downlink_frames = Downlink.objects.all().filter(processed=False)
+        process_frames(downlink_frames, link)
+        messages.info(request, f"{len(downlink_frames)} {link} frames were processed.")
+    else:
+        messages.error(request, "Operation not allowed.")
+
+    return redirect('account')
 
 def paginate_telemetry_table(request, telemetry_filter, table_name):
     """Paginates a telemetry table and renders the filtering form"""

@@ -3,6 +3,7 @@ from django.db import models
 from django.db.models.deletion import DO_NOTHING
 from django.utils import timezone
 from members.models import Member
+from transmission.telemetry_scraper import TIME_FORMAT
 
 #pylint: disable=all
 
@@ -35,8 +36,9 @@ class Downlink(models.Model):
     def to_dictionary(self):
         """Convert Downlink object to dict"""
         frame_dict = {}
-        frame_dict["timestamp"] = self.timestamp
-        frame_dict["observer"] = self.observer.username
+        frame_dict["timestamp"] = self.timestamp.strftime(TIME_FORMAT)
+        if self.observer is not None:
+            frame_dict["observer"] = self.observer.username
         frame_dict["application"] = self.application
         frame_dict["processed"] = self.processed
         frame_dict["frequency"] = self.frequency
@@ -60,8 +62,9 @@ class Uplink(models.Model):
     def to_dictionary(self):
         """Convert Uplink object to dict"""
         frame_dict = {}
-        frame_dict["timestamp"] = self.timestamp
-        frame_dict["operator"] = self.operator.username
+        frame_dict["timestamp"] = self.timestamp.strftime(TIME_FORMAT)
+        if self.operator is not None:
+            frame_dict["operator"] = self.operator.username
         frame_dict["application"] = self.application
         frame_dict["processed"] = self.processed
         frame_dict["frequency"] = self.frequency

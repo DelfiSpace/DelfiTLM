@@ -89,6 +89,7 @@ def process_uplink_and_downlink():
     uplink_frames = Uplink.objects.all().filter(processed=False)
     process_frames(uplink_frames, "uplink")
 
+    return len(downlink_frames), len(uplink_frames)
 
 def process_frames(frames, link):
     """Try to store frame to influxdb and set the processed flag to True
