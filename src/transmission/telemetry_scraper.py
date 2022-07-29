@@ -251,8 +251,3 @@ def scrape(satellite: str, save_to_db=True, save_to_file=False) -> None:
 
         if save_to_file:
             dump_telemetry_to_file(satellite, telemetry)
-
-# scrape("delfi_pq")
-# scrape("delfi_next")
-# scrape("delfi_c3")
-# scrape("da_vinci")

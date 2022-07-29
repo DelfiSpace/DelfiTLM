@@ -6,3 +6,7 @@ from django.apps import AppConfig
 class TransmissionConfig(AppConfig):
     default_auto_field = 'django.db.models.BigAutoField'
     name = 'transmission'
+
+    def ready(self):
+        import transmission.scheduler as scheduler
+        scheduler.start()
