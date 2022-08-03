@@ -3,7 +3,8 @@
 import importlib.util
 from XTCEParser import XTCEParser, XTCEException
 
-BUCKET = "delfi_pq"
+SATELLITE = "delfi_pq"
+parser = XTCEParser("src/delfipq/Delfi-PQ.xml", "Radio")
 
 def module_from_file(module_name, file_path):
     """Import module form file"""
@@ -16,7 +17,7 @@ tlm_scraper = module_from_file("tlm_scraper", "src/transmission/telemetry_scrape
 
 write_api, query_api = tlm_scraper.get_influx_db_read_and_query_api()
 
-def store_frame(parser, timestamp, frame, observer):
+def store_frame(timestamp, frame, observer, link):
     """Store frame in influxdb"""
 
     telemetry = parser.processTMFrame(bytes.fromhex(frame))
@@ -48,43 +49,48 @@ def store_frame(parser, timestamp, frame, observer):
 
             db_fields["fields"][field] = value
 
-            write_api.write(BUCKET, tlm_scraper.INFLUX_ORG, db_fields)
+            write_api.write(SATELLITE + "_" + link, tlm_scraper.INFLUX_ORG, db_fields)
             print(db_fields)
             db_fields["fields"] = {}
 
 
+def process_frames_delfi_pq(link):
+    scraped_telemetry = tlm_scraper.read_scraped_tlm()
 
-parser = XTCEParser("src/delfipq/Delfi-PQ.xml", "Radio")
+    if scraped_telemetry[SATELLITE] != []:
 
-scraped_telemetry = tlm_scraper.read_scraped_tlm()
-LINK = "downlink"
+        start_time = scraped_telemetry[SATELLITE][link][1]
+        end_time = scraped_telemetry[SATELLITE][link][0]
 
-if scraped_telemetry['delfi_pq'] != []:
+        get_unprocessed_frames_query = f'''
+        from(bucket: "{SATELLITE +  "_raw_data"}")
+        |> range(start: {start_time}, stop: {end_time})
+        |> filter(fn: (r) => r._measurement == "{SATELLITE + "_" + link + "_raw_data"}" and
+                    r["_field"] == "processed" and r["_value"] == false or
+                    r["_field"] == "frame" or r["_field"] == "observer")
+        |> pivot(rowKey:["_time"], columnKey: ["_field"], valueColumn: "_value")
+        '''
+        # query result as dataframe
+        df = query_api.query_data_frame(query=get_unprocessed_frames_query)
+        # convert dataframe to dict and only include the frame and observer columns
+        df_as_dict = df.loc[:, df.columns.isin(['frame', 'observer'])].to_dict(orient='records')
+        # process each frame
+        for i, row in df.iterrows():
+            try:
+                store_frame(row["_time"], row["frame"], row["observer"],  link)
+                row["processed"] = True
+                tlm_scraper.write_frame_to_raw_bucket(
+                    write_api,
+                    SATELLITE,
+                    link,
+                    row["_time"],
+                    df_as_dict[i]
+                    )
+            except XTCEException as ex:
+                # ignore
+                pass
 
-    start_time = scraped_telemetry["delfi_pq"][LINK][1]
-    end_time = scraped_telemetry["delfi_pq"][LINK][0]
+        tlm_scraper.reset_scraped_tlm_timestamps(SATELLITE)
 
-    get_unprocessed_frames_query = f'''
-    from(bucket: "{BUCKET + "_" + LINK +  "_raw_data"}")
-    |> range(start: {start_time}, stop: {end_time})
-    |> filter(fn: (r) => r["_field"] == "processed" and r["_value"] == false or
-                r["_field"] == "frame" or r["_field"] == "observer")
-    |> pivot(rowKey:["_time"], columnKey: ["_field"], valueColumn: "_value")
-    '''
-    data = query_api.query_data_frame(query=get_unprocessed_frames_query)
-    # process each frame
-    for _, frame in data.iterrows():
-        try:
-            store_frame(parser, frame["_time"], frame["frame"], frame["observer"])
-            frame["processed"] = True
-            tlm_scraper.write_frame_to_raw_bucket(
-                write_api,
-                "delfi_pq_" + LINK,
-                frame["_time"],
-                frame
-                )
-        except XTCEException as ex:
-            # ignore
-            pass
+process_frames_delfi_pq("downlink")
 
-    tlm_scraper.reset_scraped_tlm_timestamps("delfi_pq")
