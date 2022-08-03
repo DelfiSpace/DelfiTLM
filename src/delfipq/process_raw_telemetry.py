@@ -52,8 +52,8 @@ def process_frames_delfi_pq(link):
 
     if scraped_telemetry[SATELLITE][link] != []:
 
-        start_time = scraped_telemetry[SATELLITE][link][1]
-        end_time = scraped_telemetry[SATELLITE][link][0]
+        start_time = scraped_telemetry[SATELLITE][link][0]
+        end_time = scraped_telemetry[SATELLITE][link][1]
 
         get_unprocessed_frames_query = f'''
         from(bucket: "{SATELLITE +  "_raw_data"}")
@@ -72,7 +72,7 @@ def process_frames_delfi_pq(link):
         for i, row in dataframe.iterrows():
             try:
                 store_frame(row["_time"], row["frame"], row["observer"],  link)
-                row["processed"] = True
+                df_as_dict[i]["processed"] = True
                 tlm_scraper.write_frame_to_raw_bucket(
                     write_api,
                     SATELLITE,

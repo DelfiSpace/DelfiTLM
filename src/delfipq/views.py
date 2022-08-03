@@ -1,8 +1,9 @@
 """API request handling. Map requests to the corresponding HTMLs."""
 import json
-from django.shortcuts import render
+from django.contrib import messages
+from django.shortcuts import render, redirect
 from delfipq import XTCEParser as xtce_parser
-from delfipq.process_raw_telemetry import store_frame
+from delfipq.process_raw_telemetry import process_frames_delfi_pq, store_frame
 
 # from revproxy.views import ProxyView
 
@@ -35,6 +36,19 @@ def add_dummy_tlm_data(request):
                 # ignore
                 pass
     return {"len": len(data) }
+
+
+def process_telemetry(request):
+    """Trigger delfi_pq telemetry processing"""
+    user = request.user
+
+    if user.has_perm("transmission.view_downlink"):
+        messages.info(request, "Delfi-PQ telemetry frames processed.")
+        process_frames_delfi_pq("downlink")
+    else:
+        messages.error(request, "Operation not allowed.")
+
+    return redirect('get_frames_table', "downlink")
 
 
 def home(request):
