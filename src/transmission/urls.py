@@ -1,7 +1,7 @@
 """API urls"""
+import os
 from django.urls import path
 from django.views.decorators.csrf import csrf_exempt
-
 from . import views
 
 urlpatterns = [
@@ -10,7 +10,12 @@ urlpatterns = [
     path('transmission/delete-processed-frames/<link>/',
          views.delete_processed_frames, name='delete_processed_frames'),
     path('transmission/process-frames/<link>/', views.process, name='process'),
-    # add dummy data
-    path('add/', views.add_dummy_downlink_frames, name='add_dummy_downlink_frames'),
     path('submit/', csrf_exempt(views.submit_frame), name='submit_frame'),
 ]
+
+# add path only in debug mode
+dummy_data_path = path('add/', views.add_dummy_downlink_frames, name='add_dummy_downlink_frames')
+DEBUG = bool(int(os.environ.get('DEBUG', 1)))
+
+if DEBUG:
+    urlpatterns.append(dummy_data_path)

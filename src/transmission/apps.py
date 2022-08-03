@@ -14,3 +14,4 @@ class TransmissionConfig(AppConfig):
         if not DEBUG:
             import transmission.scheduler as scheduler
             scheduler.start()
+            print("Scheduler started")

@@ -1,5 +1,4 @@
 """Script to store Delfi-PQ telemetry frames"""
-# pylint: disable=E0401, W0621
 from transmission import telemetry_scraper as tlm_scraper
 from delfipq import XTCEParser as xtce_parser
 
@@ -10,7 +9,7 @@ parser = xtce_parser.XTCEParser("delfipq/Delfi-PQ.xml", "Radio")
 
 write_api, query_api = tlm_scraper.get_influx_db_read_and_query_api()
 
-def store_frame(timestamp, frame, observer, link):
+def store_frame(timestamp, frame: str, observer: str, link: str):
     """Store frame in influxdb"""
 
     telemetry = parser.processTMFrame(bytes.fromhex(frame))
