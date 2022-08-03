@@ -1,19 +1,12 @@
 """Script to store Delfi-PQ telemetry frames"""
 # pylint: disable=E0401, W0621
-import importlib.util
-from XTCEParser import XTCEParser, XTCEException
+from transmission import telemetry_scraper as tlm_scraper
+from delfipq import XTCEParser as xtce_parser
 
 SATELLITE = "delfi_pq"
-parser = XTCEParser("src/delfipq/Delfi-PQ.xml", "Radio")
 
-def module_from_file(module_name, file_path):
-    """Import module form file"""
-    spec = importlib.util.spec_from_file_location(module_name, file_path)
-    module = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(module)
-    return module
+parser = xtce_parser.XTCEParser("delfipq/Delfi-PQ.xml", "Radio")
 
-tlm_scraper = module_from_file("tlm_scraper", "src/transmission/telemetry_scraper.py")
 
 write_api, query_api = tlm_scraper.get_influx_db_read_and_query_api()
 
@@ -57,7 +50,7 @@ def store_frame(timestamp, frame, observer, link):
 def process_frames_delfi_pq(link):
     scraped_telemetry = tlm_scraper.read_scraped_tlm()
 
-    if scraped_telemetry[SATELLITE] != []:
+    if scraped_telemetry[SATELLITE][link] != []:
 
         start_time = scraped_telemetry[SATELLITE][link][1]
         end_time = scraped_telemetry[SATELLITE][link][0]
@@ -86,11 +79,9 @@ def process_frames_delfi_pq(link):
                     row["_time"],
                     df_as_dict[i]
                     )
-            except XTCEException as ex:
+            except xtce_parser.XTCEException as ex:
                 # ignore
                 pass
 
         tlm_scraper.reset_scraped_tlm_timestamps(SATELLITE)
-
-process_frames_delfi_pq("downlink")
 

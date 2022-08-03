@@ -1,5 +1,6 @@
 """Scheduler for planning telemetry scrapes and frame processing"""
 from apscheduler.schedulers.background import BackgroundScheduler
+from delfipq.process_raw_telemetry import process_frames_delfi_pq
 from transmission.telemetry_scraper import scrape
 from transmission.save_data import process_uplink_and_downlink
 
@@ -37,6 +38,17 @@ def start():
     # add_scraper_job("delfi_next", trigger="interval", minutes=60*12)
     # add_scraper_job("delfi_c3", trigger="interval", minutes=60*12)
     # add_scraper_job("da_vinci", trigger="interval", minutes=60*12)
+
+
+    scheduler.add_job(
+        process_frames_delfi_pq,
+        args=["downlink"],
+        trigger='interval',
+        minutes= 1,
+        id='delfi_pq_frame_processor_influxdb',
+        max_instances=1
+        )
+
 
     scheduler.start()
 

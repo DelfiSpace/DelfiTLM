@@ -2,6 +2,8 @@
 # pylint: disable=E0401
 from telemetry_scraper import scrape
 
+# Run this file from within the src folder (if ran as a standalone script)
+
 scrape("delfi_pq")
 # scrape("delfi_next")
 # scrape("delfi_c3")

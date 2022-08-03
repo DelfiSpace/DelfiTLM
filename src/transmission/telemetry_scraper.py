@@ -16,10 +16,6 @@ SATNOGS_TOKEN_PATH = "tokens/satnogs_token.txt"
 INFLUXDB_URL = "http://influxdb:8086"
 
 # To run this file as a stand alone script or with  use the settings below:
-
-# SCRAPED_TLM_FILE = "src/transmission/scraped_telemetry.json"
-# INFLUXDB_TOKEN_PATH = "src/tokens/influxdb_token.txt"
-# SATNOGS_TOKEN_PATH = "src/tokens/satnogs_token.txt"
 # INFLUXDB_URL = "http://localhost:8086"
 
 SATELLITES = {
