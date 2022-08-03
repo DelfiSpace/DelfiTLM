@@ -48,6 +48,7 @@ def store_frame(timestamp, frame, observer, link):
 
 
 def process_frames_delfi_pq(link):
+    """Parse frames, store the parsed form and mark the raw entry as processed."""
     scraped_telemetry = tlm_scraper.read_scraped_tlm()
 
     if scraped_telemetry[SATELLITE][link] != []:
@@ -64,11 +65,12 @@ def process_frames_delfi_pq(link):
         |> pivot(rowKey:["_time"], columnKey: ["_field"], valueColumn: "_value")
         '''
         # query result as dataframe
-        df = query_api.query_data_frame(query=get_unprocessed_frames_query)
+        dataframe = query_api.query_data_frame(query=get_unprocessed_frames_query)
         # convert dataframe to dict and only include the frame and observer columns
-        df_as_dict = df.loc[:, df.columns.isin(['frame', 'observer'])].to_dict(orient='records')
+        df_as_dict = dataframe.loc[:, dataframe.columns.isin(['frame', 'observer'])]
+        df_as_dict = df_as_dict.to_dict(orient='records')
         # process each frame
-        for i, row in df.iterrows():
+        for i, row in dataframe.iterrows():
             try:
                 store_frame(row["_time"], row["frame"], row["observer"],  link)
                 row["processed"] = True
@@ -79,9 +81,8 @@ def process_frames_delfi_pq(link):
                     row["_time"],
                     df_as_dict[i]
                     )
-            except xtce_parser.XTCEException as ex:
+            except xtce_parser.XTCEException as _:
                 # ignore
                 pass
 
         tlm_scraper.reset_scraped_tlm_timestamps(SATELLITE)
-

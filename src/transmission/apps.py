@@ -1,6 +1,7 @@
 """Apps config file"""
 
 from django.apps import AppConfig
+import os
 
 # pylint: disable=all
 class TransmissionConfig(AppConfig):
@@ -8,5 +9,8 @@ class TransmissionConfig(AppConfig):
     name = 'transmission'
 
     def ready(self):
-        import transmission.scheduler as scheduler
-        scheduler.start()
+        # start the scheduler only in production
+        DEBUG = bool(int(os.environ.get('DEBUG', 1)))
+        if not DEBUG:
+            import transmission.scheduler as scheduler
+            scheduler.start()
