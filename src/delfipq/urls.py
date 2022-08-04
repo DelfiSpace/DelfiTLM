@@ -11,7 +11,15 @@ urlpatterns = [
 
 # add path only in debug mode
 DEBUG = bool(int(os.environ.get('DEBUG', 1)))
-dummy_tlm_path = path('delfipq/add-tlm/', views.add_dummy_tlm_data, name='delfi_pq_add_dummy_tlm')
+dummy_tlm_path = path('delfipq/add-tlm/',
+                      views.add_dummy_tlm_data,
+                      name='delfi_pq_add_dummy_tlm'
+                      )
+dummy_raw_tlm_path =  path('delfipq/add-raw-tlm/',
+                           views.add_dummy_tlm_raw_data,
+                           name='delfi_pq_add_dummy_raw_tlm'
+                           )
 
 if DEBUG:
     urlpatterns.append(dummy_tlm_path)
+    urlpatterns.append(dummy_raw_tlm_path)

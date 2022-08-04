@@ -9,8 +9,23 @@ parser = xtce_parser.XTCEParser("delfipq/Delfi-PQ.xml", "Radio")
 
 write_api, query_api = tlm_scraper.get_influx_db_read_and_query_api()
 
+def store_raw_frame(timestamp, frame: str, observer: str, link: str):
+    """Store raw unprocessed frame in influxdb"""
+    frame_fields = {
+        "frame": frame,
+        "observer": observer,
+        "timestamp": timestamp
+    }
+
+    stored = tlm_scraper.commit_frame(write_api, query_api, SATELLITE, link, frame_fields)
+    if stored:
+        tlm_scraper.include_timestamp_in_scraped_tlm_range(SATELLITE, link, timestamp)
+    return stored
+
 def store_frame(timestamp, frame: str, observer: str, link: str):
-    """Store frame in influxdb"""
+    """Store parsed frame in influxdb"""
+
+    print("processed frame stored")
 
     telemetry = parser.processTMFrame(bytes.fromhex(frame))
 
@@ -42,13 +57,19 @@ def store_frame(timestamp, frame: str, observer: str, link: str):
             db_fields["fields"][field] = value
 
             write_api.write(SATELLITE + "_" + link, tlm_scraper.INFLUX_ORG, db_fields)
-            print(db_fields)
+            # print(db_fields)
             db_fields["fields"] = {}
 
 
-def process_frames_delfi_pq(link):
-    """Parse frames, store the parsed form and mark the raw entry as processed."""
+def process_frames_delfi_pq(link) -> tuple:
+    """Parse frames, store the parsed form and mark the raw entry as processed.
+    Return the total number of frames attempting to process and
+    how many frames were successfully processed."""
+
     scraped_telemetry = tlm_scraper.read_scraped_tlm()
+
+    processed_frames_count = 0
+    total_frames_count = 0
 
     if scraped_telemetry[SATELLITE][link] != []:
 
@@ -68,6 +89,8 @@ def process_frames_delfi_pq(link):
         # convert dataframe to dict and only include the frame and observer columns
         df_as_dict = dataframe.loc[:, dataframe.columns.isin(['frame', 'observer'])]
         df_as_dict = df_as_dict.to_dict(orient='records')
+        total_frames_count = len(df_as_dict)
+
         # process each frame
         for i, row in dataframe.iterrows():
             try:
@@ -80,8 +103,13 @@ def process_frames_delfi_pq(link):
                     row["_time"],
                     df_as_dict[i]
                     )
-            except xtce_parser.XTCEException as _:
-                # ignore
-                pass
+                processed_frames_count += 1
+            except xtce_parser.XTCEException as ex:
+                print(f"delfi_pq: frame processing error: {ex}" )
 
-        tlm_scraper.reset_scraped_tlm_timestamps(SATELLITE)
+        if processed_frames_count == total_frames_count:
+            tlm_scraper.reset_scraped_tlm_timestamps(SATELLITE)
+    else:
+        print("delfi_pq: no frames to process.")
+
+    return processed_frames_count, total_frames_count

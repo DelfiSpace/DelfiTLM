@@ -1,9 +1,10 @@
 """API request handling. Map requests to the corresponding HTMLs."""
 import json
 from django.contrib import messages
-from django.shortcuts import render, redirect
+from django.http import JsonResponse
+from django.shortcuts import render
 from delfipq import XTCEParser as xtce_parser
-from delfipq.process_raw_telemetry import process_frames_delfi_pq, store_frame
+from delfipq.process_raw_telemetry import process_frames_delfi_pq, store_frame, store_raw_frame
 
 # from revproxy.views import ProxyView
 
@@ -27,7 +28,7 @@ def add_dummy_tlm_data(request):
         data = json.load(file)
         # sort messages in chronological order
         data.sort(key=lambda x: x["timestamp"])
-
+        data = data[:100]
         # process each frame
         for frame in data:
             try:
@@ -35,7 +36,28 @@ def add_dummy_tlm_data(request):
             except xtce_parser.XTCEException as _:
                 # ignore
                 pass
-    return {"len": len(data) }
+    return JsonResponse({"len": len(data)})
+
+
+def add_dummy_tlm_raw_data(request):
+    """Add dummy raw telemetry"""
+    inputfile = "delfipq/delfi-pq.txt"
+    stored_frames = 0
+    with open(inputfile, encoding="utf-8") as file:
+        data = json.load(file)
+        # sort messages in chronological order
+        data.sort(key=lambda x: x["timestamp"])
+        data = data[:100]
+        # process each frame
+        for frame in data:
+            stored = store_raw_frame(frame["timestamp"],
+                                     frame["frame"],
+                                     frame["observer"],
+                                     "downlink")
+            if stored:
+                stored_frames += 1
+
+    return JsonResponse({"len": len(data), "len_stored": stored_frames})
 
 
 def process_telemetry(request):
@@ -43,12 +65,18 @@ def process_telemetry(request):
     user = request.user
 
     if user.has_perm("transmission.view_downlink"):
-        messages.info(request, "Delfi-PQ telemetry frames processed.")
-        process_frames_delfi_pq("downlink")
-    else:
-        messages.error(request, "Operation not allowed.")
+        processed_frames_count, total_frames_count = process_frames_delfi_pq("downlink")
+        message = f"{processed_frames_count}/{total_frames_count}"
+        message += " Delfi-PQ telemetry frames processed"
+        messages.info(request, message)
 
-    return redirect('get_frames_table', "downlink")
+    else:
+        message =  "Operation not allowed"
+        messages.error(request, message)
+
+    return JsonResponse({"message": message})
+
+
 
 
 def home(request):
