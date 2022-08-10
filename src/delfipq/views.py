@@ -28,7 +28,7 @@ def add_dummy_tlm_data(request):
         data = json.load(file)
         # sort messages in chronological order
         data.sort(key=lambda x: x["timestamp"])
-        data = data[:100]
+        # data = data[:100]
         # process each frame
         for frame in data:
             try:
