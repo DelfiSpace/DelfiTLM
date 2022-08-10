@@ -22,6 +22,8 @@ services:
         - POSTGRES_PASSWORD=${POSTGRES_DB:-postgres}
         - POSTGRES_HOST=${POSTGRES_DB:-db}
         - POSTGRES_PORT=${POSTGRES_DB:-5432}
+        - INFLUXDB_V2_ORG=${INFLUXDB_V2_ORG:-Delfi Space}
+        - INFLUXDB_V2_TOKEN=${INFLUXDB_V2_TOKEN:-adminpwd}
     restart: always
     depends_on:
       - "db"
@@ -33,7 +35,7 @@ services:
     ports:
       - 8086:8086
     volumes:
-      - influxdb-storage:/var/lib/influxdb
+      - influxdb_storage:/var/lib/influxdb
     restart: always
 
   influx-cli:
@@ -43,31 +45,31 @@ services:
     depends_on:
       - influxdb
     command: sh -c 'sleep 5; influx setup
-     --bucket "${INFLUX_DATA_BUCKET:-delfi_pq_downlink}"
+     --bucket "${INFLUX_TLM_BUCKET:-delfi_pq_downlink}"
      --token "${INFLUXDB_V2_TOKEN:-adminpwd}"
      --org "${INFLUXDB_V2_ORG:-Delfi Space}"
      --username=${INFLUX_USERNAME:-"admin"}
      --password=${INFLUX_PASSWORD:-"adminpwd"}
      --host=http://influxdb:8086
-     --force'
+     --force &&
+     influx bucket create --name "${INFLUX_DATA_BUCKET:-delfi_pq_raw_data}"
+     --token "${INFLUXDB_V2_TOKEN:-adminpwd}"
+     --org "${INFLUXDB_V2_ORG:-Delfi Space}"'
 
   grafana:
     image: grafana/grafana:latest
     ports:
-    - '3000:3000'
+      - '3000:3000'
     volumes:
-    - grafana-storage:/var/lib/grafana
-    - ./grafana.ini:/etc/grafana/grafana.ini
-    - ./grafana/provisioning/:/etc/grafana/provisioning/datasources/
-    - ./grafana/dashboards/:/etc/grafana/provisioning/dashboards/
+      - grafana_storage:/var/lib/grafana
+      - ./grafana.ini:/etc/grafana/grafana.ini
+      - ./grafana/provisioning/:/etc/grafana/provisioning/datasources/
+      - ./grafana/dashboards/:/etc/grafana/provisioning/dashboards/
     depends_on:
-    - influxdb
-    environment:
-    - GF_SECURITY_ADMIN_USER=admin
-    - GF_SECURITY_ADMIN_PASSWORD=admin
+      - influxdb
     restart: always
 
 volumes:
     db_data:
-    influxdb-storage:
-    grafana-storage:
+    influxdb_storage:
+    grafana_storage:
