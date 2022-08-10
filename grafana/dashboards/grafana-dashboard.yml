@@ -1,6 +1,7 @@
 apiVersion: 1
+
 providers:
-  - name: InfluxDB_v2_Flux
+  - name: influxdb
     org_id: 1
     folder: ''
     type: 'file'

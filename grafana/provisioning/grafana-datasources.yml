@@ -1,12 +1,12 @@
 apiVersion: 1
 
 datasources:
-  - name: InfluxDB_v2_Flux
+  - name: influxdb
     type: influxdb
     access: proxy
     url: http://influxdb:8086
     secureJsonData:
-      token: ${INFLUXDB_TOKEN}
+      token: adminpwd
     jsonData:
       version: Flux
       organization: Delfi Space
