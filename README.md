@@ -44,10 +44,14 @@ After this, you can access the application on http://127.0.0.1:8000/ and a pgAdm
 
 ![image](https://user-images.githubusercontent.com/15870306/145728488-ada8aacf-ec53-42d1-8e4d-b7198c70cc77.png)
 
-InfluxDB can be set up at http://localhost:8086/. Create an organization called "Delfi Space" and a bucket. Afterwards, go to `Load Data > API tokens` from the side menu and paste the admin token to `src/tokens/influxdb_token.txt` (or create a new token and add that one). Note that the `tokens` folder is ignored by git. Then, create a Grafana account at http://localhost:3000/ and add an InfluxDB datasource with the following config:
+InfluxDB can accessed at http://localhost:8086/, username:admin, password:adminpwd.
+
+Grafana runs on http://localhost:3000/, username:admin, password:adminpwd with the following InfluxDB datasource config:
 ![image](https://user-images.githubusercontent.com/43474282/179267387-554aeb2e-b789-408f-ad24-74f1afd281e2.png)
 
-To reset the container and remove the volumes run the `./reset_docker.sh` script.
+The datasource and dashboards confing for Grafana can be changed from `grafana/provisioning/grafana-datasources.yml` and `grafana/dashboards/grafana-dashboard.yml` respectively. New dashboards can also be created in Grafana and exported as json, then added to `grafana/dashboards`, to be loaded when the container restarts.
+
+To reset the containers and remove the volumes run the `./reset_docker.sh` script.
 
 # Deployment
 
