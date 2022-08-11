@@ -1,15 +1,16 @@
 """Satnogs scraper"""
 from datetime import datetime, timedelta
 import json
+import os
 import time
 import re
 import requests
-import os
+
 from influxdb_client import InfluxDBClient
 from influxdb_client.client.write_api import SYNCHRONOUS
 
 PATH = "https://db.satnogs.org/api/telemetry/"
-INFLUX_ORG = os.environ['INFLUXDB_V2_ORG']
+INFLUX_ORG = os.environ.get('INFLUXDB_V2_ORG', 'Delfi Space')
 # Django + docker paths and links:
 SCRAPED_TLM_FILE = "transmission/scraped_telemetry.json"
 SATNOGS_TOKEN_PATH = "tokens/satnogs_token.txt"
@@ -32,7 +33,7 @@ def get_influx_db_read_and_query_api() -> tuple:
 
 
     client = InfluxDBClient(url=INFLUXDB_URL,
-                            token=os.environ['INFLUXDB_V2_TOKEN'],
+                            token=os.environ.get('INFLUXDB_V2_TOKEN', 'adminpwd'),
                             org=INFLUX_ORG)
 
     write_api = client.write_api(write_options=SYNCHRONOUS)
