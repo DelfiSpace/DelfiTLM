@@ -1,6 +1,5 @@
 """API request handling. Map requests to the corresponding HTMLs."""
 import json
-import os
 from django.http.response import JsonResponse
 from django.utils import timezone
 from django.shortcuts import redirect, render
@@ -18,10 +17,14 @@ from .tokens import account_activation_token
 from .forms import RegisterForm, LoginForm, ChangePasswordForm, PasswordResetForm
 from .models import APIKey, Member
 
-PROTOCOL = "https"
+def get_protocol(request):
+    """Return the HTTP or HTTPS based on
+    the protocol chosen in the request."""
 
-if bool(int(os.environ.get('DEBUG', 1))):
-    PROTOCOL = "http"
+    if request.is_secure():
+        return 'https'
+    return 'http'
+
 
 @login_required(login_url='/login')
 def account(request):
@@ -34,6 +37,7 @@ def register(request):
 
     form = RegisterForm(request.POST or None)
 
+
     if request.method == "POST":
         if form.is_valid():
             user = form.save(commit=False)
@@ -45,7 +49,7 @@ def register(request):
                 'domain': current_site.domain,
                 'uid': urlsafe_base64_encode(force_bytes(user.pk)),
                 'token': account_activation_token.make_token(user),
-                'protocol': PROTOCOL
+                'protocol': get_protocol(request)
             })
             to_email = user.email
             send_mail( subject="Welcome to DelfiTLM",
@@ -188,7 +192,7 @@ def password_reset_request(request):
                     'domain': current_site.domain,
                     'uid': urlsafe_base64_encode(force_bytes(user.pk)),
                     'token': default_token_generator.make_token(user),
-                    'protocol': PROTOCOL
+                    'protocol': get_protocol(request)
                 })
                 send_mail( subject="DelfiTLM Password Reset Requested",
                     message=message,
