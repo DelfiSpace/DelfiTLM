@@ -67,6 +67,8 @@ services:
       - ./grafana/dashboards/:/etc/grafana/provisioning/dashboards/
     depends_on:
       - influxdb
+    environment:
+      - GF_SERVER_DOMAIN=${GF_SERVER_DOMAIN:-localhost}
     restart: always
 
 volumes:
