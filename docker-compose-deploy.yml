@@ -14,6 +14,9 @@ services:
             - SMTP_PORT=${SMTP_PORT}
             - FROM_EMAIL=${FROM_EMAIL}
         restart: always
+        networks:
+            crowdsec_test:
+                ipv4_address: 172.0.0.2
 
     proxy:
         build:
@@ -21,6 +24,7 @@ services:
         volumes:
             - static_data:/vol:ro
             - certificates:/certs:ro
+            - logs:/var/log/nginx
         ports:
             - "80:8080"
             - "443:8443"
@@ -31,6 +35,9 @@ services:
             - pgadmin
             - grafana
         restart: always
+        networks:
+            crowdsec_test:
+                ipv4_address: 172.0.0.3
 
     pgadmin:
         container_name: pgadmin4_container
@@ -43,8 +50,57 @@ services:
             - "db"
         volumes:
             - pgadmin_persistent:/var/lib/pgadmin
+        networks:
+            crowdsec_test:
+                ipv4_address: 172.0.0.4
+
+    crowdsec:
+        image: crowdsecurity/crowdsec:v1.3.4
+        restart: always
+        environment:
+            #this is the list of collections we want to install
+            #https://hub.crowdsec.net/author/crowdsecurity/collections/nginx
+            COLLECTIONS: "crowdsecurity/nginx"
+            GID: "${GID-1000}"
+        depends_on:
+            - 'proxy'
+        volumes:
+            - ./crowdsec/acquis.yaml:/etc/crowdsec/acquis.yaml
+            - logs:/var/log/nginx/:ro
+            - crowdsec-db:/var/lib/crowdsec/data/
+            - crowdsec-config:/etc/crowdsec/
+        networks:
+            crowdsec_test:
+                ipv4_address: 172.0.0.5
+    #metabase, because security is cool, but dashboards are cooler
+    dashboard:
+        #we're using a custom Dockerfile so that metabase pops with pre-configured dashboards
+        build: ./crowdsec/dashboard
+        restart: always
+        ports:
+            - 3000:3000
+        environment:
+            MB_DB_FILE: /data/metabase.db
+            MGID: "${GID-1000}"
+        depends_on:
+            - 'crowdsec'
+        volumes:
+            - crowdsec-db:/metabase-data/
+        networks:
+            crowdsec_test:
+                ipv4_address: 172.0.0.6
 
 volumes:
+    logs:
     static_data:
     certificates:
     pgadmin_persistent:
+    crowdsec-db:
+    crowdsec-config:
+
+networks:
+ crowdsec_test:
+   ipam:
+     driver: default
+     config:
+       - subnet: 172.0.0.0/24
