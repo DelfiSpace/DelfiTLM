@@ -1,4 +1,14 @@
 # only listen to HTTP to forward to HTTPS
+map $http_upgrade $connection_upgrade {
+  default upgrade;
+  '' close;
+}
+
+upstream grafana {
+  server localhost:3000;
+}
+
+
 server {
     listen 8080 default_server;
     server_name ${MY_HOST};
@@ -46,5 +56,19 @@ server {
         proxy_set_header Host ${MY_HOST};
         proxy_pass http://pgadmin/;
         proxy_redirect off;
+    }
+
+
+    location /grafana/ {
+        proxy_set_header Host ${MY_HOST};
+        proxy_pass http://grafana;
+    }
+
+    location /api/live/ {
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection $connection_upgrade;
+        proxy_set_header Host ${MY_HOST};
+        proxy_pass http://grafana;
     }
 }
