@@ -22,7 +22,7 @@ LOGGING = {
     'disable_existing_loggers' : False,
     'loggers': {
         'django_logger': {
-            'handlers': ['error', 'info', 'debug'],
+            'handlers': ['error', 'info', 'debug', 'warning', 'debug_console'],
             'level': 1
         }
     },
@@ -45,6 +45,17 @@ LOGGING = {
         'debug': {
             'class': 'logging.FileHandler',
             'filename': 'debug.log',
+            'level': 'DEBUG',
+            'formatter': 'default',
+        },
+        'warning': {
+            'class': 'logging.FileHandler',
+            'filename': 'warning.log',
+            'level': 'WARNING',
+            'formatter': 'default',
+        },
+        'debug_console': {
+            'class': 'logging.StreamHandler',
             'level': 'DEBUG',
             'formatter': 'default',
         },
