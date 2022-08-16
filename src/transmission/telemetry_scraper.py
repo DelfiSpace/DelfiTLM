@@ -145,7 +145,7 @@ def write_frame_to_raw_bucket(write_api, satellite, link, timestamp, frame_field
     "fields": frame_fields
     }
 
-    logger.info(f"{satellite}: raw frame stored. Frame timestamp: {timestamp}, link: {link}")
+    logger.info("%s: raw frame stored. Frame timestamp: %s, link: %s", satellite, timestamp, link)
 
     write_api.write(bucket, INFLUX_ORG, db_fields)
 
@@ -221,7 +221,7 @@ def scrape(satellite: str, save_to_db=True, save_to_file=False) -> None:
 
     telemetry = []
     telemetry_tmp = []
-    logger.info(f"SatNOGS scraper started. Scraping {satellite} telemetry.")
+    logger.info("SatNOGS scraper started. Scraping %s telemetry.", satellite)
     while True:
         satnogs_params = get_satnogs_params(satellite)
         response = requests.get(
@@ -256,11 +256,11 @@ def scrape(satellite: str, save_to_db=True, save_to_file=False) -> None:
                                                   first["timestamp"] + timedelta(seconds=1)
                                                   )
                 else:
-                    logger.info(f"SatNOGS scraper stopped. Done scraping {satellite} telemetry.")
+                    logger.info("SatNOGS scraper stopped. Done scraping %s telemetry.", satellite)
                     break # stop scraping
 
         except IndexError:
-            logger.info(f"SatNOGS scraper stopped. Done scraping {satellite} telemetry.")
+            logger.info("SatNOGS scraper stopped. Done scraping %s telemetry.", satellite)
             break
 
         except KeyError:

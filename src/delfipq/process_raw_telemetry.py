@@ -57,7 +57,7 @@ def store_frame(timestamp, frame: str, observer: str, link: str):
                 pass
 
             # print(field + " " + str(value) + " " + status)
-            logger.debug(field + " " + str(value) + " " + status)
+            logger.debug("delfi_pq: field: %s, val: %s, status: %s", field, str(value), status)
 
             db_fields["fields"][field] = value
             db_fields["tags"]["status"] = status
@@ -67,7 +67,8 @@ def store_frame(timestamp, frame: str, observer: str, link: str):
             db_fields["fields"] = {}
             db_fields["tags"] = {}
 
-        logger.info(f"delfi_pq: processed frame stored. Frame timestamp: {timestamp}, link: {link}")
+        logger.info("delfi_pq: processed frame stored. Frame timestamp: %s, link: %s",
+                    timestamp, link)
 
 
 
@@ -115,11 +116,11 @@ def process_frames_delfi_pq(link) -> tuple:
                     )
                 processed_frames_count += 1
             except xtce_parser.XTCEException as ex:
-                logger.exception(f"delfi_pq: frame processing error: {ex}")
+                logger.exception("delfi_pq: frame processing error: %s", ex)
 
         if processed_frames_count == total_frames_count:
             tlm_scraper.reset_scraped_tlm_timestamps(SATELLITE)
-            logger.info(f"delfi_pq: {link} data was processed from {start_time} - {end_time}")
+            logger.info("delfi_pq: %s data was processed from %s - %s", link, start_time, end_time)
     else:
         logger.info("delfi_pq: no frames to process")
 

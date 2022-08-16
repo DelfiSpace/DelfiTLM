@@ -51,7 +51,7 @@ def submit_frame(request): #pylint:disable=R0911
             # add the frame to the database
             store_frame(frame_to_add, link, username=api_key_name,  application=user_agent)
 
-            logger.info(f"{api_key_name} submited a frame. Frame successfully stored")
+            logger.info("%s submited a frame. Frame successfully stored.", api_key_name)
             return JsonResponse({"result": "success", "message": "Successful submission"},
                                 status=HTTPStatus.CREATED)
 
@@ -65,7 +65,7 @@ def submit_frame(request): #pylint:disable=R0911
 
         except PermissionDenied as e: #pylint:disable=C0103, W0612
             # catch submission without right permission
-            logger.warning(f"{api_key_name} was denied permission to submit frame")
+            logger.warning("%s was denied permission to submit frame.", api_key_name)
 
             message_text = "Permission denied"
             return JsonResponse({"result": "failure", "message": message_text},
@@ -73,14 +73,14 @@ def submit_frame(request): #pylint:disable=R0911
 
         except BadRequest as e: #pylint:disable=C0103, W0612
             # catch submission without right permission
-            logger.error(f"{api_key_name} submitted a bad request")
+            logger.error("%s submitted a bad request.", api_key_name)
 
             return JsonResponse({"result": "failure", "message": str(e)},
                                 status=HTTPStatus.BAD_REQUEST)
 
         except JSONDecodeError as e: #pylint:disable=C0103, W0612
             # catch an error in the JSON request
-            logger.error(f"{api_key_name} submitted an invalid JSON structure")
+            logger.error("%s submitted an invalid JSON structure.", api_key_name)
 
             message_text = "Invalid JSON structure"
             return JsonResponse({"result": "failure", "message": message_text},
@@ -88,15 +88,17 @@ def submit_frame(request): #pylint:disable=R0911
 
         except ValidationError as e: #pylint:disable=C0103, W0612
             # catch an error in the frame formatting
-            logger.error(f"{api_key_name} submitted an invalid frame format")
+            logger.error("%s submitted an invalid frame format.", api_key_name)
             return JsonResponse({"result": "failure", "message": str(e)},
                                 status=HTTPStatus.BAD_REQUEST)
 
         except Exception as e:  #pylint:disable=C0103, W0703
             # catch other exceptions
-            message_text = type(e).__qualname__+": "+str(e)
+            err_message = str(e)
+            message_text = type(e).__qualname__ + ": "+ err_message
 
-            logger.exception(f"{api_key_name} submitted an invalid frame. Server error: {e}")
+            logger.exception("%s submitted an invalid frame. Server error: %s",
+                             api_key_name, err_message)
             return JsonResponse({"result": "failure", "message": message_text},
                                 status=HTTPStatus.INTERNAL_SERVER_ERROR)
 
@@ -132,14 +134,14 @@ def delete_processed_frames(request, link):
     elif link == "downlink" and user.has_perm("transmission.delete_downlink"):
         buffered_frames = Downlink.objects.all().filter(processed=True)
     else:
-        logger.warning(f"{request.user} was denied permission to access uplink or downlink tables.")
+        logger.warning("%s was denied permission to access uplink or downlink tables", request.user)
         return HttpResponseForbidden()
 
     removed_data_len = len(buffered_frames)
     buffered_frames.delete()
 
     messages.info(request, f"{removed_data_len} processed {link} frames were removed.")
-    logger.info(f"{link} frame buffer has been cleared.")
+    logger.info("%s frame buffer has been cleared.", link)
     return redirect('get_frames_table', link)
 
 @login_required(login_url='/login')
@@ -157,7 +159,7 @@ def process(request, link):
     elif link == "downlink" and user.has_perm("transmission.view_downlink"):
         frames = Downlink.objects.all().filter(processed=False)
     else:
-        logger.warning(f"{request.user} was denied permission to access uplink or downlink tables.")
+        logger.warning("%s was denied permission to access uplink or downlink tables", request.user)
         return HttpResponseForbidden()
 
 
@@ -193,7 +195,7 @@ def get_frames_table(request, link):
         telemetry_filter = TelemetryUplinkFilter(request.GET, queryset=frames)
         return paginate_telemetry_table(request, telemetry_filter, "Uplink")
 
-    logger.warning(f"{request.user} was denied permission to access uplink or downlink tables.")
+    logger.warning("%s was denied permission to access uplink or downlink tables.", request.user)
     return HttpResponseForbidden()
 
 
