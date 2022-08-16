@@ -16,10 +16,6 @@ SATNOGS_TOKEN_PATH = "tokens/satnogs_token.txt"
 INFLUXDB_URL = "http://influxdb:8086"
 
 # To run this file as a stand alone script or with  use the settings below:
-
-# SCRAPED_TLM_FILE = "src/transmission/scraped_telemetry.json"
-# INFLUXDB_TOKEN_PATH = "src/tokens/influxdb_token.txt"
-# SATNOGS_TOKEN_PATH = "src/tokens/satnogs_token.txt"
 # INFLUXDB_URL = "http://localhost:8086"
 
 SATELLITES = {
@@ -128,6 +124,8 @@ def write_frame_to_raw_bucket(write_api, satellite, link, timestamp, frame_field
     "fields": frame_fields
     }
 
+    print("raw frame stored")
+
     write_api.write(bucket, INFLUX_ORG, db_fields)
 
 
@@ -146,7 +144,8 @@ def commit_frame(write_api, query_api, satellite: str, link: str, tlm: dict) -> 
     # check if frame already exists
     query = f'''from(bucket: "{bucket}")
     |> range(start: {time_range_lower_bound}, stop: {time_range_upper_bound})
-    |> filter(fn: (r) => r["_field"] == "frame" and r["_value"] == "{tlm["frame"]}")
+    |> filter(fn: (r) => r._measurement == "{satellite + "_" + link + "_raw_data"}" and
+    r["_field"] == "frame" and r["_value"] == "{tlm["frame"]}")
     '''
     # store frame only if not stored already
     if len(query_api.query(query=query)) != 0:
@@ -158,7 +157,7 @@ def commit_frame(write_api, query_api, satellite: str, link: str, tlm: dict) -> 
 
 
 def save_raw_frame_to_influxdb(satellite: str, link: str, telemetry) -> bool:
-    """Connect to influxdb and process raw telemetry.
+    """Connect to influxdb and save raw telemetry.
     Return True if telemetry was stored, False otherwise."""
 
     write_api, query_api = get_influx_db_read_and_query_api()
@@ -231,8 +230,11 @@ def scrape(satellite: str, save_to_db=True, save_to_file=False) -> None:
                     # print("DB successfully updated.")
                     # break
                     print("Stored frame")
-                    update_scraped_tlm_timestamps(satellite, "downlink",
-                                                  first["timestamp"], last["timestamp"])
+                    update_scraped_tlm_timestamps(satellite,
+                                                  "downlink",
+                                                  last["timestamp"] - timedelta(seconds=1),
+                                                  first["timestamp"] + timedelta(seconds=1)
+                                                  )
 
         except IndexError:
             break
@@ -251,8 +253,3 @@ def scrape(satellite: str, save_to_db=True, save_to_file=False) -> None:
 
         if save_to_file:
             dump_telemetry_to_file(satellite, telemetry)
-
-# scrape("delfi_pq")
-# scrape("delfi_next")
-# scrape("delfi_c3")
-# scrape("da_vinci")

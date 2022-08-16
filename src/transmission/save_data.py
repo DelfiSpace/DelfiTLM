@@ -91,17 +91,21 @@ def process_uplink_and_downlink():
 
     return len(downlink_frames), len(uplink_frames)
 
-def process_frames(frames, link):
+def process_frames(frames, link) -> int:
     """Try to store frame to influxdb and set the processed flag to True
-    if a frame was sucessfully stored in influxdb."""
+    if a frame was sucessfully stored in influxdb.
+    Returns the count of successfully processed_frames."""
 
+    processed_frames = 0
     for frame_obj in frames:
         frame_dict = frame_obj.to_dictionary()
         stored = store_frame_to_influxdb(frame_dict, link)
         if stored:
             frame_obj.processed = True
             frame_obj.save()
+            processed_frames += 1
 
+    return processed_frames
 
 def store_frame_to_influxdb(frame, link) -> bool:
     """Try to store frame to influxdb.
@@ -111,8 +115,10 @@ def store_frame_to_influxdb(frame, link) -> bool:
     fields_to_save = ["frame", "timestamp", "observer", "frequency", "application", "metadata"]
 
     frame = tlm_scraper.strip_tlm(frame, fields_to_save)
-    tlm_scraper.include_timestamp_in_scraped_tlm_range(satellite, link, frame["timestamp"])
     stored = tlm_scraper.save_raw_frame_to_influxdb(satellite, link, frame)
+
+    if stored:
+        tlm_scraper.include_timestamp_in_scraped_tlm_range(satellite, link, frame["timestamp"])
 
     return stored
 

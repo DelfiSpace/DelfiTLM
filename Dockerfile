@@ -6,6 +6,11 @@ ENV PATH="/scripts:${PATH}"
 # Always flush output directly
 ENV PYTHONBUFFERED=1
 
+# Install OpenJDK-11
+RUN apt-get update && \
+    apt-get install -y openjdk-11-jre-headless && \
+    apt-get clean;
+
 # install dependencies
 COPY ./requirements.txt /requirements.txt
 

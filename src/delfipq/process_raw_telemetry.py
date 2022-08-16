@@ -1,23 +1,31 @@
 """Script to store Delfi-PQ telemetry frames"""
-# pylint: disable=E0401, W0621
-import importlib.util
-from XTCEParser import XTCEParser, XTCEException
+from transmission import telemetry_scraper as tlm_scraper
+from delfipq import XTCEParser as xtce_parser
 
-BUCKET = "delfi_pq"
+SATELLITE = "delfi_pq"
 
-def module_from_file(module_name, file_path):
-    """Import module form file"""
-    spec = importlib.util.spec_from_file_location(module_name, file_path)
-    module = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(module)
-    return module
+parser = xtce_parser.XTCEParser("delfipq/Delfi-PQ.xml", "Radio")
 
-tlm_scraper = module_from_file("tlm_scraper", "src/transmission/telemetry_scraper.py")
 
 write_api, query_api = tlm_scraper.get_influx_db_read_and_query_api()
 
-def store_frame(parser, timestamp, frame, observer):
-    """Store frame in influxdb"""
+def store_raw_frame(timestamp, frame: str, observer: str, link: str):
+    """Store raw unprocessed frame in influxdb"""
+    frame_fields = {
+        "frame": frame,
+        "observer": observer,
+        "timestamp": timestamp
+    }
+
+    stored = tlm_scraper.commit_frame(write_api, query_api, SATELLITE, link, frame_fields)
+    if stored:
+        tlm_scraper.include_timestamp_in_scraped_tlm_range(SATELLITE, link, timestamp)
+    return stored
+
+def store_frame(timestamp, frame: str, observer: str, link: str):
+    """Store parsed frame in influxdb"""
+
+    print("processed frame stored")
 
     telemetry = parser.processTMFrame(bytes.fromhex(frame))
 
@@ -48,43 +56,60 @@ def store_frame(parser, timestamp, frame, observer):
 
             db_fields["fields"][field] = value
 
-            write_api.write(BUCKET, tlm_scraper.INFLUX_ORG, db_fields)
-            print(db_fields)
+            write_api.write(SATELLITE + "_" + link, tlm_scraper.INFLUX_ORG, db_fields)
+            # print(db_fields)
             db_fields["fields"] = {}
 
 
+def process_frames_delfi_pq(link) -> tuple:
+    """Parse frames, store the parsed form and mark the raw entry as processed.
+    Return the total number of frames attempting to process and
+    how many frames were successfully processed."""
 
-parser = XTCEParser("src/delfipq/Delfi-PQ.xml", "Radio")
+    scraped_telemetry = tlm_scraper.read_scraped_tlm()
 
-scraped_telemetry = tlm_scraper.read_scraped_tlm()
-LINK = "downlink"
+    processed_frames_count = 0
+    total_frames_count = 0
 
-if scraped_telemetry['delfi_pq'] != []:
+    if scraped_telemetry[SATELLITE][link] != []:
 
-    start_time = scraped_telemetry["delfi_pq"][LINK][1]
-    end_time = scraped_telemetry["delfi_pq"][LINK][0]
+        start_time = scraped_telemetry[SATELLITE][link][0]
+        end_time = scraped_telemetry[SATELLITE][link][1]
 
-    get_unprocessed_frames_query = f'''
-    from(bucket: "{BUCKET + "_" + LINK +  "_raw_data"}")
-    |> range(start: {start_time}, stop: {end_time})
-    |> filter(fn: (r) => r["_field"] == "processed" and r["_value"] == false or
-                r["_field"] == "frame" or r["_field"] == "observer")
-    |> pivot(rowKey:["_time"], columnKey: ["_field"], valueColumn: "_value")
-    '''
-    data = query_api.query_data_frame(query=get_unprocessed_frames_query)
-    # process each frame
-    for _, frame in data.iterrows():
-        try:
-            store_frame(parser, frame["_time"], frame["frame"], frame["observer"])
-            frame["processed"] = True
-            tlm_scraper.write_frame_to_raw_bucket(
-                write_api,
-                "delfi_pq_" + LINK,
-                frame["_time"],
-                frame
-                )
-        except XTCEException as ex:
-            # ignore
-            pass
+        get_unprocessed_frames_query = f'''
+        from(bucket: "{SATELLITE +  "_raw_data"}")
+        |> range(start: {start_time}, stop: {end_time})
+        |> filter(fn: (r) => r._measurement == "{SATELLITE + "_" + link + "_raw_data"}" and
+                    r["_field"] == "processed" and r["_value"] == false or
+                    r["_field"] == "frame" or r["_field"] == "observer")
+        |> pivot(rowKey:["_time"], columnKey: ["_field"], valueColumn: "_value")
+        '''
+        # query result as dataframe
+        dataframe = query_api.query_data_frame(query=get_unprocessed_frames_query)
+        # convert dataframe to dict and only include the frame and observer columns
+        df_as_dict = dataframe.loc[:, dataframe.columns.isin(['frame', 'observer'])]
+        df_as_dict = df_as_dict.to_dict(orient='records')
+        total_frames_count = len(df_as_dict)
 
-    tlm_scraper.reset_scraped_tlm_timestamps("delfi_pq")
+        # process each frame
+        for i, row in dataframe.iterrows():
+            try:
+                store_frame(row["_time"], row["frame"], row["observer"],  link)
+                df_as_dict[i]["processed"] = True
+                tlm_scraper.write_frame_to_raw_bucket(
+                    write_api,
+                    SATELLITE,
+                    link,
+                    row["_time"],
+                    df_as_dict[i]
+                    )
+                processed_frames_count += 1
+            except xtce_parser.XTCEException as ex:
+                print(f"delfi_pq: frame processing error: {ex}" )
+
+        if processed_frames_count == total_frames_count:
+            tlm_scraper.reset_scraped_tlm_timestamps(SATELLITE)
+    else:
+        print("delfi_pq: no frames to process.")
+
+    return processed_frames_count, total_frames_count
