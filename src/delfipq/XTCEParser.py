@@ -3,10 +3,14 @@ from py4j.java_gateway import JavaGateway
 from py4j.protocol import Py4JJavaError
 # pylint: disable=all
 class XTCEParser:
+  gateway_started = 0
   def __init__(self, XTCEfile, stream):
-    launch_gateway(classpath='delfipq/xtcetools-1.1.5.jar',
+  
+    if XTCEParser.gateway_started == 0:
+      launch_gateway(classpath='delfipq/xtcetools-1.1.5.jar',
 			   port=25333,
 			   die_on_exit=True)
+      XTCEParser.gateway_started = 1
 
     gateway = JavaGateway()
 
