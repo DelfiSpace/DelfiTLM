@@ -18,6 +18,7 @@ jobs:
         python -m pip install --upgrade pip
         pip install -r requirements.txt
     - name: Lint with pylint
-      run: >
-        find src -name "*.py" -not -path "*/migrations/*" -not -path "*/test/*" -not -path "*/delfitlm/*" |
+      run: |
+        cd src
+        find -name "*.py" -not -path "*/migrations/*" -not -path "*/test/*" -not -path "*/delfitlm/*" |
         xargs pylint --load-plugins pylint_django --django-settings-module=delfitlm.settings
