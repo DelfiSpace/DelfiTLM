@@ -28,7 +28,7 @@ def add_dummy_tlm_data(request):
         data = json.load(file)
         # sort messages in chronological order
         data.sort(key=lambda x: x["timestamp"])
-        data = data[:100]
+        # data = data[:100]
         # process each frame
         for frame in data:
             try:
@@ -47,7 +47,7 @@ def add_dummy_tlm_raw_data(request):
         data = json.load(file)
         # sort messages in chronological order
         data.sort(key=lambda x: x["timestamp"])
-        data = data[:100]
+        # data = data[:100]
         # process each frame
         for frame in data:
             stored = store_raw_frame(frame["timestamp"],
@@ -62,17 +62,17 @@ def add_dummy_tlm_raw_data(request):
 
 def process_telemetry(request):
     """Trigger delfi_pq telemetry processing"""
-    user = request.user
+    # user = request.user
 
-    if user.has_perm("transmission.view_downlink"):
-        processed_frames_count, total_frames_count = process_frames_delfi_pq("downlink")
-        message = f"{processed_frames_count}/{total_frames_count}"
-        message += " Delfi-PQ telemetry frames processed"
-        messages.info(request, message)
+    # if user.has_perm("transmission.view_downlink"):
+    processed_frames_count, total_frames_count = process_frames_delfi_pq("downlink")
+    message = f"{processed_frames_count}/{total_frames_count}"
+    message += " Delfi-PQ telemetry frames processed"
+    messages.info(request, message)
 
-    else:
-        message =  "Operation not allowed"
-        messages.error(request, message)
+    # else:
+    #     message =  "Operation not allowed"
+    #     messages.error(request, message)
 
     return JsonResponse({"message": message})
 

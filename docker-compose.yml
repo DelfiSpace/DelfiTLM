@@ -22,6 +22,8 @@ services:
         - POSTGRES_PASSWORD=${POSTGRES_DB:-postgres}
         - POSTGRES_HOST=${POSTGRES_DB:-db}
         - POSTGRES_PORT=${POSTGRES_DB:-5432}
+        - INFLUXDB_V2_ORG=${INFLUXDB_V2_ORG:-Delfi Space}
+        - INFLUXDB_V2_TOKEN=${INFLUXDB_V2_TOKEN:-adminpwd}
     restart: always
     depends_on:
       - "db"
@@ -33,35 +35,43 @@ services:
     ports:
       - 8086:8086
     volumes:
-      - influxdb-storage:/var/lib/influxdb
-    environment:
-      # - INFLUXDB_ADMIN_USER=admin
-      # - INFLUXDB_ADMIN_PASSWORD=adminadmin
-      - INFLUXDB_HTTP_FLUX_ENABLED=true
+      - influxdb_storage:/var/lib/influxdb
     restart: always
 
-  grafana:
-      image: grafana/grafana:latest
-      ports:
-      - '3000:3000'
-      volumes:
-      - grafana-storage:/var/lib/grafana
-      - ./grafana/provisioning/:/etc/grafana/provisioning/
-      - ./grafana/dashboards/:/var/lib/grafana/dashboards/
-      - ./grafana.ini:/etc/grafana/grafana.ini
-      depends_on:
+  influx-cli:
+    #  initializes influxdb user/password/bucket...
+    image: influxdb:latest
+    container_name: influx-cli
+    depends_on:
       - influxdb
-      # environment:
-      # - GF_SECURITY_ADMIN_USER=admin
-      # - GF_SECURITY_ADMIN_PASSWORD=admin
+    command: sh -c 'sleep 5; influx setup
+     --bucket "${INFLUX_TLM_BUCKET:-delfi_pq_downlink}"
+     --token "${INFLUXDB_V2_TOKEN:-adminpwd}"
+     --org "${INFLUXDB_V2_ORG:-Delfi Space}"
+     --username=${INFLUX_USERNAME:-"admin"}
+     --password=${INFLUX_PASSWORD:-"adminpwd"}
+     --host=http://influxdb:8086
+     --force &&
+     influx bucket create --name "${INFLUX_DATA_BUCKET:-delfi_pq_raw_data}"
+     --token "${INFLUXDB_V2_TOKEN:-adminpwd}"
+     --org "${INFLUXDB_V2_ORG:-Delfi Space}"'
 
-      # - GF_AUTH_ANONYMOUS_ENABLED=true
-      # - GF_AUTH_ANONYMOUS_ORG_NAME="delfi"
-      # - GF_AUTH_ANONYMOUS_ORG_ROLE=View
-      # - GF_USERS_ALLOW_SIGN_UP=false
-      restart: always
+  grafana:
+    image: grafana/grafana:latest
+    ports:
+      - '3000:3000'
+    volumes:
+      - grafana_storage:/var/lib/grafana
+      - ./grafana/grafana.ini:/etc/grafana/grafana.ini
+      - ./grafana/provisioning/:/etc/grafana/provisioning/datasources/
+      - ./grafana/dashboards/:/etc/grafana/provisioning/dashboards/
+    depends_on:
+      - influxdb
+    environment:
+      - GF_SERVER_DOMAIN=${GF_SERVER_DOMAIN:-localhost}
+    restart: always
 
 volumes:
     db_data:
-    influxdb-storage:
-    grafana-storage:
+    influxdb_storage:
+    grafana_storage:

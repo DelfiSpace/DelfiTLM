@@ -45,20 +45,29 @@ def store_frame(timestamp, frame: str, observer: str, link: str):
                 "observer": observer,
             }
         }
-        for field, value in telemetry.items():
+
+        for field, value_and_status in telemetry.items():
+            # skip frame field
+            if field == "frame":
+                continue
+
+            value = value_and_status["value"]
+            status = value_and_status["status"]
             # try to convert to float
             try:
                 value = float(value)
-                # add ERROR/WARNING/NOMINAL tags
-                #     db_fields["tags"]["tag"] = "Err"
             except ValueError:
                 pass
 
+            print(field + " " + str(value) + " " + status)
+
             db_fields["fields"][field] = value
+            db_fields["tags"]["status"] = status
 
             write_api.write(SATELLITE + "_" + link, tlm_scraper.INFLUX_ORG, db_fields)
             # print(db_fields)
             db_fields["fields"] = {}
+            db_fields["tags"] = {}
 
 
 def process_frames_delfi_pq(link) -> tuple:

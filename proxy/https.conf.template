@@ -1,14 +1,3 @@
-# only listen to HTTP to forward to HTTPS
-map $http_upgrade $connection_upgrade {
-  default upgrade;
-  '' close;
-}
-
-upstream grafana {
-  server localhost:3000;
-}
-
-
 server {
     listen 8080 default_server;
     server_name ${MY_HOST};
@@ -58,17 +47,19 @@ server {
         proxy_redirect off;
     }
 
-
     location /grafana/ {
-        proxy_set_header Host ${MY_HOST};
-        proxy_pass http://grafana;
+        proxy_set_header X-Script-Name /grafana;
+        proxy_set_header X-Scheme ${DOLLAR}scheme;
+        proxy_set_header Host ${MY_HOST}; 
+        proxy_pass http://grafana:3000/;
     }
 
-    location /api/live/ {
+    # Proxy Grafana Live WebSocket connections.
+    location /grafana/api/live/ {
         proxy_http_version 1.1;
-        proxy_set_header Upgrade $http_upgrade;
-        proxy_set_header Connection $connection_upgrade;
+        proxy_set_header Upgrade ${DOLLAR}http_upgrade;
+        proxy_set_header Connection "upgrade";
         proxy_set_header Host ${MY_HOST};
-        proxy_pass http://grafana;
+        proxy_pass http://grafana:3000/;
     }
 }
