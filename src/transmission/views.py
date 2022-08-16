@@ -3,16 +3,18 @@ import json
 from json.decoder import JSONDecodeError
 from django.core.paginator import Paginator
 from django.forms import ValidationError
+from django.contrib import messages
+from django.contrib.auth.decorators import login_required
 from django.core.exceptions import BadRequest
 from django.http import HttpResponseBadRequest
 from django.http.response import JsonResponse
-from django.shortcuts import render
+from django.shortcuts import redirect, render
 from rest_framework_api_key.permissions import HasAPIKey
 from rest_framework.decorators import permission_classes
 from members.models import APIKey
 from .models import Uplink, Downlink, TLE
 from .filters import TelemetryDownlinkFilter, TelemetryUplinkFilter, TLEFilter
-from .save_data import parse_frame, add_frame
+from .save_data import parse_submitted_frame, process_frames, store_frame
 
 
 QUERY_ROW_LIMIT = 100
@@ -31,19 +33,22 @@ def submit_frame(request): #pylint:disable=R0911
             # retrieve the user agent (if present, empty otherwise)
             user_agent = request.META.get('HTTP_USER_AGENT', '')
 
-            qualifier = 'downlink'
+            link = 'downlink'
 
-            if 'HTTP_FRAME_TYPE' in request.META and \
-                request.META.get('HTTP_FRAME_TYPE', '') is not None:
+            if 'HTTP_FRAME_LINK' in request.META and \
+                request.META.get('HTTP_FRAME_LINK', '') is not None:
 
-                qualifier = request.META.get('HTTP_FRAME_TYPE', '')
+                link = request.META.get('HTTP_FRAME_LINK', '')
+
+                if link not in ["uplink", "downlink"]:
+                    raise BadRequest("HTTP_FRAME_LINK can be either 'uplink' or 'downlink'" )
 
             # search for the user name matching the API key
             api_key_name = APIKey.objects.get_from_key(key)
             # retrieve the JSON frame just submitted
             frame_to_add = json.loads(request.body)
             # add the frame to the database
-            add_frame(frame_to_add, qualifier, username=api_key_name,  application=user_agent)
+            store_frame(frame_to_add, link, username=api_key_name,  application=user_agent)
             return JsonResponse({"result": "success", "message": ""}, status=201)
 
         except APIKey.DoesNotExist as e: #pylint:disable=C0103
@@ -66,6 +71,7 @@ def submit_frame(request): #pylint:disable=R0911
         except Exception as e:  #pylint:disable=C0103, W0703
             # catch other exceptions
             message_text = type(e).__qualname__+": "+str(e)
+            print(message_text)
             return JsonResponse({"result": "failure", "message": message_text}, status=500)
 
     # POST is the only supported method, return error
@@ -76,20 +82,53 @@ def add_dummy_downlink_frames(request):
     """Add frames to Downlink table. The input is a list of json objects embedded in to the
     HTTP request."""
 
-    with open("src/transmission/dummy_downlink.json", 'r', encoding="utf-8") as file:
+    with open("transmission/dummy_downlink.json", 'r', encoding="utf-8") as file:
         dummy_data = json.load(file)
         for frame in dummy_data["frames"]:
             frame_entry = Downlink()
-            frame_entry = parse_frame(frame, frame_entry)
+            frame_entry = parse_submitted_frame(frame, frame_entry)
             frame_entry.save()
 
     return JsonResponse({"len": len(Downlink.objects.all())})
 
 
-def home(request):
-    """render index.html page"""
-    ren = render(request, "transmission/home/index.html")
-    return ren
+@login_required(login_url='/login')
+def delete_processed_frames(request, link):
+    """Remove the processed frames that are already stored in influxdb"""
+    user = request.user
+    if link == "uplink" and  user.has_perm("transmission.delete_uplink"):
+        removed_data_len = len(Uplink.objects.all().filter(processed=True))
+        Uplink.objects.all().filter(processed=True).delete()
+        messages.info(request, f"{removed_data_len} processed {link} frames were removed.")
+
+    elif link == "downlink" and user.has_perm("transmission.delete_downlink"):
+        removed_data_len = len(Downlink.objects.all().filter(processed=True))
+        Downlink.objects.all().filter(processed=True).delete()
+        messages.info(request, f"{removed_data_len} processed {link} frames were removed.")
+    else:
+        messages.error(request, "Operation not allowed.")
+
+    return redirect('get_frames_table', link)
+
+
+@login_required(login_url='/login')
+def process(request, link):
+    """Process frames that are not already stored in influxdb"""
+
+    user = request.user
+    if link == "uplink" and user.has_perm("transmission.view_uplink"):
+        uplink_frames = Uplink.objects.all().filter(processed=False)
+        process_frames(uplink_frames, link)
+        messages.info(request, f"{len(uplink_frames)} {link} frames were processed.")
+
+    elif link == "downlink" and user.has_perm("transmission.view_downlink"):
+        downlink_frames = Downlink.objects.all().filter(processed=False)
+        process_frames(downlink_frames, link)
+        messages.info(request, f"{len(downlink_frames)} {link} frames were processed.")
+    else:
+        messages.error(request, "Operation not allowed.")
+
+    return redirect('get_frames_table', link)
 
 
 def paginate_telemetry_table(request, telemetry_filter, table_name):
@@ -104,21 +143,20 @@ def paginate_telemetry_table(request, telemetry_filter, table_name):
     return render(request, "transmission/table.html", context)
 
 
-def get_downlink_table(request):
-    """Queries and filters the downlink table"""
-    frames = Downlink.objects.all().order_by('timestamp')
-    telemetry_filter = TelemetryDownlinkFilter(request.GET, queryset=frames)
-    return paginate_telemetry_table(request, telemetry_filter, "Downlink")
+def get_frames_table(request, link):
+    """Queries and filters the uplink/downlink table"""
+    if link == "downlink" and request.user.has_perm('transmission.view_downlink'):
+        frames = Downlink.objects.all().order_by('timestamp')
+        telemetry_filter = TelemetryDownlinkFilter(request.GET, queryset=frames)
+        return paginate_telemetry_table(request, telemetry_filter, "Downlink")
 
-
-def get_uplink_table(request):
-    """Queries and filters the uplink table"""
-    if request.user.has_perm('transmission.view_uplink'):
+    if link == "uplink" and request.user.has_perm('transmission.uplink_downlink'):
         frames = Uplink.objects.all().order_by('timestamp')
         telemetry_filter = TelemetryUplinkFilter(request.GET, queryset=frames)
         return paginate_telemetry_table(request, telemetry_filter, "Uplink")
 
     return HttpResponseBadRequest()
+
 
 def get_tle_table(request):
     """Queries and filters the TLEs table"""

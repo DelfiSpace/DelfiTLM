@@ -26,6 +26,7 @@ services:
     depends_on:
       - "db"
       - "grafana"
+      - "influxdb"
 
   influxdb:
     image: influxdb:latest

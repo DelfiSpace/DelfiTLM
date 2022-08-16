@@ -9,81 +9,119 @@ from skyfield.api import load, EarthSatellite
 import pytz
 from transmission.models import Uplink, Downlink, TLE, Satellite
 from members.models import Member
+import transmission.telemetry_scraper as tlm_scraper
 
 
-def add_frame(frame, qualifier="downlink", username=None, application=None) -> None:
-    """Adds one json frame to the downlink table"""
+def store_frame(frame, link, username, application=None) -> None:
+    """Adds one json frame to the uplink/downlink table"""
 
     frame_entry = None
 
     if username is not None:
         user = Member.objects.get(username=username)
 
-        if qualifier == "uplink":
+        if link == "uplink":
             if not user.has_perm("transmission.add_uplink"):
                 raise BadRequest()
             frame_entry = Uplink()
+            frame_entry.operator = user
 
-        elif qualifier == "downlink":
+        elif link == "downlink":
             if not user.has_perm("transmission.add_downlink"):
                 raise BadRequest()
             frame_entry = Downlink()
+            frame_entry.observer = user
         else:
-            raise ValueError("Invalid frame qualifier")
-
-        frame_entry.radio_amateur = user
+            raise ValueError("Invalid frame link.")
 
     # if present, store the application name/version used to submit the data
     if application is not None:
         frame_entry.application = application
 
+    check_valid_frame(frame)
     # copy fields from frame to frame_entry
-    frame_entry = parse_frame(frame, frame_entry)
+    frame_entry = parse_submitted_frame(frame, frame_entry)
 
     frame_entry.save()
 
 
-def parse_frame(frame, frame_entry):
-    """Extract frame info from frame and stores it into frame_entry (database frame)"""
-
+def check_valid_frame(frame):
+    """Check if a given frame has a valid form and a timestamp."""
     # check if the frame exists and it is a HEX string
     non_hex = re.match("^[A-Fa-f0-9]+$", frame["frame"])
     if non_hex is None:
         raise ValidationError("Invalid frame, not an hexadecimal value.")
 
-    # assign the frame HEX values
-    frame_entry.frame = frame['frame']
-
     # check is a timestamp is attached
     if "timestamp" not in frame or frame["timestamp"] is None:
         raise ValidationError("Invalid submission, no timestamp attached.")
 
+
+def parse_submitted_frame(frame, frame_entry):
+    """Extract frame info from frame and store it into frame_entry (database frame)"""
+    # assign the frame HEX values
+    frame_entry.frame = frame['frame']
     # assign the timestamp
     frame_entry.timestamp = parse_datetime(frame["timestamp"]).astimezone(pytz.utc)
-
     # assign frequency, if present
     if "frequency" in frame and frame["frequency"] is not None:
         frame_entry.frequency = frame["frequency"]
 
-    # assign qos, if present
-    if "qos" in frame and frame["qos"] is not None:
-        frame_entry.qos = frame["qos"]
-
-    # assign sat, if present
-    if "sat" in frame and frame["sat"] is not None:
-        sat = Satellite.objects.get(sat=frame["sat"])
-        frame_entry.sat = sat
-
     # add metadata
     metadata = copy.deepcopy(frame)
     # remove previousely parsed fields
-    for field in ["frequency", "qos", "sat", "timestamp"]:
+    for field in ["frame", "timestamp", "frequency"]:
         if field in metadata:
             del metadata[field]
 
     frame_entry.metadata = json.dumps(metadata)
 
     return frame_entry
+
+
+def process_uplink_and_downlink():
+    """Process all unprocessed uplink and downlink frames,
+    i.e. move them to the influxdb raw satellite data bucket."""
+
+    downlink_frames = Downlink.objects.all().filter(processed=False)
+    process_frames(downlink_frames, "downlink")
+
+    uplink_frames = Uplink.objects.all().filter(processed=False)
+    process_frames(uplink_frames, "uplink")
+
+    return len(downlink_frames), len(uplink_frames)
+
+def process_frames(frames, link):
+    """Try to store frame to influxdb and set the processed flag to True
+    if a frame was sucessfully stored in influxdb."""
+
+    for frame_obj in frames:
+        frame_dict = frame_obj.to_dictionary()
+        stored = store_frame_to_influxdb(frame_dict, link)
+        if stored:
+            frame_obj.processed = True
+            frame_obj.save()
+
+
+def store_frame_to_influxdb(frame, link) -> bool:
+    """Try to store frame to influxdb.
+    Returns True if the frame was successfully stored, False otherwise."""
+
+    satellite = get_satellite_from_frame_header(frame["frame"])
+    fields_to_save = ["frame", "timestamp", "observer", "frequency", "application", "metadata"]
+
+    frame = tlm_scraper.strip_tlm(frame, fields_to_save)
+    tlm_scraper.include_timestamp_in_scraped_tlm_range(satellite, link, frame["timestamp"])
+    stored = tlm_scraper.save_raw_frame_to_influxdb(satellite, link, frame)
+
+    return stored
+
+
+def get_satellite_from_frame_header(frame):
+    """Find the corresponding satellite from the frame header"""
+    # to be implemented
+    print(frame)
+    return "delfi_pq"
 
 
 def save_tle(tle):

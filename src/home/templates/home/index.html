@@ -13,10 +13,12 @@ crossorigin="anonymous">
 {% endblock %}
 
 {% block usertools %}
-<a href="{% url 'transmission_downlink' %}" >{% translate 'Downlink Transmission' %}</a>
+{% if perms.transmission.view_downlink %}
+<a href="{% url 'get_frames_table' link='downlink'%}" >{% translate 'Downlink Transmission' %}</a>
+{% endif %}
 
 {% if perms.transmission.view_uplink %}
-    <a href="{% url 'transmission_uplink' %}" >{% translate 'Uplink Transmission' %}</a>
+    <a href="{% url 'get_frames_table' link='uplink' %}" >{% translate 'Uplink Transmission' %}</a>
 {% endif %}
 
     {% if user.is_authenticated %}
@@ -26,7 +28,7 @@ crossorigin="anonymous">
         <a href="{% url 'login' %}">{% translate 'Login' %}</a>
         <!-- <a href="{% url 'register' %}">{% translate 'Register' %}</a> -->
     {% endif %}
-    {% endblock %}
+{% endblock %}
 
 {% block content %}
 <div style="display: flex; flex-direction: row; flex-wrap: wrap;
@@ -41,7 +43,7 @@ justify-content: center;">
             <!-- <p class="card-text">Intro...</p> -->
             <br>
             <a href="https://www.tudelft.nl/lr/delfi-space/delfi-c3"><input type="submit" value="About"></input></a>
-            <a href="{% url 'delfic3_home' %}"><input type="submit" value="Dashboard"></input></a>
+            <a href="http://localhost:3000"><input type="submit" value="Dashboard"></input></a>
         </div>
       </div>
 
@@ -54,7 +56,7 @@ justify-content: center;">
             <!-- <p class="card-text">Intro...</p> -->
             <br>
             <a href="https://www.tudelft.nl/lr/delfi-space/delfi-n3xt"><input type="submit" value="About"></input></a>
-            <a href="{% url 'delfin3xt_home' %}"><input type="submit" value="Dashboard"></input></a>
+            <a href="http://localhost:3000"><input type="submit" value="Dashboard"></input></a>
         </div>
       </div>
 
@@ -67,7 +69,7 @@ justify-content: center;">
             <!-- <p class="card-text">Intro...</p> -->
             <br>
             <a href="https://www.tudelft.nl/lr/delfi-space/delfi-pq"><input type="submit" value="About"></input></a>
-            <a href="{% url 'delfic3_home' %}"><input type="submit" value="Dashboard"></input></a>
+            <a href="http://localhost:3000"><input type="submit" value="Dashboard"></input></a>
         </div>
       </div>
 
@@ -82,7 +84,7 @@ justify-content: center;">
             <!-- <p class="card-text">Intro...</p> -->
             <br>
             <a href="https://davincisatellite.nl/?page_id=937&lang=en"><input type="submit" value="About"></input></a>
-            <a href="{% url 'davinci_home' %}"><input type="submit" value="Dashboard"></input></a>
+            <a href="http://localhost:3000"><input type="submit" value="Dashboard"></input></a>
         </div>
       </div>
 
