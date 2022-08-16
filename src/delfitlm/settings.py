@@ -17,6 +17,47 @@ import sys
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers' : False,
+    'loggers': {
+        'django_logger': {
+            'handlers': ['error', 'info', 'debug'],
+            'level': 1
+        }
+    },
+    'handlers': {
+        'std_err': {
+            'class': 'logging.StreamHandler'
+        },
+        'info': {
+            'class': 'logging.FileHandler',
+            'filename': 'info.log',
+            'level': 'INFO',
+            'formatter': 'default',
+        },
+        'error': {
+            'class': 'logging.FileHandler',
+            'filename': 'error.log',
+            'level': 'ERROR',
+            'formatter': 'error',
+        },
+        'debug': {
+            'class': 'logging.FileHandler',
+            'filename': 'debug.log',
+            'level': 'DEBUG',
+            'formatter': 'default',
+        },
+    },
+    'formatters': {
+        'default': {
+            'format': '%(asctime)s [%(module)s | %(levelname)s] %(message)s',
+        },
+        'error': {
+            'format': '%(asctime)s [%(module)s | %(levelname)s] %(message)s @ %(pathname)s : %(lineno)d : %(funcName)s',
+        },
+    },
+}
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/3.2/howto/deployment/checklist/
 
