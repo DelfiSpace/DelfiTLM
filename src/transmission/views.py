@@ -57,7 +57,7 @@ def submit_frame(request): #pylint:disable=R0911
 
         except APIKey.DoesNotExist as _: #pylint:disable=C0103
             # catch a wrong API key
-            logger.warning("API key authentication error during frame submission")
+            logger.error("API key authentication error during frame submission")
 
             message_text = "Unauthorized request"
             return JsonResponse({"result": "failure", "message": message_text},
@@ -65,7 +65,7 @@ def submit_frame(request): #pylint:disable=R0911
 
         except PermissionDenied as e: #pylint:disable=C0103, W0612
             # catch submission without right permission
-            logger.warning("%s was denied permission to submit frame.", api_key_name)
+            logger.error("%s was denied permission to submit frame.", api_key_name)
 
             message_text = "Permission denied"
             return JsonResponse({"result": "failure", "message": message_text},
@@ -97,7 +97,7 @@ def submit_frame(request): #pylint:disable=R0911
             err_message = str(e)
             message_text = type(e).__qualname__ + ": "+ err_message
 
-            logger.exception("%s submitted an invalid frame. Server error: %s",
+            logger.error("%s submitted an invalid frame. Server error: %s",
                              api_key_name, err_message)
             return JsonResponse({"result": "failure", "message": message_text},
                                 status=HTTPStatus.INTERNAL_SERVER_ERROR)
