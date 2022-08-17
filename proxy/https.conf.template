@@ -1,9 +1,6 @@
 server {
     listen 8080 default_server;
     server_name ${MY_HOST};
-    # log files
-    access_log /var/log/nginx/example.access.log;
-    error_log /var/log/nginx/example.error.log
     return 301 https://${MY_HOST}${DOLLAR}request_uri;
 }
 
@@ -12,10 +9,6 @@ server {
     listen 8443 ssl http2;
 
     server_name ${MY_HOST};
-
-    # log files
-    access_log /var/log/nginx/example.access.log;
-    error_log /var/log/nginx/example.error.log;
 
     # expects certificates in this folder
     ssl_certificate        /certs/server.pem;
@@ -70,4 +63,3 @@ server {
         proxy_pass http://grafana:3000/;
     }
 }
-

@@ -7,8 +7,8 @@ RUN UID=`whoami`
 # switch to root
 USER root
 
-COPY ./http.conf /http.conf
-COPY ./https.conf /https.conf
+COPY ./http.conf.template /http.conf.template
+COPY ./https.conf.template /https.conf.template
 COPY ./uwsgi_params /etc/nginx/uwsgi_params
 COPY ./entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh

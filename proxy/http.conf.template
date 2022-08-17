@@ -4,9 +4,6 @@ upstream grafana {
 
 server {
     listen 8080;
-    # log files
-    access_log /var/log/nginx/example.access.log;
-    error_log /var/log/nginx/example.error.log;
 
     location /static {
         alias /vol/static;
@@ -33,4 +30,3 @@ server {
     }
 
 }
-
