@@ -43,6 +43,7 @@ else:
 EMAIL_HOST_USER         = os.environ.get('SMTP_USER', '')
 EMAIL_HOST_PASSWORD     = os.environ.get('SMTP_PASSWORD', '')
 EMAIL_USE_TLS           = False
+DEFAULT_FROM_EMAIL      = os.environ.get('FROM_EMAIL', 'webmaster@localhost')
 
 if EMAIL_HOST == '':
     EMAIL_BACKEND       = 'django.core.mail.backends.console.EmailBackend'
