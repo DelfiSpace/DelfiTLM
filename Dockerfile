@@ -35,6 +35,9 @@ RUN adduser user
 RUN chown -R user:user /vol
 RUN chmod -R 755 /vol/web
 
+RUN chmod -R 777 /app/logs
+RUN chmod -R 777 /app/transmission/scraped_telemetry.json
+
 # switch to unprivileged user
 USER user
 
