@@ -35,7 +35,7 @@ services:
     ports:
       - 8086:8086
     volumes:
-      - influxdb_storage:/var/lib/influxdb
+      - influxdb_storage:/var/lib/influxdb2
     restart: always
 
   influx-cli:
