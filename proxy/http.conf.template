@@ -1,3 +1,7 @@
+access_log /var/log/nginx/example.access.log;
+error_log /var/log/nginx/example.error.log;
+
+
 upstream grafana {
   server localhost:3000;
 }
