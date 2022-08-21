@@ -3,7 +3,7 @@ import re
 import copy
 import json
 from django.forms import ValidationError
-from django.core.exceptions import BadRequest
+from django.core.exceptions import PermissionDenied
 from django.utils.dateparse import parse_datetime
 from skyfield.api import load, EarthSatellite
 import pytz
@@ -22,13 +22,13 @@ def store_frame(frame, link, username, application=None) -> None:
 
         if link == "uplink":
             if not user.has_perm("transmission.add_uplink"):
-                raise BadRequest()
+                raise PermissionDenied()
             frame_entry = Uplink()
             frame_entry.operator = user
 
         elif link == "downlink":
             if not user.has_perm("transmission.add_downlink"):
-                raise BadRequest()
+                raise PermissionDenied()
             frame_entry = Downlink()
             frame_entry.observer = user
         else:

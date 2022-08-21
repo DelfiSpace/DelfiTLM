@@ -76,7 +76,8 @@ INSTALLED_APPS = [
     'delfin3xt',
     'delfipq',
     'transmission',
-    'members'
+    'members',
+    'home',
 ]
 
 # REST_FRAMEWORK = {
@@ -210,3 +211,56 @@ STATICFILES_DIRS = [
 # https://docs.djangoproject.com/en/3.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers' : False,
+    'loggers': {
+        'django_logger': {
+            'handlers': ['debug_console', 'debug', 'info', 'warning', 'error'],
+            'level': 1
+        }
+    },
+    'handlers': {
+        'std_err': {
+            'class': 'logging.StreamHandler'
+        },
+        'debug_console': {
+            'class': 'logging.StreamHandler',
+            'level': 'WARNING',
+            'formatter': 'default',
+        },
+        'debug': {
+            'class': 'logging.FileHandler',
+            'filename': 'logs/debug.log',
+            'level': 'DEBUG',
+            'formatter': 'default',
+        },
+        'info': {
+            'class': 'logging.FileHandler',
+            'filename': 'logs/info.log',
+            'level': 'INFO',
+            'formatter': 'default',
+        },
+        'warning': {
+            'class': 'logging.FileHandler',
+            'filename': 'logs/warning.log',
+            'level': 'WARNING',
+            'formatter': 'default',
+        },
+        'error': {
+            'class': 'logging.FileHandler',
+            'filename': 'logs/error.log',
+            'level': 'ERROR',
+            'formatter': 'error',
+        },
+    },
+    'formatters': {
+        'default': {
+            'format': '%(asctime)s [%(module)s | %(levelname)s] %(message)s',
+        },
+        'error': {
+            'format': '%(asctime)s [%(module)s | %(levelname)s] %(message)s @ %(pathname)s : %(lineno)d : %(funcName)s',
+        },
+    },
+}

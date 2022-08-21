@@ -309,7 +309,7 @@ class TestAccountVerification(TestCase):
         self.assertTemplateUsed(response, 'registration/login.html')
 
         response = self.client.post(reverse('login'), {'username': 'user', 'password': 'delfispace4242'})
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, 400)
         self.assertTemplateUsed(response, 'registration/login.html') #account is not verified so we return to login
 
         self.user.verified = True #the user verified the account
@@ -353,7 +353,7 @@ class TestAccountVerification(TestCase):
         messages = list(response.context['messages'])
         self.assertTrue(len(messages)>0)
         self.assertEqual(str(messages[0]), 'Activation link is invalid!')
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, 400)
 
 
     def test_reset_password(self):
@@ -383,7 +383,7 @@ class TestAccountVerification(TestCase):
         self.assertEqual(response.status_code, 302)
 
         response = self.client.post(reverse('login'), {'username': 'user', 'password': 'delfispace'})
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, 401)
         messages = list(response.context['messages'])
         self.assertNotEqual(str(messages[0]), 'Invalid username or password')
 

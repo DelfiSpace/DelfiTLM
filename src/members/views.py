@@ -1,4 +1,5 @@
 """API request handling. Map requests to the corresponding HTMLs."""
+from http import HTTPStatus
 import json
 from django.http.response import JsonResponse
 from django.utils import timezone
@@ -35,8 +36,8 @@ def account(request):
 def register(request):
     """Render the register page and register a user"""
 
+    status = HTTPStatus.OK
     form = RegisterForm(request.POST or None)
-
 
     if request.method == "POST":
         if form.is_valid():
@@ -62,11 +63,13 @@ def register(request):
             return redirect("homepage")
 
         messages.error(request, "Unsuccessful registration")
+        status = HTTPStatus.BAD_REQUEST
 
-    return render(request, "registration/register.html", {'form': form})
+    return render(request, "registration/register.html", {'form': form}, status=status)
 
 def activate(request, uidb64, token):
     """Activate user email"""
+    status = HTTPStatus.OK
     try:
         uid = force_text(urlsafe_base64_decode(uidb64))
         user = Member.objects.get(pk=uid)
@@ -85,13 +88,15 @@ def activate(request, uidb64, token):
                             Now you can login into your account.")
     else:
         messages.error(request, 'Activation link is invalid!')
-    return render(request, "home/index.html")
+        status = HTTPStatus.BAD_REQUEST
+    return render(request, "home/index.html", status=status)
 
 
 def login_member(request):
     """Render login page"""
 
     form = LoginForm(request.POST or None)
+    status = HTTPStatus.OK
 
     if request.method == "POST":
         if form.is_valid():
@@ -106,18 +111,20 @@ def login_member(request):
 
             if member is not None and member.verified is False:
                 messages.error(request, "Email not verified")
-                return render(request, "registration/login.html", {'form': form})
+                status = HTTPStatus.BAD_REQUEST
+                return render(request, "registration/login.html", {'form': form}, status=status)
 
             if member is not None and member.is_active is True:
                 login(request, member)
                 Member.objects.filter(username=member.username).update(
                         last_login=timezone.now()
                     )
-                return render(request, "account.html")
+                return render(request, "account.html", status=status)
 
         messages.error(request, "Invalid username or password")
+        status = HTTPStatus.UNAUTHORIZED
 
-    return render(request, "registration/login.html", { 'form': form })
+    return render(request, "registration/login.html", context={ 'form': form }, status=status)
 
 
 @login_required(login_url='/login')
@@ -159,6 +166,7 @@ def change_password(request):
     """Render change password page and reset password"""
 
     form = ChangePasswordForm(request.user)
+    status = HTTPStatus.OK
 
     if request.method == 'POST':
         form = ChangePasswordForm(request.user, request.POST)
@@ -172,14 +180,16 @@ def change_password(request):
             return redirect('account')
 
         messages.error(request, "Invalid password")
+        status = HTTPStatus.BAD_REQUEST
 
-    return render(request, "registration/change_password.html", {'form': form })
+    return render(request, "registration/change_password.html", {'form': form }, status=status)
 
 
 def password_reset_request(request):
     """Send password recovery email"""
 
     form = PasswordResetForm(request.POST or None)
+    status = HTTPStatus.OK
 
     if request.method == "POST":
         if form.is_valid():
@@ -205,5 +215,6 @@ def password_reset_request(request):
                 return redirect("homepage")
 
         messages.error(request, "Invalid email address")
+        status = HTTPStatus.BAD_REQUEST
 
-    return render(request, "registration/password_reset_form.html", {'form': form})
+    return render(request, "registration/password_reset_form.html", {'form': form}, status=status)
