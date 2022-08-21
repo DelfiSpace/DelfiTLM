@@ -13,9 +13,9 @@ services:
             - SMTP_HOST=${SMTP_HOST}
             - SMTP_PORT=${SMTP_PORT}
             - FROM_EMAIL=${FROM_EMAIL:-webmaster@localhost}
+            - CROWDSEC_LAPI=${CROWDSEC_LAPI:-6a601f2baf982825d472200826fb44b5}
+            - CROWDSEC_URL=${CROWDSEC_URL:-http://crowdsec:8080/}
         restart: always
-        # networks:
-        #     crowdsec_test:
 
     proxy:
         build:
@@ -34,12 +34,10 @@ services:
             - pgadmin
             - grafana
         restart: always
-        # networks:
-        #     crowdsec_test:
 
     pgadmin:
         container_name: pgadmin4_container
-        image: dpage/pgadmin4:6.5
+        image: dpage/pgadmin4:latest
         restart: always
         environment:
             - PGADMIN_DEFAULT_EMAIL=${PGADMIN_DEFAULT_EMAIL:-admin@admin.com}
@@ -48,12 +46,12 @@ services:
             - "db"
         volumes:
             - pgadmin_persistent:/var/lib/pgadmin
-        # networks:
-        #     crowdsec_test:
 
     crowdsec:
-        image: crowdsecurity/crowdsec:v1.3.4
+        image: crowdsecurity/crowdsec:latest
         restart: always
+        ports:
+            - "8080:8080"
         environment:
             #this is the list of collections we want to install
             #https://hub.crowdsec.net/author/crowdsecurity/collections/nginx
@@ -66,8 +64,9 @@ services:
             - logs:/var/log/nginx/:ro
             - crowdsec_db:/var/lib/crowdsec/data/
             - crowdsec_config:/etc/crowdsec/
-        # networks:
-        #     crowdsec_test:
+
+
+
     #metabase, because security is cool, but dashboards are cooler
     # crowdsec_dashboard:
     #     #we're using a custom Dockerfile so that metabase pops with pre-configured dashboards
@@ -82,8 +81,6 @@ services:
     #         - 'crowdsec'
     #     volumes:
     #         - crowdsec_db:/metabase-data/
-        # networks:
-        #     crowdsec_test:
 
 volumes:
     logs:
@@ -92,8 +89,3 @@ volumes:
     pgadmin_persistent:
     crowdsec_db:
     crowdsec_config:
-
-# networks:
-#  crowdsec_test:
-#    ipam:
-#      driver: default
