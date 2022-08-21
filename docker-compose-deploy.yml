@@ -43,7 +43,6 @@ services:
             - "db"
         volumes:
             - pgadmin_persistent:/var/lib/pgadmin
-
 volumes:
     static_data:
     certificates:

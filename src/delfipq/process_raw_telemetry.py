@@ -1,11 +1,9 @@
 """Script to store Delfi-PQ telemetry frames"""
 from transmission import telemetry_scraper as tlm_scraper
 from delfipq import XTCEParser as xtce_parser
+from django_logger import logger
 
 SATELLITE = "delfi_pq"
-
-parser = xtce_parser.XTCEParser("delfipq/Delfi-PQ.xml", "Radio")
-
 
 write_api, query_api = tlm_scraper.get_influx_db_read_and_query_api()
 
@@ -25,8 +23,7 @@ def store_raw_frame(timestamp, frame: str, observer: str, link: str):
 def store_frame(timestamp, frame: str, observer: str, link: str):
     """Store parsed frame in influxdb"""
 
-    print("processed frame stored")
-
+    parser = xtce_parser.XTCEParser("delfipq/Delfi-PQ.xml", "Radio")
     telemetry = parser.processTMFrame(bytes.fromhex(frame))
 
     if "frame" in telemetry:
@@ -59,7 +56,8 @@ def store_frame(timestamp, frame: str, observer: str, link: str):
             except ValueError:
                 pass
 
-            print(field + " " + str(value) + " " + status)
+            # print(field + " " + str(value) + " " + status)
+            logger.debug("delfi_pq: field: %s, val: %s, status: %s", field, str(value), status)
 
             db_fields["fields"][field] = value
             db_fields["tags"]["status"] = status
@@ -68,6 +66,10 @@ def store_frame(timestamp, frame: str, observer: str, link: str):
             # print(db_fields)
             db_fields["fields"] = {}
             db_fields["tags"] = {}
+
+        logger.info("delfi_pq: processed frame stored. Frame timestamp: %s, link: %s",
+                    timestamp, link)
+
 
 
 def process_frames_delfi_pq(link) -> tuple:
@@ -114,11 +116,12 @@ def process_frames_delfi_pq(link) -> tuple:
                     )
                 processed_frames_count += 1
             except xtce_parser.XTCEException as ex:
-                print(f"delfi_pq: frame processing error: {ex}" )
+                logger.exception("delfi_pq: frame processing error: %s", ex)
 
         if processed_frames_count == total_frames_count:
             tlm_scraper.reset_scraped_tlm_timestamps(SATELLITE)
+            logger.info("delfi_pq: %s data was processed from %s - %s", link, start_time, end_time)
     else:
-        print("delfi_pq: no frames to process.")
+        logger.info("delfi_pq: no frames to process")
 
     return processed_frames_count, total_frames_count

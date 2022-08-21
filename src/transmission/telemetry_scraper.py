@@ -9,6 +9,8 @@ import requests
 from influxdb_client import InfluxDBClient
 from influxdb_client.client.write_api import SYNCHRONOUS
 
+from django_logger import logger
+
 PATH = "https://db.satnogs.org/api/telemetry/"
 INFLUX_ORG = os.environ.get('INFLUXDB_V2_ORG', 'Delfi Space')
 # Django + docker paths and links:
@@ -28,13 +30,30 @@ SATELLITES = {
 
 TIME_FORMAT = '%Y-%m-%dT%H:%M:%SZ'
 
+
+def get_influxdb_client():
+    """Connect to influxdb and return the influxdb client."""
+
+    client = InfluxDBClient(url=INFLUXDB_URL,
+                        token=os.environ.get('INFLUXDB_V2_TOKEN', 'adminpwd'),
+                        org=INFLUX_ORG)
+
+    return client
+
+def get_influxdb_bucket_api():
+    """Connect to influxdb and return bucket_api."""
+
+    client = get_influxdb_client()
+
+    buckets_api = client.buckets_api()
+
+    return buckets_api
+
+
 def get_influx_db_read_and_query_api() -> tuple:
     """Connect to influxdb and return write_api and query_api."""
 
-
-    client = InfluxDBClient(url=INFLUXDB_URL,
-                            token=os.environ.get('INFLUXDB_V2_TOKEN', 'adminpwd'),
-                            org=INFLUX_ORG)
+    client = get_influxdb_client()
 
     write_api = client.write_api(write_options=SYNCHRONOUS)
     query_api = client.query_api()
@@ -126,7 +145,7 @@ def write_frame_to_raw_bucket(write_api, satellite, link, timestamp, frame_field
     "fields": frame_fields
     }
 
-    print("raw frame stored")
+    logger.info("%s: raw frame stored. Frame timestamp: %s, link: %s", satellite, timestamp, link)
 
     write_api.write(bucket, INFLUX_ORG, db_fields)
 
@@ -202,7 +221,7 @@ def scrape(satellite: str, save_to_db=True, save_to_file=False) -> None:
 
     telemetry = []
     telemetry_tmp = []
-
+    logger.info("SatNOGS scraper started. Scraping %s telemetry.", satellite)
     while True:
         satnogs_params = get_satnogs_params(satellite)
         response = requests.get(
@@ -231,14 +250,17 @@ def scrape(satellite: str, save_to_db=True, save_to_file=False) -> None:
                 if stored:
                     # print("DB successfully updated.")
                     # break
-                    print("Stored frame")
                     update_scraped_tlm_timestamps(satellite,
                                                   "downlink",
                                                   last["timestamp"] - timedelta(seconds=1),
                                                   first["timestamp"] + timedelta(seconds=1)
                                                   )
+                else:
+                    logger.info("SatNOGS scraper stopped. Done scraping %s telemetry.", satellite)
+                    break # stop scraping
 
         except IndexError:
+            logger.info("SatNOGS scraper stopped. Done scraping %s telemetry.", satellite)
             break
 
         except KeyError:
