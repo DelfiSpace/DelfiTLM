@@ -100,8 +100,10 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    "pycrowdsec.django.crowdsec_middleware",
 ]
+
+if DEBUG == 0:
+    MIDDLEWARE.append("pycrowdsec.django.crowdsec_middleware")
 
 ROOT_URLCONF = 'delfitlm.urls'
 
