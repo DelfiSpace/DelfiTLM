@@ -143,7 +143,7 @@ PYCROWDSEC_ACTIONS = {
 # IMPORTANT: If any action is doing a redirect to some view, always exclude it for pycrowdsec. Otherwise the middleware will trigger the redirect on the action view too.
 PYCROWDSEC_EXCLUDE_VIEWS = {"ban_view"}
 
-PYCROWDSEC_POLL_INTERVAL = 5
+PYCROWDSEC_POLL_INTERVAL = 10
 
 
 # Database
