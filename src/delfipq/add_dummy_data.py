@@ -1,7 +1,7 @@
 """Methods to populate DelfiPQ influxdb buckets"""
 
 import json
-from delfipq import XTCEParser
+from transmission.processing import XTCEParser
 
 from delfipq.process_raw_telemetry import store_frame, store_raw_frame
 

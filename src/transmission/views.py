@@ -15,7 +15,7 @@ from members.models import APIKey
 from django_logger import logger
 from .models import Uplink, Downlink, TLE
 from .filters import TelemetryDownlinkFilter, TelemetryUplinkFilter, TLEFilter
-from .save_data import parse_submitted_frame, process_frames, store_frame
+from .processing.save_raw_data import parse_submitted_frame, process_frames, store_frame
 
 QUERY_ROW_LIMIT = 100
 

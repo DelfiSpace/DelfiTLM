@@ -1,6 +1,6 @@
 from django.test import TestCase
 from transmission.models import TLE, Satellite
-from transmission.save_data import save_tle
+from transmission.processing.save_raw_data import save_tle
 import datetime as dt
 import pytz
 

@@ -1,11 +1,15 @@
 """Script to store Delfi-PQ telemetry frames"""
-from transmission import telemetry_scraper as tlm_scraper
-from delfipq import XTCEParser as xtce_parser
+from transmission.processing import XTCEParser as xtce_parser
 from django_logger import logger
+import transmission.processing.bookkeep_new_data_time_range as time_range
+from transmission.processing.influxdb_api import INFLUX_ORG, commit_frame, \
+get_influx_db_read_and_query_api, write_frame_to_raw_bucket
+
+from transmission.processing.telemetry_scraper import SCRAPED_TLM_FILE
 
 SATELLITE = "delfi_pq"
 
-write_api, query_api = tlm_scraper.get_influx_db_read_and_query_api()
+write_api, query_api = get_influx_db_read_and_query_api()
 
 def store_raw_frame(timestamp, frame: str, observer: str, link: str):
     """Store raw unprocessed frame in influxdb"""
@@ -15,15 +19,15 @@ def store_raw_frame(timestamp, frame: str, observer: str, link: str):
         "timestamp": timestamp
     }
 
-    stored = tlm_scraper.commit_frame(write_api, query_api, SATELLITE, link, frame_fields)
+    stored = commit_frame(write_api, query_api, SATELLITE, link, frame_fields)
     if stored:
-        tlm_scraper.include_timestamp_in_scraped_tlm_range(SATELLITE, link, timestamp)
+        time_range.include_timestamp_in_time_range(SATELLITE, link, timestamp, SCRAPED_TLM_FILE)
     return stored
 
 def store_frame(timestamp, frame: str, observer: str, link: str):
     """Store parsed frame in influxdb"""
 
-    parser = xtce_parser.XTCEParser("delfipq/Delfi-PQ.xml", "Radio")
+    parser = xtce_parser.SatParsers().parsers[SATELLITE]
     telemetry = parser.processTMFrame(bytes.fromhex(frame))
 
     if "frame" in telemetry:
@@ -62,7 +66,7 @@ def store_frame(timestamp, frame: str, observer: str, link: str):
             db_fields["fields"][field] = value
             db_fields["tags"]["status"] = status
 
-            write_api.write(SATELLITE + "_" + link, tlm_scraper.INFLUX_ORG, db_fields)
+            write_api.write(SATELLITE + "_" + link, INFLUX_ORG, db_fields)
             # print(db_fields)
             db_fields["fields"] = {}
             db_fields["tags"] = {}
@@ -77,7 +81,7 @@ def process_frames_delfi_pq(link) -> tuple:
     Return the total number of frames attempting to process and
     how many frames were successfully processed."""
 
-    scraped_telemetry = tlm_scraper.read_scraped_tlm()
+    scraped_telemetry = time_range.read_time_range_file(SCRAPED_TLM_FILE)
 
     processed_frames_count = 0
     total_frames_count = 0
@@ -107,7 +111,7 @@ def process_frames_delfi_pq(link) -> tuple:
             try:
                 store_frame(row["_time"], row["frame"], row["observer"],  link)
                 df_as_dict[i]["processed"] = True
-                tlm_scraper.write_frame_to_raw_bucket(
+                write_frame_to_raw_bucket(
                     write_api,
                     SATELLITE,
                     link,
@@ -119,7 +123,7 @@ def process_frames_delfi_pq(link) -> tuple:
                 logger.exception("delfi_pq: frame processing error: %s", ex)
 
         if processed_frames_count == total_frames_count:
-            tlm_scraper.reset_scraped_tlm_timestamps(SATELLITE)
+            time_range.reset_new_data_timestamps(SATELLITE, SCRAPED_TLM_FILE)
             logger.info("delfi_pq: %s data was processed from %s - %s", link, start_time, end_time)
     else:
         logger.info("delfi_pq: no frames to process")

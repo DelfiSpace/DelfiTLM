@@ -3,7 +3,7 @@ from django.db import models
 from django.db.models.deletion import DO_NOTHING
 from django.utils import timezone
 from members.models import Member
-from transmission.telemetry_scraper import TIME_FORMAT
+from transmission.processing.telemetry_scraper import TIME_FORMAT
 
 #pylint: disable=all
 

@@ -6,7 +6,7 @@ from rest_framework.test import force_authenticate
 from django.contrib.auth.models import Permission
 from django.urls import reverse
 from transmission.models import Downlink, Satellite, Uplink
-from transmission.save_data import process_uplink_and_downlink
+from transmission.processing.save_raw_data import process_uplink_and_downlink
 from transmission.views import delete_processed_frames, submit_frame
 
 from members.models import Member
@@ -324,7 +324,7 @@ class TestDeleteFrames(TestCase):
         self.client.logout()
 
 
-    @patch('transmission.save_data.store_frame_to_influxdb')
+    @patch('transmission.processing.save_raw_data.store_frame_to_influxdb')
     def test_delete(self, mock_store_frame_to_influxdb):
         mock_store_frame_to_influxdb.return_value = True
 
@@ -349,7 +349,7 @@ class TestDeleteFrames(TestCase):
         self.assertEqual(len(Uplink.objects.all()), 0)
 
 
-    @patch('transmission.save_data.store_frame_to_influxdb')
+    @patch('transmission.processing.save_raw_data.store_frame_to_influxdb')
     def test_delete_no_processed_frames(self, mock_store_frame_to_influxdb):
         mock_store_frame_to_influxdb.return_value = False
         self.assertEqual(len(Downlink.objects.all()), 3)
@@ -371,7 +371,7 @@ class TestDeleteFrames(TestCase):
         self.assertEqual(len(Uplink.objects.all()), 3)
 
 
-    @patch('transmission.save_data.store_frame_to_influxdb')
+    @patch('transmission.processing.save_raw_data.store_frame_to_influxdb')
     def test_delete_without_permissions(self, mock_store_frame_to_influxdb):
         unauthorized_user = Member.objects.create_user(username='unauthorized_user', email='unauthorized_user@email.com')
         unauthorized_user.set_password('delfispace4242')

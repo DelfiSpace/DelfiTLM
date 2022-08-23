@@ -9,8 +9,9 @@ from skyfield.api import load, EarthSatellite
 import pytz
 from transmission.models import Uplink, Downlink, TLE, Satellite
 from members.models import Member
-import transmission.telemetry_scraper as tlm_scraper
+import transmission.processing.telemetry_scraper as tlm_scraper
 
+from django_logger import logger
 
 def store_frame(frame, link, username, application=None) -> None:
     """Adds one json frame to the uplink/downlink table"""
@@ -126,7 +127,7 @@ def store_frame_to_influxdb(frame, link) -> bool:
 def get_satellite_from_frame_header(frame):
     """Find the corresponding satellite from the frame header"""
     # to be implemented
-    print(frame)
+    logger.debug(frame)
     return "delfi_pq"
 
 

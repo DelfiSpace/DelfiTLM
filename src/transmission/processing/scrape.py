@@ -1,6 +1,6 @@
 """Scrape satnogs"""
 # pylint: disable=E0401
-from telemetry_scraper import scrape
+from transmission.processing.telemetry_scraper import scrape
 
 # Run this file from within the src folder (if ran as a standalone script)
 
