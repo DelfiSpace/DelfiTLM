@@ -9,9 +9,11 @@ from skyfield.api import load, EarthSatellite
 import pytz
 from transmission.models import Uplink, Downlink, TLE, Satellite
 from members.models import Member
-import transmission.processing.telemetry_scraper as tlm_scraper
+from transmission.processing.XTCEParser import SatParsers
+from transmission.processing.bookkeep_new_data_time_range import include_timestamp_in_time_range
+from transmission.processing.influxdb_api import save_raw_frame_to_influxdb
+from transmission.processing.telemetry_scraper import SCRAPED_TLM_FILE, strip_tlm
 
-from django_logger import logger
 
 def store_frame(frame, link, username, application=None) -> None:
     """Adds one json frame to the uplink/downlink table"""
@@ -92,6 +94,7 @@ def process_uplink_and_downlink():
 
     return len(downlink_frames), len(uplink_frames)
 
+
 def process_frames(frames, link) -> int:
     """Try to store frame to influxdb and set the processed flag to True
     if a frame was sucessfully stored in influxdb.
@@ -108,27 +111,47 @@ def process_frames(frames, link) -> int:
 
     return processed_frames
 
+
+def mark_frame_as_invalid(frame, link):
+    if link == "downlink":
+        Downlink.objects.all().filter(frame=frame).first().set(invalid=True).save()
+    elif link == "uplink":
+        Uplink.objects.all().filter(frame=frame).first().set(invalid=True).save()
+
+
 def store_frame_to_influxdb(frame, link) -> bool:
     """Try to store frame to influxdb.
     Returns True if the frame was successfully stored, False otherwise."""
 
-    satellite = get_satellite_from_frame_header(frame["frame"])
+    satellite = get_satellite_from_frame(frame["frame"])
+
+    if satellite is None:
+        mark_frame_as_invalid(frame, link)
+        return False
+
     fields_to_save = ["frame", "timestamp", "observer", "frequency", "application", "metadata"]
 
-    frame = tlm_scraper.strip_tlm(frame, fields_to_save)
-    stored = tlm_scraper.save_raw_frame_to_influxdb(satellite, link, frame)
+    frame = strip_tlm(frame, fields_to_save)
+    stored = save_raw_frame_to_influxdb(satellite, link, frame)
 
     if stored:
-        tlm_scraper.include_timestamp_in_scraped_tlm_range(satellite, link, frame["timestamp"])
+        include_timestamp_in_time_range(satellite, link, frame["timestamp"], SCRAPED_TLM_FILE)
 
     return stored
 
 
-def get_satellite_from_frame_header(frame):
-    """Find the corresponding satellite from the frame header"""
-    # to be implemented
-    logger.debug(frame)
-    return "delfi_pq"
+def get_satellite_from_frame(frame):
+    """Find the corresponding satellite by attempting to parse the frame.
+    If the parsing is successful, return the satellite name, else None."""
+    for sat, parser in SatParsers().parsers.items():
+        if parser is not None:
+            try:
+                parser.processTMFrame(bytes.fromhex(frame))
+                return sat
+            except:
+                pass
+
+    return None
 
 
 def save_tle(tle):
