@@ -8,5 +8,3 @@ SATELLITES = {
     "delfi_c3": '32789',
     "da_vinci": None  #update id
 }
-
-

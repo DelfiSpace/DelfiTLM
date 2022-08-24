@@ -7,12 +7,12 @@ from django.core.exceptions import PermissionDenied
 from django.utils.dateparse import parse_datetime
 from skyfield.api import load, EarthSatellite
 import pytz
-from transmission.models import Uplink, Downlink, TLE, Satellite
 from members.models import Member
-from transmission.processing.XTCEParser import SatParsers
+from transmission.models import Uplink, Downlink, TLE, Satellite
+from transmission.processing.XTCEParser import SatParsers, XTCEException
 from transmission.processing.bookkeep_new_data_time_range import include_timestamp_in_time_range
 from transmission.processing.influxdb_api import save_raw_frame_to_influxdb
-from transmission.processing.telemetry_scraper import SCRAPED_TLM_FILE, strip_tlm
+from transmission.processing.telemetry_scraper import NEW_DATA_FILE, strip_tlm
 
 
 def store_frame(frame, link, username, application=None) -> None:
@@ -113,11 +113,13 @@ def process_frames(frames, link) -> int:
 
 
 def mark_frame_as_invalid(frame, link):
+    """Flag an invalid frame that doesn't correspond to any satellite."""
     if link == "downlink":
         Downlink.objects.all().filter(frame=frame).first().set(invalid=True).save()
     elif link == "uplink":
         Uplink.objects.all().filter(frame=frame).first().set(invalid=True).save()
-
+    else:
+        return
 
 def store_frame_to_influxdb(frame, link) -> bool:
     """Try to store frame to influxdb.
@@ -135,7 +137,7 @@ def store_frame_to_influxdb(frame, link) -> bool:
     stored = save_raw_frame_to_influxdb(satellite, link, frame)
 
     if stored:
-        include_timestamp_in_time_range(satellite, link, frame["timestamp"], SCRAPED_TLM_FILE)
+        include_timestamp_in_time_range(satellite, link, frame["timestamp"], NEW_DATA_FILE)
 
     return stored
 
@@ -148,7 +150,7 @@ def get_satellite_from_frame(frame):
             try:
                 parser.processTMFrame(bytes.fromhex(frame))
                 return sat
-            except:
+            except XTCEException:
                 pass
 
     return None

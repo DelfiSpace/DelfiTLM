@@ -13,7 +13,7 @@ from transmission.processing.influxdb_api import save_raw_frame_to_influxdb
 SATNOGS_PATH = "https://db.satnogs.org/api/telemetry/"
 SATNOGS_TOKEN_PATH = "tokens/satnogs_token.txt"
 
-SCRAPED_TLM_FILE = "transmission/processing/new_data.json"
+NEW_DATA_FILE = "transmission/processing/new_data.json"
 
 def get_satnogs_headers() -> dict:
     """Get satnogs request headers"""
@@ -33,7 +33,6 @@ def get_satnogs_params(satellite: str) -> dict:
     #params = {'app_source':'network', 'end': now, 'format': 'json', 'satellite': '51074'}
     params = {'end': now, 'format': 'json', 'satellite': SATELLITES[satellite]}
     return params
-
 
 
 def dump_telemetry_to_file(satellite: str, telemetry: list) -> None:
@@ -97,7 +96,7 @@ def scrape(satellite: str, save_to_db=True, save_to_file=False) -> None:
                                                   "downlink",
                                                   last["timestamp"] - timedelta(seconds=1),
                                                   first["timestamp"] + timedelta(seconds=1),
-                                                  SCRAPED_TLM_FILE
+                                                  NEW_DATA_FILE
                                                   )
                 else:
                     logger.info("SatNOGS scraper stopped. Done scraping %s telemetry.", satellite)

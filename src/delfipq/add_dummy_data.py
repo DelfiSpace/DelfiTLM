@@ -3,7 +3,7 @@
 import json
 from transmission.processing import XTCEParser
 
-from delfipq.process_raw_telemetry import store_frame, store_raw_frame
+from transmission.processing.process_raw_bucket import store_frame, store_raw_frame
 
 
 def delfi_pq_add_dummy_tlm_data():
@@ -17,7 +17,12 @@ def delfi_pq_add_dummy_tlm_data():
         # process each frame
         for frame in data:
             try:
-                store_frame(frame["timestamp"], frame["frame"], frame["observer"], "downlink")
+                store_frame("delfi_pq",
+                            frame["timestamp"],
+                            frame["frame"],
+                            frame["observer"],
+                            "downlink"
+                            )
             except XTCEParser.XTCEException as _:
                 # ignore
                 pass
@@ -34,7 +39,8 @@ def delfi_pq_add_dummy_tlm_raw_data():
         # data = data[:100]
         # process each frame
         for frame in data:
-            stored = store_raw_frame(frame["timestamp"],
+            stored = store_raw_frame("delfi_pq",
+                                     frame["timestamp"],
                                      frame["frame"],
                                      frame["observer"],
                                      "downlink")

@@ -26,11 +26,14 @@ def reset_new_data_timestamps(satellite: str, input_file: str) -> None:
         file.write(json.dumps(new_data_time_range, indent=4))
 
 
-def include_timestamp_in_time_range(satellite, link, timestamp, input_file):
+def include_timestamp_in_time_range(satellite: str, link: str, timestamp, input_file:str):
     """This function ensures that a given timestamp will be included in the scraped
     telemetry time range such that it can then be processed and parsed from raw form."""
 
-    time = datetime.strptime(timestamp, TIME_FORMAT)
+    if isinstance(timestamp, str):
+        time = datetime.strptime(timestamp, TIME_FORMAT)
+    else:
+        time = timestamp
 
     start_time = (time - timedelta(seconds=1)).strftime(TIME_FORMAT)
     end_time = (time + timedelta(seconds=1)).strftime(TIME_FORMAT)
