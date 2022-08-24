@@ -4,9 +4,11 @@ import copy
 import json
 from django.forms import ValidationError
 from django.core.exceptions import PermissionDenied
+from django.db import models
 from django.utils.dateparse import parse_datetime
 from skyfield.api import load, EarthSatellite
 import pytz
+from django_logger import logger
 from members.models import Member
 from transmission.models import Uplink, Downlink, TLE, Satellite
 from transmission.processing.XTCEParser import SatParsers, XTCEException
@@ -48,7 +50,7 @@ def store_frame(frame, link, username, application=None) -> None:
     frame_entry.save()
 
 
-def check_valid_frame(frame):
+def check_valid_frame(frame: str) -> None:
     """Check if a given frame has a valid form and a timestamp."""
     # check if the frame exists and it is a HEX string
     non_hex = re.match("^[A-Fa-f0-9]+$", frame["frame"])
@@ -60,7 +62,7 @@ def check_valid_frame(frame):
         raise ValidationError("Invalid submission, no timestamp attached.")
 
 
-def parse_submitted_frame(frame, frame_entry):
+def parse_submitted_frame(frame: str, frame_entry: models.Model) -> models.Model:
     """Extract frame info from frame and store it into frame_entry (database frame)"""
     # assign the frame HEX values
     frame_entry.frame = frame['frame']
@@ -82,7 +84,7 @@ def parse_submitted_frame(frame, frame_entry):
     return frame_entry
 
 
-def process_uplink_and_downlink():
+def process_uplink_and_downlink() -> tuple:
     """Process all unprocessed uplink and downlink frames,
     i.e. move them to the influxdb raw satellite data bucket."""
 
@@ -95,7 +97,7 @@ def process_uplink_and_downlink():
     return len(downlink_frames), len(uplink_frames)
 
 
-def process_frames(frames, link) -> int:
+def process_frames(frames: str, link: str) -> int:
     """Try to store frame to influxdb and set the processed flag to True
     if a frame was sucessfully stored in influxdb.
     Returns the count of successfully processed_frames."""
@@ -112,23 +114,25 @@ def process_frames(frames, link) -> int:
     return processed_frames
 
 
-def mark_frame_as_invalid(frame, link):
+def mark_frame_as_invalid(frame: str, link: str) -> None:
     """Flag an invalid frame that doesn't correspond to any satellite."""
     if link == "downlink":
-        Downlink.objects.all().filter(frame=frame).first().set(invalid=True).save()
+        Downlink.objects.filter(frame=frame).update(invalid=True)
     elif link == "uplink":
-        Uplink.objects.all().filter(frame=frame).first().set(invalid=True).save()
+        Uplink.objects.filter(frame=frame).update(invalid=True)
     else:
         return
 
-def store_frame_to_influxdb(frame, link) -> bool:
+
+def store_frame_to_influxdb(frame: dict, link: str) -> bool:
     """Try to store frame to influxdb.
     Returns True if the frame was successfully stored, False otherwise."""
 
     satellite = get_satellite_from_frame(frame["frame"])
 
     if satellite is None:
-        mark_frame_as_invalid(frame, link)
+        mark_frame_as_invalid(frame["frame"], link)
+        logger.warning("invalid %s frame, cannot match satellite", link)
         return False
 
     fields_to_save = ["frame", "timestamp", "observer", "frequency", "application", "metadata"]
@@ -142,7 +146,7 @@ def store_frame_to_influxdb(frame, link) -> bool:
     return stored
 
 
-def get_satellite_from_frame(frame):
+def get_satellite_from_frame(frame: str) -> None:
     """Find the corresponding satellite by attempting to parse the frame.
     If the parsing is successful, return the satellite name, else None."""
     for sat, parser in SatParsers().parsers.items():
@@ -156,7 +160,7 @@ def get_satellite_from_frame(frame):
     return None
 
 
-def save_tle(tle):
+def save_tle(tle: str) -> models.Model:
     """Insert a TLE into the database.
         TLE format:
         ISS (ZARYA)
