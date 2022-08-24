@@ -1,4 +1,4 @@
-"""Methods to populate DelfiPQ influxdb buckets"""
+"""Methods to populate influxdb buckets"""
 
 import json
 from transmission.processing import XTCEParser
@@ -6,10 +6,9 @@ from transmission.processing import XTCEParser
 from transmission.processing.process_raw_bucket import store_frame, store_raw_frame
 
 
-def delfi_pq_add_dummy_tlm_data():
+def add_dummy_tlm_data(satellite, input_file):
     """Add dummy processed telemetry intended to test and experiment with dashboards."""
-    inputfile = "delfipq/delfi-pq.txt"
-    with open(inputfile, encoding="utf-8") as file:
+    with open(input_file, encoding="utf-8") as file:
         data = json.load(file)
         # sort messages in chronological order
         data.sort(key=lambda x: x["timestamp"])
@@ -17,7 +16,7 @@ def delfi_pq_add_dummy_tlm_data():
         # process each frame
         for frame in data:
             try:
-                store_frame("delfi_pq",
+                store_frame(satellite,
                             frame["timestamp"],
                             frame["frame"],
                             frame["observer"],
@@ -28,18 +27,18 @@ def delfi_pq_add_dummy_tlm_data():
                 pass
     return len(data)
 
-def delfi_pq_add_dummy_tlm_raw_data():
+
+def add_dummy_tlm_raw_data(satellite, input_file):
     """Add dummy raw telemetry"""
-    inputfile = "delfipq/delfi-pq.txt"
     stored_frames = 0
-    with open(inputfile, encoding="utf-8") as file:
+    with open(input_file, encoding="utf-8") as file:
         data = json.load(file)
         # sort messages in chronological order
         data.sort(key=lambda x: x["timestamp"])
         # data = data[:100]
         # process each frame
         for frame in data:
-            stored = store_raw_frame("delfi_pq",
+            stored = store_raw_frame(satellite,
                                      frame["timestamp"],
                                      frame["frame"],
                                      frame["observer"],

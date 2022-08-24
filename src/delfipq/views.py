@@ -3,21 +3,7 @@ from django.contrib import messages
 from django.core.exceptions import PermissionDenied
 from django.http import JsonResponse
 from django.shortcuts import render
-from delfipq.add_dummy_data import delfi_pq_add_dummy_tlm_data, delfi_pq_add_dummy_tlm_raw_data
 from transmission.processing.process_raw_bucket import process_raw_bucket
-
-
-def add_dummy_tlm_data(request):
-    """Add dummy processed telemetry intended to test and experiment with dashboards."""
-    len_data = delfi_pq_add_dummy_tlm_data()
-
-    return JsonResponse({"len": len_data})
-
-
-def add_dummy_tlm_raw_data(request):
-    """Add dummy raw telemetry"""
-    len_data, stored_frames = delfi_pq_add_dummy_tlm_raw_data()
-    return JsonResponse({"len": len_data, "len_stored": stored_frames})
 
 
 def process_telemetry(request):
