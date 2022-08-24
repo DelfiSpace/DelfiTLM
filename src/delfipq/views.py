@@ -18,9 +18,3 @@ def process_telemetry(request):
         return JsonResponse({"message": message})
 
     return PermissionDenied()
-
-
-def home(request):
-    """render index.html page"""
-    ren = render(request, "delfipq/home/index.html")
-    return ren
