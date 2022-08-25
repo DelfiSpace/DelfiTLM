@@ -1,0 +1,18 @@
+{
+    "delfi_pq": {
+        "uplink": [],
+        "downlink": []
+    },
+    "delfi_next": {
+        "uplink": [],
+        "downlink": []
+    },
+    "delfi_c3": {
+        "uplink": [],
+        "downlink": []
+    },
+    "da_vinci": {
+        "uplink": [],
+        "downlink": []
+    }
+}

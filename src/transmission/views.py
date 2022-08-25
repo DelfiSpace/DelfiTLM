@@ -7,16 +7,17 @@ from django.forms import ValidationError
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import BadRequest, PermissionDenied
-from django.core.management import call_command
 from django.http.response import JsonResponse, HttpResponseBadRequest, HttpResponseForbidden
 from django.shortcuts import redirect, render
 from rest_framework_api_key.permissions import HasAPIKey
 from rest_framework.decorators import permission_classes
-from members.models import APIKey, Member
 from django_logger import logger
+from members.models import APIKey
+from transmission.processing.process_raw_bucket import process_raw_bucket
+from transmission.processing.add_dummy_data import add_dummy_downlink_frames
 from .models import Uplink, Downlink, TLE
 from .filters import TelemetryDownlinkFilter, TelemetryUplinkFilter, TLEFilter
-from .processing.save_raw_data import parse_submitted_frame, process_frames, store_frame
+from .processing.save_raw_data import process_frames, store_frame
 
 QUERY_ROW_LIMIT = 100
 
@@ -104,21 +105,10 @@ def submit_frame(request): #pylint:disable=R0911
     return JsonResponse({"result": "failure", "message": "Method not allowed"},
                         status=HTTPStatus.METHOD_NOT_ALLOWED)
 
-
-def add_dummy_downlink_frames(request):
+def add_dummy_downlink(request):
     """Add dummy frames to Downlink table as admin user."""
 
-    # check if admin exists, if not create it
-    if len(Member.objects.filter(username="admin"))==0:
-        call_command('initadmin')
-
-    with open("transmission/dummy_downlink.json", 'r', encoding="utf-8") as file:
-        dummy_data = json.load(file)
-        for frame in dummy_data["frames"]:
-            frame_entry = Downlink()
-            frame_entry.observer = Member.objects.all().filter(username="admin")[0]
-            frame_entry = parse_submitted_frame(frame, frame_entry)
-            frame_entry.save()
+    add_dummy_downlink_frames()
 
     return JsonResponse({"len": len(Downlink.objects.all())})
 
@@ -180,6 +170,20 @@ def process(request, link):
         return HttpResponseForbidden()
 
     return redirect('get_frames_table', link)
+
+
+def process_raw_telemetry_bucket(request, satellite, link):
+    """Trigger telemetry processing in influxdb given satellite and link"""
+    user = request.user
+
+    if user.has_perm("transmission.view_downlink"):
+        processed_frames_count, total_frames_count = process_raw_bucket(satellite, link)
+        message = f"{processed_frames_count}/{total_frames_count}"
+        message += f" {satellite} telemetry frames processed"
+        messages.info(request, message)
+        return JsonResponse({"message": message})
+
+    return PermissionDenied()
 
 
 def paginate_telemetry_table(request, telemetry_filter, table_name):

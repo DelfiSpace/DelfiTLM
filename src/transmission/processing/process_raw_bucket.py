@@ -25,7 +25,7 @@ def store_raw_frame(satellite, timestamp, frame: str, observer: str, link: str):
     return stored
 
 
-def store_frame(satellite, timestamp, frame: str, observer: str, link: str):
+def parse_and_store_frame(satellite, timestamp, frame: str, observer: str, link: str):
     """Store parsed frame in influxdb"""
 
     parser = xtce_parser.SatParsers().parsers[satellite]
@@ -107,7 +107,7 @@ def process_raw_bucket(satellite, link) -> tuple:
         # process each frame
         for i, row in dataframe.iterrows():
             try:
-                store_frame(satellite, row["_time"], row["frame"], row["observer"],  link)
+                parse_and_store_frame(satellite, row["_time"], row["frame"], row["observer"],  link)
                 df_as_dict[i]["processed"] = True
                 write_frame_to_raw_bucket(
                     write_api,
