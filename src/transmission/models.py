@@ -34,12 +34,11 @@ class Downlink(models.Model):
     frame = models.TextField(default=None, null=False)
     metadata = models.JSONField(null=True, blank=True)
 
-    def to_dictionary(self):
+    def to_dictionary(self) -> dict:
         """Convert Downlink object to dict"""
         frame_dict = {}
         frame_dict["timestamp"] = self.timestamp.strftime(TIME_FORMAT)
-        if self.observer is not None:
-            frame_dict["observer"] = self.observer.username
+        frame_dict["observer"] = self.observer.username
         frame_dict["application"] = self.application
         frame_dict["processed"] = self.processed
         frame_dict["frequency"] = self.frequency
@@ -61,12 +60,11 @@ class Uplink(models.Model):
     metadata = models.JSONField(null=True, blank=True)
 
 
-    def to_dictionary(self):
+    def to_dictionary(self) -> dict:
         """Convert Uplink object to dict"""
         frame_dict = {}
         frame_dict["timestamp"] = self.timestamp.strftime(TIME_FORMAT)
-        if self.operator is not None:
-            frame_dict["operator"] = self.operator.username
+        frame_dict["operator"] = self.operator.username
         frame_dict["application"] = self.application
         frame_dict["processed"] = self.processed
         frame_dict["frequency"] = self.frequency

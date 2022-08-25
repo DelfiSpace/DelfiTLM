@@ -2,7 +2,6 @@
 from django.contrib import messages
 from django.core.exceptions import PermissionDenied
 from django.http import JsonResponse
-from django.shortcuts import render
 from transmission.processing.process_raw_bucket import process_raw_bucket
 
 

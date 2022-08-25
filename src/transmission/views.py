@@ -34,8 +34,6 @@ def submit_frame(request): #pylint:disable=R0911
             # retrieve the user agent (if present, empty otherwise)
             user_agent = request.META.get('HTTP_USER_AGENT', '')
 
-            link = 'downlink'
-
             if 'HTTP_FRAME_LINK' in request.META and \
                 request.META.get('HTTP_FRAME_LINK', '') is not None:
 
@@ -43,7 +41,6 @@ def submit_frame(request): #pylint:disable=R0911
 
                 if link not in ["uplink", "downlink"]:
                     raise BadRequest("HTTP_FRAME_LINK can be either 'uplink' or 'downlink'" )
-
 
             # search for the user name matching the API key
             api_key_name = APIKey.objects.get_from_key(key)
@@ -184,6 +181,7 @@ def process(request, link):
 
     return redirect('get_frames_table', link)
 
+
 def paginate_telemetry_table(request, telemetry_filter, table_name):
     """Paginates a telemetry table and renders the filtering form"""
 
@@ -199,7 +197,7 @@ def paginate_telemetry_table(request, telemetry_filter, table_name):
 def get_frames_table(request, link):
     """Queries and filters the uplink/downlink table"""
 
-    if link not in ['uplink', 'downlink']:
+    if request.method != "GET" or link not in ['uplink', 'downlink']:
         return HttpResponseBadRequest()
 
     if link == "downlink" and request.user.has_perm('transmission.view_downlink'):
@@ -207,7 +205,7 @@ def get_frames_table(request, link):
         telemetry_filter = TelemetryDownlinkFilter(request.GET, queryset=frames)
         return paginate_telemetry_table(request, telemetry_filter, "Downlink")
 
-    if link == "uplink" and request.user.has_perm('transmission.uplink_downlink'):
+    if link == "uplink" and request.user.has_perm('transmission.view_uplink'):
         frames = Uplink.objects.all().order_by('timestamp')
         telemetry_filter = TelemetryUplinkFilter(request.GET, queryset=frames)
         return paginate_telemetry_table(request, telemetry_filter, "Uplink")
@@ -218,6 +216,9 @@ def get_frames_table(request, link):
 
 def get_tle_table(request):
     """Queries and filters the TLEs table"""
+    if request.method != "GET":
+        return HttpResponseBadRequest()
+
     frames = TLE.objects.all().order_by('valid_from')
     tle_filter = TLEFilter(request.GET, queryset=frames)
 

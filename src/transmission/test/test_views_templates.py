@@ -1,12 +1,13 @@
 """Test views html templates"""
 import json
+from django.http import HttpResponseBadRequest
 from django.test import Client, TestCase, RequestFactory
 from django.contrib.messages.storage.fallback import FallbackStorage
 from rest_framework.test import force_authenticate
 from django.contrib.auth.models import Permission
 from django.urls import reverse
 from transmission.models import Downlink, Satellite, Uplink
-from transmission.processing.save_raw_data import process_uplink_and_downlink
+from transmission.processing.save_raw_data import process_uplink_and_downlink, store_frame
 from transmission.views import delete_processed_frames, submit_frame
 
 from members.models import Member
@@ -14,6 +15,62 @@ from members.views import generate_key
 
 from unittest.mock import patch
 # pylint: disable=all
+
+
+class TestTableViews(TestCase):
+    def setUp(self):
+        self.factory = RequestFactory()
+        self.client = Client()
+        self.user = Member.objects.create_superuser(username='user', email='user@email.com', verified=True)
+        self.user.set_password('delfispace4242')
+        self.user.save()
+        Satellite.objects.create(sat='delfic3', norad_id=1).save()
+
+    def tearDown(self):
+        self.client.logout()
+
+    def test_requested_tables(self):
+        # access uplink/downlink tables
+        frame = { "qos": 98.6, "sat": "delfic3", "timestamp": "2021-12-19T02:20:14.959630Z", "frequency": 2455.66, "frame": "A8989A40404000888C9C66B0A80003F0890FFDAD776500001E601983C008C39C10D02911E2F0FF71230DECE70032044C09500311119B8CA092A08B5E85919492938285939C7900000000000000000000005602F637005601F3380000006D70000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000434B1345B440BF3C9736D0301D240E000004B82C4050B26DDB942EB4D0CFE4E9D64946"}
+
+        store_frame(frame, "downlink", "user")
+        store_frame(frame, "uplink", "user")
+
+        response = self.client.post(reverse('login'), {'username': 'user', 'password': 'delfispace4242'})
+        self.assertEqual(response.status_code, 200)
+
+        response = self.client.get(reverse('get_frames_table', args=["downlink"]))
+        self.assertEqual(response.status_code, 200)
+
+        response = self.client.get(reverse('get_frames_table', args=["uplink"]))
+        self.assertEqual(response.status_code, 200)
+
+        response = self.client.get(reverse('get_tle_table'))
+        self.assertEqual(response.status_code, 200)
+
+
+    def test_requested_tables_no_permissions(self):
+        # cannot access uplink/downlink tables without proper permission
+        response = self.client.get(reverse('get_frames_table', args=["downlink"]))
+        self.assertEqual(response.status_code, 403)
+
+        response = self.client.get(reverse('get_frames_table', args=["uplink"]))
+        self.assertEqual(response.status_code, 403)
+
+
+    def test_requested_tables_bad_requests(self):
+        # tables must be requested with a get request
+        response = self.client.post(reverse('login'), {'username': 'user', 'password': 'delfispace4242'})
+        self.assertEqual(response.status_code, 200)
+
+        response = self.client.delete(reverse('get_frames_table', args=["downlink"]))
+        self.assertEqual(response.status_code, 400)
+
+        response = self.client.post(reverse('get_frames_table', args=["uplink"]))
+        self.assertEqual(response.status_code, 400)
+
+        response = self.client.head(reverse('get_tle_table'))
+        self.assertEqual(response.status_code, 400)
 
 
 class TestSubmitFrames(TestCase):
@@ -85,6 +142,8 @@ class TestSubmitFrames(TestCase):
         request = self.factory.post(path='submit_frame', data=frame_json, content_type='application/json')
         request.user = user
         request.META['HTTP_AUTHORIZATION'] = json.loads(response_key)['generated_key']
+        request.META['HTTP_FRAME_LINK'] = "downlink"
+
 
         response = submit_frame(request)
 
@@ -109,11 +168,12 @@ class TestSubmitFrames(TestCase):
         request = self.factory.post(path='submit_frame', data=frame_json, content_type='application/json')
         request.user = user
         request.META['HTTP_AUTHORIZATION'] = json.loads(response_key)['generated_key']
+        request.META['HTTP_FRAME_LINK'] = "downlink"
 
         response = submit_frame(request)
 
         self.assertEquals(response.status_code, 400)
-        self.assertEqual(len(Downlink.objects.all()), 0) # dowlink table has no entry
+        self.assertEqual(len(Downlink.objects.all()), 0) # downlink table has no entry
 
 
     def test_submit_with_timestamps(self):
@@ -136,12 +196,12 @@ class TestSubmitFrames(TestCase):
         request.user = user
         request.META['HTTP_AUTHORIZATION'] = json.loads(response_key)['generated_key']
 
-        # test donwlink
+        # test downlink
         request.META['HTTP_FRAME_LINK'] = 'downlink'
         response = submit_frame(request)
 
         self.assertEquals(response.status_code, 201)
-        self.assertEqual(len(Downlink.objects.all()), 1) # dowlink table has 1 entry
+        self.assertEqual(len(Downlink.objects.all()), 1) # downlink table has 1 entry
         self.assertEqual(str(Downlink.objects.first().timestamp), "2021-12-19 02:20:14.959630+00:00")
 
         # test uplink
@@ -170,11 +230,13 @@ class TestSubmitFrames(TestCase):
         request = self.factory.post(path='submit_frame', data=frame_json, content_type='application/json')
         request.user = user
         request.META['HTTP_AUTHORIZATION'] = json.loads(response_key)['generated_key']
+        request.META['HTTP_FRAME_LINK'] = "downlink"
+
 
         response = submit_frame(request)
 
         self.assertEquals(response.status_code, 201)
-        self.assertEqual(len(Downlink.objects.all()), 1) # dowlink table has 1 entry
+        self.assertEqual(len(Downlink.objects.all()), 1) # downlink table has 1 entry
         self.assertEqual(str(Downlink.objects.first().timestamp), "2022-02-06 16:49:05.421398+00:00")
 
 
@@ -201,7 +263,7 @@ class TestSubmitFrames(TestCase):
         response = submit_frame(request)
 
         self.assertEquals(response.status_code, 401)
-        self.assertEqual(len(Downlink.objects.all()), 0) # dowlink table has no entry
+        self.assertEqual(len(Downlink.objects.all()), 0) # downlink table has no entry
 
 
     def test_submit_without_permissions(self):
@@ -274,124 +336,5 @@ class TestSubmitFrames(TestCase):
         self.assertEquals(response.status_code, 400)
         self.assertEqual(len(Uplink.objects.all()), 0)
 
-class TestDeleteFrames(TestCase):
-    def setUp(self):
-        self.factory = RequestFactory()
-        self.client = Client()
-        self.user = Member.objects.create_user(username='user', email='user@email.com')
-        self.user.set_password('delfispace4242')
-
-        self.add_downlink_permission = Permission.objects.get(codename='add_downlink')
-        self.add_uplink_permission = Permission.objects.get(codename='add_uplink')
-        self.user.user_permissions.add(self.add_downlink_permission)
-        self.user.user_permissions.add(self.add_uplink_permission)
-
-        self.delete_downlink_permission = Permission.objects.get(codename='delete_downlink')
-        self.delete_uplink_permission = Permission.objects.get(codename='delete_uplink')
-        self.user.user_permissions.add(self.delete_downlink_permission)
-        self.user.user_permissions.add(self.delete_uplink_permission)
-        self.user.save()
-        Satellite.objects.create(sat='delfic3', norad_id=1).save()
 
 
-        frame = '{ "qos": 98.6, "sat": "delfic3", "timestamp": "2021-12-19T02:20:14.959630Z", "frequency": 2455.66, "frame": "A8989A40404000888C9C66B0A80003F0890FFDAD776500001E601983C008C39C10D02911E2F0FF71230DECE70032044C09500311119B8CA092A08B5E85919492938285939C7900000000000000000000005602F637005601F3380000006D70000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000434B1345B440BF3C9736D0301D240E000004B82C4050B26DDB942EB4D0CFE4E9D64946"}'
-
-        frame_json = json.loads(frame)
-        request_key = self.factory.get(path='members/key/', content_type='application/json')
-
-        user = Member.objects.get(username='user')
-        force_authenticate(request_key, user=user)
-
-        request_key.user = user
-        response_key = generate_key(request_key).content
-
-        request = self.factory.post(path='submit_frame', data=frame_json, content_type='application/json')
-        request.user = user
-        request.META['HTTP_AUTHORIZATION'] = json.loads(response_key)['generated_key']
-
-        request.META['HTTP_FRAME_LINK'] = "uplink"
-
-        for _ in range(3):
-            response = submit_frame(request)
-            self.assertEquals(response.status_code, 201)
-
-        request.META['HTTP_FRAME_LINK'] = "downlink"
-        for _ in range(3):
-            response = submit_frame(request)
-            self.assertEquals(response.status_code, 201)
-
-    def tearDown(self):
-        self.client.logout()
-
-
-    @patch('transmission.processing.save_raw_data.store_frame_to_influxdb')
-    def test_delete(self, mock_store_frame_to_influxdb):
-        mock_store_frame_to_influxdb.return_value = True
-
-        self.assertEqual(len(Downlink.objects.all()), 3)
-        self.assertEqual(len(Uplink.objects.all()), 3)
-
-        process_uplink_and_downlink()
-
-        self.assertEqual(len(Downlink.objects.all()), 3)
-        self.assertEqual(len(Uplink.objects.all()), 3)
-
-        request = self.factory.post(path='transmission/delete-processed-frames/', content_type='application/json')
-        setattr(request, 'session', 'session')
-        setattr(request, '_messages', FallbackStorage(request))
-        request.user = self.user
-        delete_processed_frames(request, "uplink")
-        self.assertEqual(len(Downlink.objects.all()), 3)
-        self.assertEqual(len(Uplink.objects.all()), 0)
-
-        delete_processed_frames(request, "downlink")
-        self.assertEqual(len(Downlink.objects.all()), 0)
-        self.assertEqual(len(Uplink.objects.all()), 0)
-
-
-    @patch('transmission.processing.save_raw_data.store_frame_to_influxdb')
-    def test_delete_no_processed_frames(self, mock_store_frame_to_influxdb):
-        mock_store_frame_to_influxdb.return_value = False
-        self.assertEqual(len(Downlink.objects.all()), 3)
-        self.assertEqual(len(Uplink.objects.all()), 3)
-
-        process_uplink_and_downlink()
-
-        self.assertEqual(len(Downlink.objects.all()), 3)
-        self.assertEqual(len(Uplink.objects.all()), 3)
-
-        request = self.factory.post(path='transmission/delete-processed-frames/', content_type='application/json')
-        setattr(request, 'session', 'session')
-        setattr(request, '_messages', FallbackStorage(request))
-        request.user = self.user
-        delete_processed_frames(request, "uplink")
-        delete_processed_frames(request, "downlink")
-
-        self.assertEqual(len(Downlink.objects.all()), 3)
-        self.assertEqual(len(Uplink.objects.all()), 3)
-
-
-    @patch('transmission.processing.save_raw_data.store_frame_to_influxdb')
-    def test_delete_without_permissions(self, mock_store_frame_to_influxdb):
-        unauthorized_user = Member.objects.create_user(username='unauthorized_user', email='unauthorized_user@email.com')
-        unauthorized_user.set_password('delfispace4242')
-        unauthorized_user.save()
-
-        mock_store_frame_to_influxdb.return_value = True
-        self.assertEqual(len(Downlink.objects.all()), 3)
-        self.assertEqual(len(Uplink.objects.all()), 3)
-
-        process_uplink_and_downlink()
-
-        self.assertEqual(len(Downlink.objects.all()), 3)
-        self.assertEqual(len(Uplink.objects.all()), 3)
-
-        request = self.factory.post(path='transmission/delete-processed-frames/', content_type='application/json')
-        setattr(request, 'session', 'session')
-        setattr(request, '_messages', FallbackStorage(request))
-        request.user = unauthorized_user
-        delete_processed_frames(request, "uplink")
-        delete_processed_frames(request, "downlink")
-
-        self.assertEqual(len(Downlink.objects.all()), 3)
-        self.assertEqual(len(Uplink.objects.all()), 3)
