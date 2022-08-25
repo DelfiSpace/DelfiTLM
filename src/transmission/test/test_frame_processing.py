@@ -1,17 +1,13 @@
 """Test views html templates"""
-import json
-from django.http import HttpResponseBadRequest
-from django.test import Client, TestCase, RequestFactory
+
+from django.test import Client, TestCase, RequestFactory, tag
 from django.contrib.messages.storage.fallback import FallbackStorage
-from rest_framework.test import force_authenticate
-from django.contrib.auth.models import Permission
-from django.urls import reverse
+
 from transmission.models import Downlink, Satellite, Uplink
 from transmission.processing.save_raw_data import process_uplink_and_downlink, store_frame
-from transmission.views import delete_processed_frames, process, submit_frame
+from transmission.views import delete_processed_frames, process
 
 from members.models import Member
-from members.views import generate_key
 
 from unittest.mock import patch
 # pylint: disable=all
@@ -201,7 +197,7 @@ class TestFramesProcessing(TestCase):
         self.assertEqual(len(Downlink.objects.all().filter(processed=True)), 0)
         self.assertEqual(len(Uplink.objects.all().filter(processed=True)), 0)
 
-
+    @tag('XMLRequired')
     @patch('transmission.processing.influxdb_api.commit_frame')
     @patch('transmission.processing.influxdb_api.save_raw_frame_to_influxdb')
     def test_valid_frames_processing(self, mock_commit_frame, mock_save_raw_frame_to_influxdb):
@@ -227,7 +223,7 @@ class TestFramesProcessing(TestCase):
         self.assertEqual(len(Downlink.objects.all().filter(invalid=True)), 0)
         self.assertEqual(len(Uplink.objects.all().filter(invalid=True)), 0)
 
-
+    @tag('XMLRequired')
     @patch('transmission.processing.influxdb_api.commit_frame')
     @patch('transmission.processing.influxdb_api.save_raw_frame_to_influxdb')
     def test_invalid_frames_processing(self, mock_commit_frame, mock_save_raw_frame_to_influxdb):

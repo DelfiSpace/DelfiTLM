@@ -1,14 +1,12 @@
 """Test views html templates"""
 import json
-from django.http import HttpResponseBadRequest
 from django.test import Client, TestCase, RequestFactory
-from django.contrib.messages.storage.fallback import FallbackStorage
 from rest_framework.test import force_authenticate
 from django.contrib.auth.models import Permission
 from django.urls import reverse
 from transmission.models import Downlink, Satellite, Uplink
-from transmission.processing.save_raw_data import process_uplink_and_downlink, store_frame
-from transmission.views import delete_processed_frames, submit_frame
+from transmission.processing.save_raw_data import store_frame
+from transmission.views import  submit_frame
 
 from members.models import Member
 from members.views import generate_key
