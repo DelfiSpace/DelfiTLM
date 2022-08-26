@@ -1,8 +1,11 @@
 """Scheduler for planning telemetry scrapes and frame processing"""
+from typing import Callable
 from apscheduler.schedulers.background import BackgroundScheduler
 from transmission.processing.process_raw_bucket import process_raw_bucket
 from transmission.processing.telemetry_scraper import scrape
 from transmission.processing.save_raw_data import process_uplink_and_downlink
+from django_logger import logger
+
 # Trigger:
     # date: use when you want to run the job just once at a certain point of time
     # interval: use when you want to run the job at fixed intervals of time
@@ -15,7 +18,7 @@ job_defaults = {
 
 scheduler = BackgroundScheduler(job_defaults=job_defaults)
 
-def get_job_id(satellite, job_description, link=None):
+def get_job_id(satellite: str, job_description: str, link: str=None) -> str:
     """Create an id, job description"""
     if link is None:
 
@@ -24,7 +27,7 @@ def get_job_id(satellite, job_description, link=None):
     return satellite + "_" + link + "_" + job_description
 
 
-def schedule_job(satellite, job_type, link):
+def schedule_job(satellite: str, job_type: str, link: str) -> None:
     """Schedule job"""
     job_id = get_job_id(satellite, job_type, link)
     if job_type == "scraper":
@@ -40,7 +43,7 @@ def schedule_job(satellite, job_type, link):
         add_job(process_raw_bucket, args, job_id)
 
 
-def get_running_jobs():
+def get_pending_jobs() -> list:
     """Get the ids of the currently scheduled jobs."""
     job_ids = []
 
@@ -50,7 +53,7 @@ def get_running_jobs():
     return job_ids
 
 
-def add_job(function, args, job_id):
+def add_job(function: Callable, args:list, job_id:str) -> None:
     """Add a job to the schedule if not already scheduled."""
     if scheduler.get_job(job_id) is None:
         scheduler.add_job(
@@ -58,11 +61,13 @@ def add_job(function, args, job_id):
             args=args,
             id=job_id,
         )
+        logger.info("Scheduled job: %s", job_id)
 
 
-def start():
+def start() -> None:
     """Start the background scheduler"""
 
+    logger.info("Scheduler started")
     # add_scraper_job("delfi_pq", trigger="interval", minutes=60*12)
     # add_scraper_job("delfi_next", trigger="interval", minutes=60*12)
     # add_scraper_job("delfi_c3", trigger="interval", minutes=60*12)
@@ -72,6 +77,8 @@ def start():
     scheduler.start()
 
 
-def stop():
+def stop() -> None:
     """Stop the scheduler"""
+
+    logger.info("Scheduler shutdown")
     scheduler.shutdown()

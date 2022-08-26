@@ -6,6 +6,8 @@ class SubmitJob(forms.Form):
     satellites=[
         ('delfi_pq', 'Delfi-PQ'),
         ('delfi_c3', 'Delfi-C3'),
+        ('delfi_next', 'Delfi-Next'),
+        ('da_vinci', 'Da-Vinci-Satellite'),
         ]
 
     jobs=[

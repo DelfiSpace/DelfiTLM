@@ -1,7 +1,7 @@
 """Apps config file"""
 
 from django.apps import AppConfig
-import os
+# import os
 
 # pylint: disable=all
 class TransmissionConfig(AppConfig):
@@ -14,4 +14,3 @@ class TransmissionConfig(AppConfig):
         # if not DEBUG:
         import transmission.processing.scheduler as scheduler
         scheduler.start()
-        print("Scheduler started")
