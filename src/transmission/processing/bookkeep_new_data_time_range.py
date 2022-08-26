@@ -8,8 +8,10 @@ FAILED_PROCESSING_FILE = "transmission/processing/time_range_files/failed_proces
 TIME_RANGE_FILES_DIR = "transmission/processing/time_range_files/"
 
 
-def get_new_data_file_path(satellite, link):
-    return TIME_RANGE_FILES_DIR + satellite + "/" + link + ".json"
+def get_new_data_file_path(satellite: str, link: str) -> str:
+    """Return filepath of the new data time range file"""
+    return TIME_RANGE_FILES_DIR + satellite + "_" + link + ".json"
+
 
 def read_time_range_file(input_file: str) -> dict:
     """Read scraped_telemetry.json."""

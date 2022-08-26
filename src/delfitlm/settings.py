@@ -223,7 +223,7 @@ LOGGING = {
         },
         'debug_console': {
             'class': 'logging.StreamHandler',
-            'level': 'WARNING',
+            'level': 'DEBUG',
             'formatter': 'default',
         },
         'debug': {

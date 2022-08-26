@@ -1,19 +1,21 @@
+"""Transmission app forms"""
 from django import forms
 
 class SubmitJob(forms.Form):
+    """Job submission form"""
     satellites=[
         ('delfi_pq', 'Delfi-PQ'),
-        ('delfi_c3', 'Delfi-C3')
+        ('delfi_c3', 'Delfi-C3'),
         ]
 
     jobs=[
+        ('raw_bucket_processing','Bucket Processing'),
         ('scraper', 'Scrape'),
-        ('raw_bucket_processing','Bucket Processing')
         ]
 
     links=[
+        ('downlink', 'Downlink'),
         ('uplink', 'Uplink'),
-        ('downlink', 'Downlink')
         ]
 
     sat = forms.ChoiceField(choices=satellites, widget=forms.Select, label='Satellite')

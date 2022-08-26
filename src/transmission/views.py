@@ -236,14 +236,20 @@ def get_tle_table(request):
     context = {'telemetry_filter': tle_filter, 'page_obj': page_obj, 'table_name': 'TLE'}
     return render(request, "transmission/tle_table.html", context)
 
+
 @login_required(login_url='/login')
 def submit_job(request):
+    """Submit a task to be scheduled (scraping or bucket processing)"""
+
+    if not request.user.is_superuser:
+        return HttpResponseForbidden()
+
     form = SubmitJob(request.POST or None)
     if request.method == 'POST':
 
         if form.is_valid():
             form_data = form.cleaned_data
-            scheduled = schedule_job(form_data["sat"], form_data["job_type"], form_data["link"])
+            schedule_job(form_data["sat"], form_data["job_type"], form_data["link"])
             # if scheduled:
             #     messages.info("Job successfully scheduled")
             # else:
@@ -251,4 +257,8 @@ def submit_job(request):
     else:
         form = SubmitJob()
     running_jobs = get_running_jobs()
-    return render(request, 'transmission/submit_job.html', {'form':form, 'running_jobs': running_jobs})
+
+    return render(request,
+                  'transmission/submit_job.html',
+                  {'form':form, 'running_jobs': running_jobs}
+                  )

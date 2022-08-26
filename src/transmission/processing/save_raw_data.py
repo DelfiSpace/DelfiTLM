@@ -13,9 +13,10 @@ from django_logger import logger
 from members.models import Member
 from transmission.models import Uplink, Downlink, TLE, Satellite
 from transmission.processing.XTCEParser import SatParsers, XTCEException
-from transmission.processing.bookkeep_new_data_time_range import include_timestamp_in_time_range
+from transmission.processing.bookkeep_new_data_time_range import get_new_data_file_path,\
+    include_timestamp_in_time_range
 from transmission.processing.influxdb_api import save_raw_frame_to_influxdb
-from transmission.processing.telemetry_scraper import NEW_DATA_FILE, strip_tlm
+from transmission.processing.telemetry_scraper import strip_tlm
 
 
 def store_frame(frame: dict, link: str, username: str, application:str=None) -> None:
@@ -141,7 +142,8 @@ def store_frame_to_influxdb(frame: dict, link: str) -> bool:
     stored = save_raw_frame_to_influxdb(satellite, link, frame)
 
     if stored:
-        include_timestamp_in_time_range(satellite, link, frame["timestamp"], NEW_DATA_FILE)
+        file = get_new_data_file_path(satellite, link)
+        include_timestamp_in_time_range(satellite, link, frame["timestamp"], file)
 
     return stored
 
