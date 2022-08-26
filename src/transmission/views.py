@@ -13,8 +13,10 @@ from rest_framework_api_key.permissions import HasAPIKey
 from rest_framework.decorators import permission_classes
 from django_logger import logger
 from members.models import APIKey
+from transmission.forms.forms import SubmitJob
 from transmission.processing.process_raw_bucket import process_raw_bucket
 from transmission.processing.add_dummy_data import add_dummy_downlink_frames
+from transmission.processing.scheduler import get_running_jobs, schedule_job
 from .models import Uplink, Downlink, TLE
 from .filters import TelemetryDownlinkFilter, TelemetryUplinkFilter, TLEFilter
 from .processing.save_raw_data import process_frames, store_frame
@@ -233,3 +235,20 @@ def get_tle_table(request):
 
     context = {'telemetry_filter': tle_filter, 'page_obj': page_obj, 'table_name': 'TLE'}
     return render(request, "transmission/tle_table.html", context)
+
+@login_required(login_url='/login')
+def submit_job(request):
+    form = SubmitJob(request.POST or None)
+    if request.method == 'POST':
+
+        if form.is_valid():
+            form_data = form.cleaned_data
+            scheduled = schedule_job(form_data["sat"], form_data["job_type"], form_data["link"])
+            # if scheduled:
+            #     messages.info("Job successfully scheduled")
+            # else:
+            #     messages.error("Could not schedule job")
+    else:
+        form = SubmitJob()
+    running_jobs = get_running_jobs()
+    return render(request, 'transmission/submit_job.html', {'form':form, 'running_jobs': running_jobs})
