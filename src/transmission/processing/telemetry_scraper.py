@@ -7,13 +7,12 @@ import requests
 
 from django_logger import logger
 from transmission.processing.satellites import SATELLITES, TIME_FORMAT
-from transmission.processing.bookkeep_new_data_time_range import update_new_data_timestamps
+from transmission.processing.bookkeep_new_data_time_range import get_new_data_file_path, update_new_data_timestamps
 from transmission.processing.influxdb_api import save_raw_frame_to_influxdb
 
 SATNOGS_PATH = "https://db.satnogs.org/api/telemetry/"
 SATNOGS_TOKEN_PATH = "tokens/satnogs_token.txt"
 
-NEW_DATA_FILE = "transmission/processing/new_data.json"
 
 def get_satnogs_headers() -> dict:
     """Get satnogs request headers"""
@@ -92,11 +91,12 @@ def scrape(satellite: str, save_to_db=True, save_to_file=False) -> None:
                 if stored:
                     # print("DB successfully updated.")
                     # break
+                    time_range_file = get_new_data_file_path(satellite, "downlink")
                     update_new_data_timestamps(satellite,
                                                   "downlink",
                                                   last["timestamp"] - timedelta(seconds=1),
                                                   first["timestamp"] + timedelta(seconds=1),
-                                                  NEW_DATA_FILE
+                                                  time_range_file
                                                   )
                 else:
                     logger.info("SatNOGS scraper stopped. Done scraping %s telemetry.", satellite)
