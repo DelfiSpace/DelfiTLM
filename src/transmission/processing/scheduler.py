@@ -1,6 +1,8 @@
 """Scheduler for planning telemetry scrapes and frame processing"""
 from typing import Callable
 from apscheduler.schedulers.background import BackgroundScheduler
+from apscheduler.executors.pool import ThreadPoolExecutor
+from apscheduler.events import EVENT_JOB_ADDED, EVENT_JOB_REMOVED
 from transmission.processing.process_raw_bucket import process_raw_bucket
 from transmission.processing.telemetry_scraper import scrape
 from transmission.processing.save_raw_data import process_uplink_and_downlink
@@ -11,12 +13,30 @@ from django_logger import logger
     # interval: use when you want to run the job at fixed intervals of time
     # cron: use when you want to run the job periodically at certain time(s) of day
 
+executors = {
+    'default': ThreadPoolExecutor(1),
+    # 'processpool': ProcessPoolExecutor(0)
+}
+
 job_defaults = {
     'coalesce': False,
     'max_instances': 1
 }
 
-scheduler = BackgroundScheduler(job_defaults=job_defaults)
+scheduler = BackgroundScheduler(job_defaults=job_defaults, executors=executors)
+running_jobs = set()
+
+def add_job_listener(event):
+    """Listens to newly added jobs"""
+    running_jobs.add(event.job_id)
+
+def remove_job_listener(event):
+    """Listens to removed jobs"""
+    running_jobs.remove(event.job_id)
+
+scheduler.add_listener(add_job_listener, EVENT_JOB_ADDED)
+scheduler.add_listener(remove_job_listener, EVENT_JOB_REMOVED)
+
 
 def get_job_id(satellite: str, job_description: str, link: str=None) -> str:
     """Create an id, job description"""
@@ -55,13 +75,12 @@ def get_pending_jobs() -> list:
 
 def add_job(function: Callable, args:list, job_id:str) -> None:
     """Add a job to the schedule if not already scheduled."""
-    if scheduler.get_job(job_id) is None:
-        scheduler.add_job(
+    scheduler.add_job(
             function,
             args=args,
             id=job_id,
         )
-        logger.info("Scheduled job: %s", job_id)
+    logger.info("Scheduled job: %s", job_id)
 
 
 def start() -> None:

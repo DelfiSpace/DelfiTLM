@@ -12,6 +12,7 @@ class SubmitJob(forms.Form):
 
     jobs=[
         ('raw_bucket_processing','Bucket Processing'),
+        ('buffer_processing','Frame Buffer Processing'),
         ('scraper', 'Scrape'),
         ]
 
@@ -20,6 +21,6 @@ class SubmitJob(forms.Form):
         ('uplink', 'Uplink'),
         ]
 
-    sat = forms.ChoiceField(choices=satellites, widget=forms.Select, label='Satellite')
+    sat = forms.ChoiceField(choices=satellites, widget=forms.Select, label='Satellite [1]')
     job_type = forms.ChoiceField(choices=jobs, widget=forms.Select, label='Job Type')
-    link = forms.ChoiceField(choices=links, widget=forms.Select, label='Link')
+    link = forms.ChoiceField(choices=links, widget=forms.Select, label='Link [2]')
