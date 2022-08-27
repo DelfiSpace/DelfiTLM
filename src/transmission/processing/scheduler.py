@@ -48,18 +48,21 @@ def get_job_id(satellite: str, job_description: str, link: str=None) -> str:
 
 
 def schedule_job(satellite: str, job_type: str, link: str) -> None:
+
     """Schedule job"""
-    job_id = get_job_id(satellite, job_type, link)
     if job_type == "scraper":
         args = [satellite]
+        job_id = get_job_id(satellite, job_type)
         add_job(scrape, args, job_id)
 
     elif job_type == "buffer_processing":
         args = []
+        job_id = job_type
         add_job(process_uplink_and_downlink, args, job_id)
 
     elif job_type == "raw_bucket_processing":
         args = [satellite, link]
+        job_id = get_job_id(satellite, job_type, link)
         add_job(process_raw_bucket, args, job_id)
 
 

@@ -4,6 +4,7 @@ services:
     app:
         volumes:
             - static_data:/vol/web
+            - app_logs:/app/logs
         environment:
             # TODO: change the key
             # could also add database config here and remove it from settings.py
@@ -44,6 +45,7 @@ services:
         volumes:
             - pgadmin_persistent:/var/lib/pgadmin
 volumes:
+    app_logs:
     static_data:
     certificates:
     pgadmin_persistent:
