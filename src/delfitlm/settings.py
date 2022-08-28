@@ -218,7 +218,7 @@ LOGGING = {
     'disable_existing_loggers' : False,
     'loggers': {
         'django_logger': {
-            'handlers': ['debug_console', 'debug', 'info', 'warning', 'error', 'mail_admin'],
+            'handlers': ['docker_logger', 'debug', 'info', 'warning', 'error', 'mail_admin'],
             'level': 1
         }
     },
@@ -234,11 +234,11 @@ LOGGING = {
         'std_err': {
             'class': 'logging.StreamHandler'
         },
-        'debug_console': {
+        'docker_logger': {
             'class': 'logging.StreamHandler',
-            'level': 'DEBUG',
+            'level': 'WARNING',
             'formatter': 'default',
-            # 'filters': ['require_debug_true'],
+            'filters': ['require_debug_false'],
         },
         'debug': {
             'class': 'logging.handlers.RotatingFileHandler',

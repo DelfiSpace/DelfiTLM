@@ -15,6 +15,12 @@ services:
             - SMTP_PORT=${SMTP_PORT}
             - FROM_EMAIL=${FROM_EMAIL:-webmaster@localhost}
         restart: always
+        logging:
+            driver: "json-file"
+            options:
+                max-file: "5"   # file count
+                max-size: "10m" # file size
+
 
     proxy:
         build:
@@ -32,6 +38,11 @@ services:
             - pgadmin
             - grafana
         restart: always
+        logging:
+            driver: "json-file"
+            options:
+                max-file: "5"   # file count
+                max-size: "10m" # file size
 
     pgadmin:
         container_name: pgadmin4_container
@@ -44,6 +55,12 @@ services:
             - "db"
         volumes:
             - pgadmin_persistent:/var/lib/pgadmin
+        logging:
+            driver: "json-file"
+            options:
+                max-file: "5"   # file count
+                max-size: "10m" # file size
+
 volumes:
     app_logs:
     static_data:
