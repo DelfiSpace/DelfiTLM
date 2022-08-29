@@ -16,7 +16,7 @@ class TelemetryDownlinkFilter(django_filters.FilterSet):
     class Meta:
         """Meta class to specify model"""
         model = Downlink
-        fields = ["processed", "observer"]
+        fields = ["processed", "invalid", "observer"]
 
 
 class TelemetryUplinkFilter(django_filters.FilterSet):
@@ -32,7 +32,7 @@ class TelemetryUplinkFilter(django_filters.FilterSet):
     class Meta:
         """Meta class to specify model"""
         model = Uplink
-        fields = ["processed","operator"]
+        fields = ["processed", "invalid", "operator"]
 
 
 class TLEFilter(django_filters.FilterSet):

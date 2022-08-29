@@ -3,11 +3,13 @@ from py4j.java_gateway import JavaGateway
 from py4j.protocol import Py4JJavaError
 # pylint: disable=all
 class XTCEParser:
+
   gateway_started = 0
+
   def __init__(self, XTCEfile, stream):
-  
+
     if XTCEParser.gateway_started == 0:
-      launch_gateway(classpath='delfipq/xtcetools-1.1.5.jar',
+      launch_gateway(classpath='transmission/processing/xtcetools-1.1.5.jar',
 			   port=25333,
 			   die_on_exit=True)
       XTCEParser.gateway_started = 1
@@ -28,6 +30,7 @@ class XTCEParser:
     self.db_ = XTCEDatabase(File(XTCEfile), True, False, True)
     self.stream_ = self.db_.getStream(stream)
 
+
   def processTMFrame(self, data):
      try:
         model = self.stream_.processStream(data)
@@ -43,7 +46,8 @@ class XTCEParser:
 
         return telemetry
      except Py4JJavaError as ex:
-        raise XTCEException(str(ex)) from ex
+        raise XTCEException(ex.java_exception)
+
 
   def isFieldValid(self, entry):
     param = entry.getParameter()
@@ -84,6 +88,7 @@ class XTCEParser:
         # the valid range is not recognized but the value is anyway valid
         return "Valid"
 
+
 class XTCEException(Exception):
     """Exception raised by xtcetools.
 
@@ -94,3 +99,14 @@ class XTCEException(Exception):
     def __init__(self, message=""):
         self.message = message
         super().__init__(self.message)
+
+class SatParsers:
+
+    def __init__(self):
+        
+        self.parsers = {
+            "delfi_pq": XTCEParser("delfipq/Delfi-PQ.xml", "Radio"),
+            "delfi_next": None,
+            "delfi_c3": XTCEParser("delfic3/Delfi-C3.xml", "TLM"),
+            "da_vinci": None
+        }
