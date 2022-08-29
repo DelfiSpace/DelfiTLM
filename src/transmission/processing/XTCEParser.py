@@ -46,7 +46,7 @@ class XTCEParser:
 
         return telemetry
      except Py4JJavaError as ex:
-        raise XTCEException(str(ex)) from ex
+        raise XTCEException(ex.java_exception)
 
 
   def isFieldValid(self, entry):
