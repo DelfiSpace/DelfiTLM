@@ -118,7 +118,7 @@ def process_raw_bucket(satellite, link) -> tuple:
                     )
                 processed_frames_count += 1
             except xtce_parser.XTCEException as ex:
-                logger.exception("%s: frame processing error: %s", satellite, ex)
+                logger.error("%s: frame processing error: %s (%s)", satellite, ex, row["frame"])
                 time_range.include_timestamp_in_time_range(satellite,
                                                            link,
                                                            row["_time"],
