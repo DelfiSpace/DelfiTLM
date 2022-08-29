@@ -6,21 +6,6 @@ from django.shortcuts import render
 from delfipq.add_dummy_data import delfi_pq_add_dummy_tlm_data, delfi_pq_add_dummy_tlm_raw_data
 from delfipq.process_raw_telemetry import process_frames_delfi_pq
 
-# from revproxy.views import ProxyView
-
-# class GraphanaProxyView(ProxyView):
-#     """Grafana proxy view for django"""
-#     upstream = 'http://localhost:3000/grafana'
-
-#     def get_proxy_request_headers(self, request):
-#         headers = super().get_proxy_request_headers(request)
-#         token = ""
-#         with open("tokens/grafana_token.txt", "r", encoding="utf-8") as file:
-#             token = file.read()
-#         headers['X-WEBAUTH-USER'] = token
-#         return headers
-
-
 
 def add_dummy_tlm_data(request):
     """Add dummy processed telemetry intended to test and experiment with dashboards."""
