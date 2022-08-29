@@ -2,7 +2,8 @@
 Run with 'python manage.py initbuckets' """
 from django.core.management.base import BaseCommand
 from influxdb_client import BucketRetentionRules
-from transmission.telemetry_scraper import SATELLITES, get_influxdb_bucket_api
+from transmission.processing.satellites import SATELLITES
+from transmission.processing.influxdb_api import get_influxdb_bucket_api
 
 class Command(BaseCommand):
     """Django command class"""

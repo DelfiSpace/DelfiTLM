@@ -3,7 +3,7 @@ from django.db import models
 from django.db.models.deletion import DO_NOTHING
 from django.utils import timezone
 from members.models import Member
-from transmission.telemetry_scraper import TIME_FORMAT
+from transmission.processing.telemetry_scraper import TIME_FORMAT
 
 #pylint: disable=all
 
@@ -29,16 +29,16 @@ class Downlink(models.Model):
     observer = models.ForeignKey(Member, to_field="username", db_column="observer", default=None, null=True, on_delete=DO_NOTHING)
     application = models.TextField(null=True, blank=True)
     processed = models.BooleanField(default=False, null=False)
+    invalid = models.BooleanField(null=True, blank=True)
     frequency = models.FloatField(null=True, blank=True)
     frame = models.TextField(default=None, null=False)
     metadata = models.JSONField(null=True, blank=True)
 
-    def to_dictionary(self):
+    def to_dictionary(self) -> dict:
         """Convert Downlink object to dict"""
         frame_dict = {}
         frame_dict["timestamp"] = self.timestamp.strftime(TIME_FORMAT)
-        if self.observer is not None:
-            frame_dict["observer"] = self.observer.username
+        frame_dict["observer"] = self.observer.username
         frame_dict["application"] = self.application
         frame_dict["processed"] = self.processed
         frame_dict["frequency"] = self.frequency
@@ -54,17 +54,17 @@ class Uplink(models.Model):
     operator = models.ForeignKey(Member, to_field="username", db_column="operator", null=False, on_delete=DO_NOTHING)
     application = models.TextField(null=True, blank=True)
     processed = models.BooleanField(default=False, null=False)
+    invalid = models.BooleanField(null=True, blank=True)
     frequency = models.FloatField(null=False)
     frame = models.TextField(default=None, null=False)
     metadata = models.JSONField(null=True, blank=True)
 
 
-    def to_dictionary(self):
+    def to_dictionary(self) -> dict:
         """Convert Uplink object to dict"""
         frame_dict = {}
         frame_dict["timestamp"] = self.timestamp.strftime(TIME_FORMAT)
-        if self.operator is not None:
-            frame_dict["operator"] = self.operator.username
+        frame_dict["operator"] = self.operator.username
         frame_dict["application"] = self.application
         frame_dict["processed"] = self.processed
         frame_dict["frequency"] = self.frequency

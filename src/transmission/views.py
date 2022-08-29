@@ -11,11 +11,13 @@ from django.http.response import JsonResponse, HttpResponseBadRequest, HttpRespo
 from django.shortcuts import redirect, render
 from rest_framework_api_key.permissions import HasAPIKey
 from rest_framework.decorators import permission_classes
-from members.models import APIKey
 from django_logger import logger
+from members.models import APIKey
+from transmission.processing.process_raw_bucket import process_raw_bucket
+from transmission.processing.add_dummy_data import add_dummy_downlink_frames
 from .models import Uplink, Downlink, TLE
 from .filters import TelemetryDownlinkFilter, TelemetryUplinkFilter, TLEFilter
-from .save_data import parse_submitted_frame, process_frames, store_frame
+from .processing.save_raw_data import process_frames, store_frame
 
 QUERY_ROW_LIMIT = 100
 
@@ -33,8 +35,6 @@ def submit_frame(request): #pylint:disable=R0911
             # retrieve the user agent (if present, empty otherwise)
             user_agent = request.META.get('HTTP_USER_AGENT', '')
 
-            link = 'downlink'
-
             if 'HTTP_FRAME_LINK' in request.META and \
                 request.META.get('HTTP_FRAME_LINK', '') is not None:
 
@@ -42,7 +42,6 @@ def submit_frame(request): #pylint:disable=R0911
 
                 if link not in ["uplink", "downlink"]:
                     raise BadRequest("HTTP_FRAME_LINK can be either 'uplink' or 'downlink'" )
-
 
             # search for the user name matching the API key
             api_key_name = APIKey.objects.get_from_key(key)
@@ -106,17 +105,10 @@ def submit_frame(request): #pylint:disable=R0911
     return JsonResponse({"result": "failure", "message": "Method not allowed"},
                         status=HTTPStatus.METHOD_NOT_ALLOWED)
 
+def add_dummy_downlink(request):
+    """Add dummy frames to Downlink table as admin user."""
 
-def add_dummy_downlink_frames(request):
-    """Add frames to Downlink table. The input is a list of json objects embedded in to the
-    HTTP request."""
-
-    with open("transmission/dummy_downlink.json", 'r', encoding="utf-8") as file:
-        dummy_data = json.load(file)
-        for frame in dummy_data["frames"]:
-            frame_entry = Downlink()
-            frame_entry = parse_submitted_frame(frame, frame_entry)
-            frame_entry.save()
+    add_dummy_downlink_frames()
 
     return JsonResponse({"len": len(Downlink.objects.all())})
 
@@ -144,6 +136,7 @@ def delete_processed_frames(request, link):
     logger.info("%s frame buffer has been cleared.", link)
     return redirect('get_frames_table', link)
 
+
 @login_required(login_url='/login')
 def process(request, link):
     """Process frames that are not already stored in influxdb"""
@@ -155,17 +148,43 @@ def process(request, link):
 
     if link == "uplink" and user.has_perm("transmission.view_uplink"):
         frames = Uplink.objects.all().filter(processed=False)
+        logger.info("%s frames processing triggered: %s frames to process", link, len(frames))
+
+        processed_frame_count = process_frames(frames, link)
+        logger.info("%s %s frames were successfully processed", processed_frame_count, link)
+
+        messages.info(request, f"{processed_frame_count} {link} frames were processed.")
 
     elif link == "downlink" and user.has_perm("transmission.view_downlink"):
         frames = Downlink.objects.all().filter(processed=False)
+        logger.info("%s frames processing triggered: %s frames to process", link, len(frames))
+
+        processed_frame_count = process_frames(frames, link)
+        logger.info("%s %s frames were successfully processed", processed_frame_count, link)
+
+
+        messages.info(request, f"{processed_frame_count} {link} frames were processed.")
+
     else:
         logger.warning("%s was denied permission to access uplink or downlink tables", request.user)
         return HttpResponseForbidden()
 
-
-    processed_frame_count = process_frames(frames, link)
-    messages.info(request, f"{processed_frame_count} {link} frames were processed.")
     return redirect('get_frames_table', link)
+
+
+def process_raw_telemetry_bucket(request, satellite, link):
+    """Trigger telemetry processing in influxdb given satellite and link"""
+    user = request.user
+
+    if user.has_perm("transmission.view_downlink"):
+        processed_frames_count, total_frames_count = process_raw_bucket(satellite, link)
+        message = f"{processed_frames_count}/{total_frames_count}"
+        message += f" {satellite} telemetry frames processed"
+        messages.info(request, message)
+        return JsonResponse({"message": message})
+
+    return PermissionDenied()
+
 
 def paginate_telemetry_table(request, telemetry_filter, table_name):
     """Paginates a telemetry table and renders the filtering form"""
@@ -182,7 +201,7 @@ def paginate_telemetry_table(request, telemetry_filter, table_name):
 def get_frames_table(request, link):
     """Queries and filters the uplink/downlink table"""
 
-    if link not in ['uplink', 'downlink']:
+    if request.method != "GET" or link not in ['uplink', 'downlink']:
         return HttpResponseBadRequest()
 
     if link == "downlink" and request.user.has_perm('transmission.view_downlink'):
@@ -190,7 +209,7 @@ def get_frames_table(request, link):
         telemetry_filter = TelemetryDownlinkFilter(request.GET, queryset=frames)
         return paginate_telemetry_table(request, telemetry_filter, "Downlink")
 
-    if link == "uplink" and request.user.has_perm('transmission.uplink_downlink'):
+    if link == "uplink" and request.user.has_perm('transmission.view_uplink'):
         frames = Uplink.objects.all().order_by('timestamp')
         telemetry_filter = TelemetryUplinkFilter(request.GET, queryset=frames)
         return paginate_telemetry_table(request, telemetry_filter, "Uplink")
@@ -201,6 +220,9 @@ def get_frames_table(request, link):
 
 def get_tle_table(request):
     """Queries and filters the TLEs table"""
+    if request.method != "GET":
+        return HttpResponseBadRequest()
+
     frames = TLE.objects.all().order_by('valid_from')
     tle_filter = TLEFilter(request.GET, queryset=frames)
 

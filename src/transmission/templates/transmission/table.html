@@ -70,8 +70,9 @@
                     <th>id</th>
                     <th>timestamp</th>
                     <th>radio_amateur</th>
-                    <th>version</th>
                     <th>processed</th>
+                    <th>invalid</th>
+                    <th>app</th>
                     <th>frequency</th>
                     <th style=" max-width: 1000px; word-wrap: break-word;">frame</th>
                 </tr>
@@ -82,9 +83,17 @@
                     <td>{{ frame.id }}</td>
                     <td>{{ frame.timestamp}}</td>
                     <!-- <td>{{ frame.timestamp|upper}}</td> USE |upper to view the timestamp in full-->
-                    <td>{{ frame.radio_amateur}}</td>
-                    <td>{{ frame.version}}</td>
+                    {% if  table_name == "Downlink" %}
+                        <td>{{ frame.observer}}</td>
+                    {% endif %}
+
+                    {% if table_name == "Uplink" %}
+                        <td>{{ frame.operator}}</td>
+                    {% endif %}
+
                     <td>{{ frame.processed}}</td>
+                    <td>{{ frame.invalid}}</td>
+                    <td>{{ frame.application}}</td>
                     <td>{{ frame.frequency}}</td>
                     <td  style=" max-width: 1000px; word-wrap: break-word;">{{ frame.frame}}</td>
                 </tr>

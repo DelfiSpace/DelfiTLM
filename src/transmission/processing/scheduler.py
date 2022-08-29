@@ -1,8 +1,8 @@
 """Scheduler for planning telemetry scrapes and frame processing"""
 from apscheduler.schedulers.background import BackgroundScheduler
-from delfipq.process_raw_telemetry import process_frames_delfi_pq
-from transmission.telemetry_scraper import scrape
-from transmission.save_data import process_uplink_and_downlink
+from transmission.processing.process_raw_bucket import process_raw_bucket
+from transmission.processing.telemetry_scraper import scrape
+from transmission.processing.save_raw_data import process_uplink_and_downlink
 
 
 scheduler = BackgroundScheduler()
@@ -41,8 +41,8 @@ def start():
 
 
     scheduler.add_job(
-        process_frames_delfi_pq,
-        args=["downlink"],
+        process_raw_bucket,
+        args=["delfi_pq","downlink"],
         trigger='interval',
         minutes= 1,
         id='delfi_pq_frame_processor_influxdb',

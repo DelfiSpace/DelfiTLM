@@ -1,0 +1,24 @@
+{
+    "delfi_pq": {
+        "uplink": [
+            "2021-12-19T02:20:13Z",
+            "2021-12-19T02:20:15Z"
+        ],
+        "downlink": [
+            "2021-12-19T02:20:13Z",
+            "2021-12-19T02:20:15Z"
+        ]
+    },
+    "delfi_next": {
+        "uplink": [],
+        "downlink": []
+    },
+    "delfi_c3": {
+        "uplink": [],
+        "downlink": []
+    },
+    "da_vinci": {
+        "uplink": [],
+        "downlink": []
+    }
+}

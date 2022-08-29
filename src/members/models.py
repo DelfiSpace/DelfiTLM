@@ -18,7 +18,7 @@ class Member(AbstractUser):
     last_login = models.DateTimeField(null=True, blank=True)
     latitude = models.FloatField(null=True, blank=True)
     longitude = models.FloatField(null=True, blank=True)
-    #by Default, when creating an use, the account is not verified
+    #by default, when creating an user, the account is not verified
     verified = models.BooleanField(default=False)
 
     def __str__(self):
