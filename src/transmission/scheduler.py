@@ -4,17 +4,8 @@ from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.executors.pool import ThreadPoolExecutor
 from apscheduler.events import EVENT_JOB_ADDED, EVENT_JOB_REMOVED,\
 EVENT_JOB_EXECUTED,EVENT_JOB_SUBMITTED
-from transmission.processing.process_raw_bucket import process_raw_bucket
-from transmission.processing.telemetry_scraper import scrape
-from transmission.processing.save_raw_data import process_uplink_and_downlink
 from django_logger import logger
 
-# Trigger:
-    # date: use when you want to run the job just once at a certain point of time
-    # interval: use when you want to run the job at fixed intervals of time
-    # cron: use when you want to run the job periodically at certain time(s) of day
-
-# Scheduler workflow: add job -> remove job -> submit job -> execute job
 
 class Singleton(type):
     """Singleton class"""
@@ -25,17 +16,26 @@ class Singleton(type):
         return cls._instances[cls]
 
 
-class ProcessingScheduler(metaclass=Singleton):
-    """Scheduler handling frame processing jobs. Employs the singleton design pattern."""
+class Scheduler(metaclass=Singleton):
+    """Scheduler currently supporting single threaded use.
+    Tasks are executed one by one, one at a time.
+    Employs the singleton design pattern."""
+
+    # Scheduler workflow: add job -> remove job -> submit job -> execute job
+    # Task Triggers:
+        # date: use when you want to run the job just once at a certain point of time
+        # interval: use when you want to run the job at fixed intervals of time
+        # cron: use when you want to run the job periodically at certain time(s) of day
+
     __instance = None
 
     @staticmethod
     def get_instance():
         """ Returns class instance"""
-        return ProcessingScheduler.__instance
+        return Scheduler.__instance
 
     def __init__(self) -> None:
-        if ProcessingScheduler.__instance is not None:
+        if Scheduler.__instance is not None:
             logger.info("Scheduler already instantiated")
         else:
             executors = {
@@ -57,7 +57,7 @@ class ProcessingScheduler(metaclass=Singleton):
             self.scheduler.add_listener(self.add_job_listener, EVENT_JOB_ADDED)
             self.scheduler.add_listener(self.remove_job_listener, EVENT_JOB_REMOVED)
 
-            ProcessingScheduler.__instance = self
+            Scheduler.__instance = self
 
             self.start_scheduler()
 
@@ -93,33 +93,6 @@ class ProcessingScheduler(metaclass=Singleton):
     def get_running_jobs(self) -> list:
         """Get the ids of the currently running jobs."""
         return self.running_jobs
-
-    @staticmethod
-    def get_job_id(satellite: str, job_description: str, link: str=None) -> str:
-        """Create an id, job description"""
-        if link is None:
-
-            return satellite + "_" + job_description
-
-        return satellite + "_" + link + "_" + job_description
-
-
-    def schedule_job(self, satellite: str, job_type: str, link: str) -> None:
-        """Schedule job"""
-        if job_type == "scraper":
-            args = [satellite]
-            job_id = self.get_job_id(satellite, job_type)
-            self.add_job_to_schedule(scrape, args, job_id)
-
-        elif job_type == "buffer_processing":
-            args = []
-            job_id = job_type
-            self.add_job_to_schedule(process_uplink_and_downlink, args, job_id)
-
-        elif job_type == "raw_bucket_processing":
-            args = [satellite, link]
-            job_id = self.get_job_id(satellite, job_type, link)
-            self.add_job_to_schedule(process_raw_bucket, args, job_id)
 
 
     def add_job_to_schedule(self, function: Callable, args:list, job_id:str) -> None:

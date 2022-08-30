@@ -16,7 +16,8 @@ from members.models import APIKey
 from transmission.forms.forms import SubmitJob
 from transmission.processing.process_raw_bucket import process_raw_bucket
 from transmission.processing.add_dummy_data import add_dummy_downlink_frames
-from transmission.processing.scheduler import ProcessingScheduler
+from transmission.processing.submit_job_to_scheduler import schedule_job
+from transmission.scheduler import Scheduler
 from .models import Uplink, Downlink, TLE
 from .filters import TelemetryDownlinkFilter, TelemetryUplinkFilter, TLEFilter
 from .processing.save_raw_data import process_frames, store_frame
@@ -252,14 +253,14 @@ def submit_job(request):
 
         if form.is_valid():
             form_data = form.cleaned_data
-            scheduler = ProcessingScheduler()
-            scheduler.schedule_job(form_data["sat"], form_data["job_type"], form_data["link"])
-            running_jobs = scheduler.get_running_jobs
-            pending_jobs = scheduler.get_pending_jobs
+            schedule_job(form_data["sat"], form_data["job_type"], form_data["link"])
 
     else:
         form = SubmitJob()
 
+    scheduler = Scheduler()
+    running_jobs = scheduler.get_running_jobs
+    pending_jobs = scheduler.get_pending_jobs
     return render(request,
                   'transmission/submit_job.html',
                   {'form':form, 'running_jobs': running_jobs, 'pending_jobs': pending_jobs}
