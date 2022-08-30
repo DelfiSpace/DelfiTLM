@@ -1,4 +1,5 @@
 """Scripts for saving the frames into the database"""
+import os
 import re
 import copy
 import json
@@ -13,8 +14,8 @@ from django_logger import logger
 from members.models import Member
 from transmission.models import Uplink, Downlink, TLE, Satellite
 from transmission.processing.XTCEParser import SatParsers, XTCEException
-from transmission.processing.bookkeep_new_data_time_range import get_new_data_file_path,\
-    include_timestamp_in_time_range
+from transmission.processing.bookkeep_new_data_time_range import get_new_data_buffer_temp_folder, get_new_data_file_path,\
+    include_timestamp_in_time_range, save_timestamps_to_file
 from transmission.processing.influxdb_api import save_raw_frame_to_influxdb
 from transmission.processing.telemetry_scraper import strip_tlm
 
@@ -104,14 +105,23 @@ def process_frames(frames: QuerySet, link: str) -> int:
     Returns the count of successfully processed_frames."""
 
     processed_frames = 0
+    processed_frames_timestamps = {}
     for frame_obj in frames:
         frame_dict = frame_obj.to_dictionary()
-        stored = store_frame_to_influxdb(frame_dict, link)
+        stored, satellite = store_frame_to_influxdb(frame_dict, link)
         if stored:
             frame_obj.processed = True
             frame_obj.invalid = False
             frame_obj.save()
             processed_frames += 1
+            processed_frames_timestamps[satellite] = include_timestamp_in_time_range(satellite, link,
+                                                                        frame_obj.timestamp,
+                                                                        existing_range=processed_frames_timestamps
+                                                                        )
+    for satellite in processed_frames_timestamps:
+        path = get_new_data_buffer_temp_folder(satellite)
+        path += satellite + "_" + link + "_" + str(len(os.listdir(path))) + ".json"
+        save_timestamps_to_file(processed_frames_timestamps[satellite], path)
 
     return processed_frames
 
@@ -126,7 +136,7 @@ def mark_frame_as_invalid(frame: str, link: str) -> None:
         return
 
 
-def store_frame_to_influxdb(frame: dict, link: str) -> bool:
+def store_frame_to_influxdb(frame: dict, link: str) -> tuple:
     """Try to store frame to influxdb.
     Returns True if the frame was successfully stored, False otherwise."""
 
@@ -142,11 +152,7 @@ def store_frame_to_influxdb(frame: dict, link: str) -> bool:
     frame = strip_tlm(frame, fields_to_save)
     stored = save_raw_frame_to_influxdb(satellite, link, frame)
 
-    if stored:
-        file = get_new_data_file_path(satellite, link)
-        include_timestamp_in_time_range(satellite, link, frame["timestamp"], file)
-
-    return stored
+    return stored, satellite
 
 
 def get_satellite_from_frame(frame: str) -> None:

@@ -1,4 +1,5 @@
 """Script to store satellite telemetry frames"""
+import os
 import string
 from transmission.processing import XTCEParser as xtce_parser
 from django_logger import logger
@@ -8,7 +9,7 @@ get_influx_db_read_and_query_api, write_frame_to_raw_bucket
 
 write_api, query_api = get_influx_db_read_and_query_api()
 
-def store_raw_frame(satellite, timestamp, frame: str, observer: str, link: str):
+def store_raw_frame(satellite: str, timestamp, frame: str, observer: str, link: str) -> bool:
     """Store raw unprocessed frame in influxdb"""
     frame_fields = {
         "frame": frame,
@@ -24,7 +25,7 @@ def store_raw_frame(satellite, timestamp, frame: str, observer: str, link: str):
     return stored
 
 
-def parse_and_store_frame(satellite, timestamp, frame: str, observer: str, link: str):
+def parse_and_store_frame(satellite: str, timestamp: str, frame: str, observer: str, link: str) -> None:
     """Store parsed frame in influxdb"""
 
     parser = xtce_parser.SatParsers().parsers[satellite]
@@ -72,11 +73,11 @@ def parse_and_store_frame(satellite, timestamp, frame: str, observer: str, link:
         logger.info("%s: processed frame stored. Frame timestamp: %s, link: %s",
                     satellite, timestamp, link)
 
-def mark_processed_flag(satellite, link, timestamp, value):
+def mark_processed_flag(satellite: str, link: str, timestamp: str, value: bool) -> None:
     """Write the processed flag to either True or False."""
     write_frame_to_raw_bucket( write_api, satellite, link, timestamp, {'processed': value})
 
-def process_retrieved_frames(satellite:str, link:str, start_time, end_time) -> tuple:
+def process_retrieved_frames(satellite: str, link: str, start_time: str, end_time: str) -> tuple:
 
     processed_frames_count = 0
     total_frames_count = 0
@@ -128,21 +129,23 @@ def process_retrieved_frames(satellite:str, link:str, start_time, end_time) -> t
         return processed_frames_count, total_frames_count
 
 
-def process_raw_bucket(satellite, link, all_frames=False, failed=False) -> tuple:
+def process_raw_bucket(satellite: str, link: str, all_frames: bool=False, failed: bool=False) -> tuple:
     """Parse frames, store the parsed form and mark the raw entry as processed.
     Return the total number of frames attempting to process and
     how many frames were successfully processed."""
+
+    combine_time_ranges(satellite, link)
 
     if all_frames:
         return process_retrieved_frames(satellite, link, "0", "now()")
 
     file = time_range.get_new_data_file_path(satellite, link)
-    scraped_telemetry = time_range.read_time_range_file(file)
+    new_data_time_range = time_range.read_time_range_file(file)
 
-    if scraped_telemetry[satellite][link] != []:
+    if new_data_time_range[satellite][link] != []:
 
-        start_time = scraped_telemetry[satellite][link][0]
-        end_time = scraped_telemetry[satellite][link][1]
+        start_time = new_data_time_range[satellite][link][0]
+        end_time = new_data_time_range[satellite][link][1]
         processed_frames_count, total_frames_count = \
             process_retrieved_frames(satellite, link, start_time, end_time)
 
@@ -150,3 +153,22 @@ def process_raw_bucket(satellite, link, all_frames=False, failed=False) -> tuple
         time_range.reset_new_data_timestamps(satellite, link, file)
 
     return processed_frames_count, total_frames_count
+
+
+def combine_time_ranges(satellite: str, link: str) -> None:
+    scraper_folder = time_range.get_new_data_scraper_temp_folder(satellite)
+    buffer_folder = time_range.get_new_data_buffer_temp_folder(satellite)
+
+    for folder in [scraper_folder, buffer_folder]:
+
+        for temp_file in os.listdir(folder):
+            if link in temp_file:
+                new_data_time_range = time_range.read_time_range_file(folder + temp_file)
+                new_data_overview_file = time_range.get_new_data_file_path(satellite, link)
+                time_range.include_timestamp_in_time_range(satellite, link,
+                                                           new_data_time_range[satellite][link][0],
+                                                           input_file=new_data_overview_file)
+                time_range.include_timestamp_in_time_range(satellite, link,
+                                                           new_data_time_range[satellite][link][1],
+                                                           input_file=new_data_overview_file)
+                os.remove(folder + temp_file)
