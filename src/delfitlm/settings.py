@@ -125,6 +125,8 @@ TEMPLATES = [
 
 ASGI_APPLICATION = 'delfitlm.asgi.application'
 
+WSGI_APPLICATION = 'delfitlm.wsgi.application'
+
 
 # Database
 # https://docs.djangoproject.com/en/3.2/ref/settings/#databases
