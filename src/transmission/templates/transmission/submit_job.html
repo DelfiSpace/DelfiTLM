@@ -50,12 +50,17 @@
 <p>[2]: Link will only be considered for bucket processing jobs.</p>
 <br>
 <br>
-<p> Pending jobs:</p>
-{% for job in running_jobs %}
-    <p> - {{ job }} </p>
-    <br>
+<p> Running jobs:</p>
+    {% for job in running_jobs %}
+        <p> - {{ job }} </p>
+        <br>
     {% endfor %}
 
+<p> Pending jobs:</p>
+    {% for job in pending_jobs %}
+        <p> - {{ job }} </p>
+        <br>
+    {% endfor %}
 
 {% if messages %}
 <ul class="messages">

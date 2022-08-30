@@ -133,7 +133,7 @@ def store_frame_to_influxdb(frame: dict, link: str) -> bool:
 
     if satellite is None:
         mark_frame_as_invalid(frame["frame"], link)
-        logger.warning("invalid %s frame, cannot match satellite", link)
+        logger.warning("invalid %s frame, cannot match satellite: %s", link, frame["frame"])
         return False
 
     fields_to_save = ["frame", "timestamp", "observer", "frequency", "application", "metadata"]
