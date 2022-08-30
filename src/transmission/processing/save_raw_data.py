@@ -109,6 +109,7 @@ def process_frames(frames: QuerySet, link: str) -> int:
         stored = store_frame_to_influxdb(frame_dict, link)
         if stored:
             frame_obj.processed = True
+            frame_obj.invalid = False
             frame_obj.save()
             processed_frames += 1
 

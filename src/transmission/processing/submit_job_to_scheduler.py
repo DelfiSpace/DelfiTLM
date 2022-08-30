@@ -32,3 +32,13 @@ def schedule_job(satellite: str, job_type: str, link: str) -> None:
         args = [satellite, link]
         job_id = get_job_id(satellite, job_type, link)
         scheduler.add_job_to_schedule(process_raw_bucket, args, job_id)
+
+    elif job_type == "reprocess_entire_raw_bucket":
+        args = [satellite, link, True, False]
+        job_id = get_job_id(satellite, job_type, link)
+        scheduler.add_job_to_schedule(process_raw_bucket, args, job_id)
+
+    elif job_type == "reprocess_failed_raw_bucket":
+        args = [satellite, link, False, True]
+        job_id = get_job_id(satellite, job_type, link)
+        scheduler.add_job_to_schedule(process_raw_bucket, args, job_id)

@@ -72,13 +72,11 @@ def parse_and_store_frame(satellite, timestamp, frame: str, observer: str, link:
         logger.info("%s: processed frame stored. Frame timestamp: %s, link: %s",
                     satellite, timestamp, link)
 
+def mark_processed_flag(satellite, link, timestamp, value):
+    """Write the processed flag to either True or False."""
+    write_frame_to_raw_bucket( write_api, satellite, link, timestamp, {'processed': value})
 
-def process_raw_bucket(satellite, link) -> tuple:
-    """Parse frames, store the parsed form and mark the raw entry as processed.
-    Return the total number of frames attempting to process and
-    how many frames were successfully processed."""
-    file = time_range.get_new_data_file_path(satellite, link)
-    scraped_telemetry = time_range.read_time_range_file(file)
+def process_retrieved_frames(satellite:str, link:str, start_time, end_time) -> tuple:
 
     processed_frames_count = 0
     total_frames_count = 0
@@ -87,12 +85,7 @@ def process_raw_bucket(satellite, link) -> tuple:
     if link == 'uplink':
         radio_amateur = 'operator'
 
-    if scraped_telemetry[satellite][link] != []:
-
-        start_time = scraped_telemetry[satellite][link][0]
-        end_time = scraped_telemetry[satellite][link][1]
-
-        get_unprocessed_frames_query = f'''
+    get_unprocessed_frames_query = f'''
         from(bucket: "{satellite +  "_raw_data"}")
         |> range(start: {start_time}, stop: {end_time})
         |> filter(fn: (r) => r._measurement == "{satellite + "_" + link + "_raw_data"}")
@@ -101,45 +94,59 @@ def process_raw_bucket(satellite, link) -> tuple:
                 r["_field"] == "{radio_amateur}")
         |> pivot(rowKey:["_time"], columnKey: ["_field"], valueColumn: "_value")
         '''
-        # query result as dataframe
-        dataframe = query_api.query_data_frame(query=get_unprocessed_frames_query)
-        dataframe = dataframe.reset_index()
-        # process each frame
-        for _, row in dataframe.iterrows():
-            try:
-                if row["processed"]: # skip frame if it's processed
-                    continue
-                # store processed frame
-                parse_and_store_frame(satellite,row["_time"],row["frame"],row[radio_amateur],link)
-                # mark raw frame as processed
-                write_frame_to_raw_bucket(
-                    write_api,
-                    satellite,
-                    link,
-                    row["_time"],
-                    {'processed': True}
-                    )
-                processed_frames_count += 1
-            except xtce_parser.XTCEException as ex:
-                logger.error("%s: frame processing error: %s (%s)", satellite, ex, row["frame"])
-                time_range.include_timestamp_in_time_range(satellite,
-                                                           link,
-                                                           row["_time"],
-                                                           time_range.FAILED_PROCESSING_FILE
-                                                           )
-                # mark frame as unprocessed
-                write_frame_to_raw_bucket(
-                    write_api,
-                    satellite,
-                    link,
-                    row["_time"],
-                    {'processed': False}
-                    )
+    # query result as dataframe
+    dataframe = query_api.query_data_frame(query=get_unprocessed_frames_query)
+    dataframe = dataframe.reset_index()
+    # process each frame
+    for _, row in dataframe.iterrows():
+        total_frames_count += 1
+        try:
+            if row["processed"]: # skip frame if it's processed
+                continue
+            # store processed frame
+            parse_and_store_frame(satellite,row["_time"],row["frame"],row[radio_amateur],link)
+            # mark raw frame as processed
+            mark_processed_flag(satellite, link, row["_time"], True)
+            processed_frames_count += 1
 
-        if processed_frames_count == total_frames_count:
-            time_range.reset_new_data_timestamps(satellite, link, file)
-            logger.info("%s: %s data was processed from %s - %s",satellite,link,start_time,end_time)
-    else:
-        logger.info("%s: no frames to process", satellite)
+        except xtce_parser.XTCEException as ex:
+            logger.error("%s: frame processing error: %s (%s)", satellite, ex, row["frame"])
+            time_range.include_timestamp_in_time_range(satellite,
+                                                        link,
+                                                        row["_time"],
+                                                        time_range.FAILED_PROCESSING_FILE
+                                                        )
+            # mark frame as unprocessed
+            mark_processed_flag(satellite, link, row["_time"], False)
+
+        logger.info("%s: %s data was processed from %s - %s; %s out of %s were successfully processed",\
+            satellite, link, start_time, end_time, processed_frames_count, total_frames_count)
+
+        if total_frames_count == 0:
+            logger.info("%s: no frames to process", satellite)
+
+        return processed_frames_count, total_frames_count
+
+
+def process_raw_bucket(satellite, link, all_frames=False, failed=False) -> tuple:
+    """Parse frames, store the parsed form and mark the raw entry as processed.
+    Return the total number of frames attempting to process and
+    how many frames were successfully processed."""
+
+    if all_frames:
+        return process_retrieved_frames(satellite, link, "0", "now()")
+
+    file = time_range.get_new_data_file_path(satellite, link)
+    scraped_telemetry = time_range.read_time_range_file(file)
+
+    if scraped_telemetry[satellite][link] != []:
+
+        start_time = scraped_telemetry[satellite][link][0]
+        end_time = scraped_telemetry[satellite][link][1]
+        processed_frames_count, total_frames_count = \
+            process_retrieved_frames(satellite, link, start_time, end_time)
+
+
+        time_range.reset_new_data_timestamps(satellite, link, file)
 
     return processed_frames_count, total_frames_count

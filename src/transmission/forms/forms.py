@@ -11,9 +11,11 @@ class SubmitJob(forms.Form):
         ]
 
     jobs=[
-        ('raw_bucket_processing','Bucket Processing'),
         ('buffer_processing','Frame Buffer Processing'),
         ('scraper', 'Scrape'),
+        ('raw_bucket_processing','Bucket Processing'),
+        ('reprocess_failed_raw_bucket','Bucket Reprocessing (failed frames)'),
+        ('reprocess_entire_raw_bucket','Bucket Reprocessing (entire bucket)'),
         ]
 
     links=[
