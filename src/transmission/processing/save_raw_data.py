@@ -108,9 +108,8 @@ def process_frames(frames: QuerySet, link: str) -> int:
     processed_frames_timestamps = {}
     for frame_obj in frames:
         frame_dict = frame_obj.to_dictionary()
-        stored = store_frame_to_influxdb(frame_dict, link)
+        stored, satellite = store_frame_to_influxdb(frame_dict, link)
         if stored:
-            satellite = get_satellite_from_frame(frame_dict["frame"])
             frame_obj.processed = True
             frame_obj.invalid = False
             frame_obj.save()
@@ -145,7 +144,7 @@ def mark_frame_as_invalid(frame: str, link: str) -> None:
         return
 
 
-def store_frame_to_influxdb(frame: dict, link: str) -> bool:
+def store_frame_to_influxdb(frame: dict, link: str) -> tuple:
     """Try to store frame to influxdb.
     Returns True if the frame was successfully stored, False otherwise."""
 
@@ -154,14 +153,14 @@ def store_frame_to_influxdb(frame: dict, link: str) -> bool:
     if satellite is None:
         mark_frame_as_invalid(frame["frame"], link)
         logger.warning("invalid %s frame, cannot match satellite: %s", link, frame["frame"])
-        return False
+        return False, satellite
 
     fields_to_save = ["frame", "timestamp", "observer", "frequency", "application", "metadata"]
 
     frame = strip_tlm(frame, fields_to_save)
     stored = save_raw_frame_to_influxdb(satellite, link, frame)
 
-    return stored
+    return stored, satellite
 
 
 def get_satellite_from_frame(frame: str) -> None:

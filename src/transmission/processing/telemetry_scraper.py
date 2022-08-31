@@ -19,12 +19,12 @@ SATNOGS_TOKEN_PATH = "tokens/satnogs_token.txt"
 def get_satnogs_headers() -> dict:
     """Get satnogs request headers"""
 
-    SATNOGS_TOKEN = os.environ.get('SATNOGS_TOKEN')
-    if SATNOGS_TOKEN in ['', None]:
+    token = os.environ.get('SATNOGS_TOKEN')
+    if token in ['', None]:
         with open(SATNOGS_TOKEN_PATH, "r", encoding="utf-8") as file:
-            SATNOGS_TOKEN = file.read()
+            token = file.read()
 
-    headers = {'accept': 'application/json', 'Authorization': 'Token ' + SATNOGS_TOKEN}
+    headers = {'accept': 'application/json', 'Authorization': 'Token ' + token}
     return headers
 
 
