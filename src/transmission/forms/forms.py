@@ -13,7 +13,7 @@ class SubmitJob(forms.Form):
     jobs=[
         ('buffer_processing','Frame Buffer Processing'),
         ('scraper', 'Scrape'),
-        ('raw_bucket_processing','Bucket Processing'),
+        ('raw_bucket_processing','Bucket Processing (new frames)'),
         ('reprocess_failed_raw_bucket','Bucket Reprocessing (failed frames)'),
         ('reprocess_entire_raw_bucket','Bucket Reprocessing (entire bucket)'),
         ]

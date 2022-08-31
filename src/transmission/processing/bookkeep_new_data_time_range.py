@@ -5,7 +5,6 @@ import json
 from transmission.processing.satellites import TIME_FORMAT
 
 TIME_RANGE_FILES_DIR = "transmission/processing/temp/"
-TEMP_DIR = "transmission/processing/temp/"
 
 def get_new_data_file_path(satellite: str, link: str) -> str:
     """Return filepath of the new data time range file."""

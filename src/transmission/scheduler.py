@@ -17,9 +17,8 @@ class Singleton(type):
 
 
 class Scheduler(metaclass=Singleton):
-    """Scheduler currently supporting single threaded use.
-    Tasks are executed one by one, one at a time.
-    Employs the singleton design pattern."""
+    """Scheduler implementing the singleton design pattern, i.e.
+    multiple instantiations will point to the same object."""
 
     # Scheduler workflow: add job -> remove job -> submit job -> execute job
     # Task Triggers:
