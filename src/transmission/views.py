@@ -35,20 +35,12 @@ def submit_frame(request): #pylint:disable=R0911
             # retrieve the user agent (if present, empty otherwise)
             user_agent = request.META.get('HTTP_USER_AGENT', '')
 
-            if 'HTTP_FRAME_LINK' in request.META and \
-                request.META.get('HTTP_FRAME_LINK', '') is not None:
-
-                link = request.META.get('HTTP_FRAME_LINK', '')
-
-                if link not in ["uplink", "downlink"]:
-                    raise BadRequest("HTTP_FRAME_LINK can be either 'uplink' or 'downlink'" )
-
             # search for the user name matching the API key
             api_key_name = APIKey.objects.get_from_key(key)
             # retrieve the JSON frame just submitted
             frame_to_add = json.loads(request.body)
             # add the frame to the database
-            store_frame(frame_to_add, link, username=api_key_name,  application=user_agent)
+            store_frame(frame_to_add, username=api_key_name,  application=user_agent)
 
             logger.info("%s submited a frame. Frame successfully stored.", api_key_name)
             return JsonResponse({"result": "success", "message": "Successful submission"},
