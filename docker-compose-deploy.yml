@@ -14,6 +14,7 @@ services:
             - SMTP_HOST=${SMTP_HOST}
             - SMTP_PORT=${SMTP_PORT}
             - FROM_EMAIL=${FROM_EMAIL:-webmaster@localhost}
+            - SATNOGS_TOKEN=${SATNOGS_TOKEN}
         restart: always
         logging:
             driver: "json-file"
