@@ -8,7 +8,7 @@ import requests
 
 from django_logger import logger
 from transmission.processing.satellites import SATELLITES, TIME_FORMAT
-from transmission.processing.bookkeep_new_data_time_range import get_new_data_file_path, get_new_data_scraper_temp_folder, \
+from transmission.processing.bookkeep_new_data_time_range import get_new_data_scraper_temp_folder, \
     include_timestamp_in_time_range, save_timestamps_to_file
 from transmission.processing.influxdb_api import save_raw_frame_to_influxdb
 
@@ -59,6 +59,7 @@ def strip_tlm_list(telemetry: list, fields: list) -> list:
     return stripped_tlm_list
 
 
+
 def scrape(satellite: str, save_to_db=True, save_to_file=False) -> None:
     """Scrape satnogs for new telemetry"""
 
@@ -87,12 +88,11 @@ def scrape(satellite: str, save_to_db=True, save_to_file=False) -> None:
             if save_to_db:
                 fields_to_save = ["frame", "timestamp", "observer"]
                 stripped_tlm = strip_tlm_list(telemetry_tmp, fields_to_save)
-                stored = save_raw_frame_to_influxdb(satellite, "downlink", stripped_tlm)
-                if stored:
-                    time_range = include_timestamp_in_time_range(
-                                satellite, 'downlink', first["timestamp"], existing_range=time_range)
-                    time_range = include_timestamp_in_time_range(
-                                satellite, 'downlink', last["timestamp"], existing_range=time_range)
+                if save_raw_frame_to_influxdb(satellite, "downlink", stripped_tlm):
+                    time_range = include_timestamp_in_time_range(satellite, 'downlink',
+                                        first["timestamp"], existing_range=time_range)
+                    time_range = include_timestamp_in_time_range(satellite, 'downlink',
+                                        last["timestamp"], existing_range=time_range)
 
                 # if the frame is not stored (due to it being stored in a past scrape) and
                 # the next request retrieves data older than a week -> stop

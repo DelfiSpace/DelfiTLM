@@ -25,7 +25,7 @@ def store_raw_frame(satellite: str, timestamp, frame: str, observer: str, link: 
     return stored
 
 
-def parse_and_store_frame(satellite: str, timestamp: str, frame: str, observer: str, link: str) -> None:
+def parse_and_store_frame(satellite:str, timestamp:str, frame:str, observer:str, link:str) -> None:
     """Store parsed frame in influxdb"""
 
     parser = xtce_parser.SatParsers().parsers[satellite]
@@ -78,6 +78,9 @@ def mark_processed_flag(satellite: str, link: str, timestamp: str, value: bool) 
     write_frame_to_raw_bucket( write_api, satellite, link, timestamp, {'processed': value})
 
 def process_retrieved_frames(satellite: str, link: str, start_time: str, end_time: str) -> tuple:
+    """Parse frames, store the parsed form and mark the raw entry as processed.
+    Return the total number of frames attempting to process and
+    how many frames were successfully processed."""
 
     processed_frames_count = 0
     total_frames_count = 0
@@ -113,14 +116,14 @@ def process_retrieved_frames(satellite: str, link: str, start_time: str, end_tim
         except xtce_parser.XTCEException as ex:
             logger.error("%s: frame processing error: %s (%s)", satellite, ex, row["frame"])
             time_range.include_timestamp_in_time_range(satellite,
-                                                        link,
-                                                        row["_time"],
-                                                        time_range.FAILED_PROCESSING_FILE
-                                                        )
+                                                link,
+                                                row["_time"],
+                                                time_range.get_failed_data_file_path(satellite,link)
+                                                )
             # mark frame as unprocessed
             mark_processed_flag(satellite, link, row["_time"], False)
 
-        logger.info("%s: %s data was processed from %s - %s; %s out of %s were successfully processed",\
+        logger.info("%s: %s frames processed from %s - %s; %s out of %s were successfully parsed",\
             satellite, link, start_time, end_time, processed_frames_count, total_frames_count)
 
         if total_frames_count == 0:
@@ -129,18 +132,25 @@ def process_retrieved_frames(satellite: str, link: str, start_time: str, end_tim
         return processed_frames_count, total_frames_count
 
 
-def process_raw_bucket(satellite: str, link: str, all_frames: bool=False, failed: bool=False) -> tuple:
-    """Parse frames, store the parsed form and mark the raw entry as processed.
-    Return the total number of frames attempting to process and
-    how many frames were successfully processed."""
+def process_raw_bucket(satellite: str, link: str, all_frames:bool=False, failed:bool=False)->tuple:
+    """Trigger bucket processing given satellite and link.
+    all_frames=True will process the entire bucket and failed=True will process only failed frames.
+    When both flags are True all frames will be processed."""
 
     combine_time_ranges(satellite, link)
 
     if all_frames:
         return process_retrieved_frames(satellite, link, "0", "now()")
 
-    file = time_range.get_new_data_file_path(satellite, link)
-    new_data_time_range = time_range.read_time_range_file(file)
+    if failed:
+        file = time_range.get_failed_data_file_path(satellite, link)
+        new_data_time_range = time_range.read_time_range_file(file)
+    else:
+        file = time_range.get_new_data_file_path(satellite, link)
+        new_data_time_range = time_range.read_time_range_file(file)
+
+    processed_frames_count = 0
+    total_frames_count = 0
 
     if new_data_time_range[satellite][link] != []:
 
@@ -149,13 +159,15 @@ def process_raw_bucket(satellite: str, link: str, all_frames: bool=False, failed
         processed_frames_count, total_frames_count = \
             process_retrieved_frames(satellite, link, start_time, end_time)
 
-
-        time_range.reset_new_data_timestamps(satellite, link, file)
+        # don't reset the interval of failed frames, unless reprocessing was successful
+        if failed is False or processed_frames_count == total_frames_count:
+            time_range.reset_new_data_timestamps(satellite, link, file)
 
     return processed_frames_count, total_frames_count
 
 
 def combine_time_ranges(satellite: str, link: str) -> None:
+    """Combine time ranges of new data from all processes."""
     scraper_folder = time_range.get_new_data_scraper_temp_folder(satellite)
     buffer_folder = time_range.get_new_data_buffer_temp_folder(satellite)
 

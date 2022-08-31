@@ -4,24 +4,27 @@ from datetime import datetime, timedelta
 import json
 from transmission.processing.satellites import TIME_FORMAT
 
-FAILED_PROCESSING_FILE = "transmission/processing/temp/failed_processing.json"
 TIME_RANGE_FILES_DIR = "transmission/processing/temp/"
 TEMP_DIR = "transmission/processing/temp/"
 
 def get_new_data_file_path(satellite: str, link: str) -> str:
-    """Return filepath of the new data time range file"""
+    """Return filepath of the new data time range file."""
     return TIME_RANGE_FILES_DIR + satellite + "/" + satellite + "_" + link + ".json"
 
+def get_failed_data_file_path(satellite: str, link: str) -> str:
+    """Return filepath of the time range file storing the interval ."""
+    return TIME_RANGE_FILES_DIR + satellite + "/" + "failed" + "_" + link + ".json"
+
 def get_new_data_scraper_temp_folder(satellite: str) -> str:
-    """Return filepath of the new data time range file"""
+    """Return filepath of the scraper process temp time range files."""
     return TIME_RANGE_FILES_DIR + satellite + "/scraper/"
 
 def get_new_data_buffer_temp_folder(satellite: str) -> str:
-    """Return filepath of the new data time range file"""
+    """Return filepath of the buffer process temp time range files."""
     return TIME_RANGE_FILES_DIR + satellite + "/buffer/"
 
 def read_time_range_file(input_file: str) -> dict:
-    """Read scraped_telemetry.json."""
+    """Read time range file and return contents as dictionary."""
     new_data_time_range = {}
     with open(input_file, "r", encoding="utf-8") as file:
         new_data_time_range = json.load(file)
@@ -30,13 +33,13 @@ def read_time_range_file(input_file: str) -> dict:
 
 
 def save_timestamps_to_file(timestamps:dict, input_file: str) -> None:
-    """Dump timestamps"""
+    """Dump timestamps to the input file in json format."""
     with open(input_file, "w", encoding="utf-8") as file:
         file.write(json.dumps(timestamps, indent=4))
 
 
 def reset_new_data_timestamps(satellite: str, link: str, input_file: str) -> None:
-    """Replace timestamps in scraped_telemetry.json with []."""
+    """Replace timestamps form the json given by the input file with []."""
     new_data_time_range = read_time_range_file(input_file)
     new_data_time_range[satellite][link] = []
 
@@ -46,8 +49,9 @@ def reset_new_data_timestamps(satellite: str, link: str, input_file: str) -> Non
 
 def include_timestamp_in_time_range(satellite: str, link: str, timestamp,
                                     input_file:str=None, existing_range:dict=None)->dict:
-    """This function ensures that a given timestamp will be included in the scraped
-    telemetry time range such that it can then be processed and parsed from raw form."""
+    """This function ensures that a given timestamp will be included in the
+    time range such that it can then be processed and parsed from raw form.
+    The range can be maintained in memory given an existing_range or in file given an input_file."""
 
     if isinstance(timestamp, str):
         time = datetime.strptime(timestamp, TIME_FORMAT)
@@ -57,12 +61,23 @@ def include_timestamp_in_time_range(satellite: str, link: str, timestamp,
     start_time = (time - timedelta(seconds=1)).strftime(TIME_FORMAT)
     end_time = (time + timedelta(seconds=1)).strftime(TIME_FORMAT)
 
-    return update_new_data_timestamps(satellite, link, start_time, end_time, input_file, existing_range)
+    return update_new_data_timestamps(satellite, link,
+                                      (start_time, end_time), input_file, existing_range)
 
 
-def update_new_data_timestamps(satellite: str, link: str, start_time: str, end_time: str,
+def update_new_data_timestamps(satellite: str, link: str, new_time_range:tuple,
                                input_file:str=None, existing_range:dict=None) -> None:
-    """Bookkeep time range of unprocessed telemetry."""
+    """Bookkeep time range of unprocessed telemetry.
+     If an input_file is specified, the timestamps from the file, will be updated and dumped.
+     If the existing_range is specified, if will be updated and returned as a dictionary.
+     If both input_file and existing_range are specified, an exception is raised."""
+
+    if input_file is not None and existing_range is not None:
+        raise RuntimeError("Specify either input_file or existing_range, not both.")
+
+    start_time = new_time_range[0]
+    end_time = new_time_range[1]
+
     if input_file is not None:
         new_data_time_range = read_time_range_file(input_file)
 
