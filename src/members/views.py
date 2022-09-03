@@ -15,7 +15,8 @@ from django.utils.encoding import force_bytes, force_text
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.template.loader import render_to_string
 from .tokens import account_activation_token
-from .forms import RegisterForm, LoginForm, ChangePasswordForm, PasswordResetForm
+from .forms import RegisterForm, LoginForm, ChangePasswordForm, PasswordResetForm, \
+    ResendVerificationForm
 from .models import APIKey, Member
 
 def get_protocol(request):
@@ -33,6 +34,26 @@ def account(request):
     return render(request, "account.html")
 
 
+def _send_verification_email(user, request):
+    protocol = get_protocol(request)
+    current_site = get_current_site(request)
+
+    message = render_to_string('emails/register_email_verification.html', {
+        'user': user,
+        'domain': current_site.domain,
+        'uid': urlsafe_base64_encode(force_bytes(user.pk)),
+        'token': account_activation_token.make_token(user),
+        'protocol': protocol
+    })
+    to_email = user.email
+    send_mail( subject="Welcome to DelfiTLM",
+        message=message,
+        from_email = None,
+        recipient_list = [to_email],
+        fail_silently=True,
+        )
+
+
 def register(request):
     """Render the register page and register a user"""
 
@@ -43,22 +64,7 @@ def register(request):
         if form.is_valid():
             user = form.save(commit=False)
             user.save()
-            current_site = get_current_site(request)
-
-            message = render_to_string('emails/register_email_verification.html', {
-                'user': user,
-                'domain': current_site.domain,
-                'uid': urlsafe_base64_encode(force_bytes(user.pk)),
-                'token': account_activation_token.make_token(user),
-                'protocol': get_protocol(request)
-            })
-            to_email = user.email
-            send_mail( subject="Welcome to DelfiTLM",
-                message=message,
-                from_email = None,
-                recipient_list = [to_email],
-                fail_silently=True,
-                )
+            _send_verification_email(user, request)
             messages.info(request, "Please confirm your email address to complete the registration")
             return redirect("homepage")
 
@@ -66,6 +72,7 @@ def register(request):
         status = HTTPStatus.BAD_REQUEST
 
     return render(request, "registration/register.html", {'form': form}, status=status)
+
 
 def activate(request, uidb64, token):
     """Activate user email"""
@@ -87,9 +94,31 @@ def activate(request, uidb64, token):
         messages.info(request, "Thank you for your email confirmation. \
                             Now you can login into your account.")
     else:
-        messages.error(request, 'Activation link is invalid!')
+        messages.error(request, 'Activation link is invalid or expired!')
         status = HTTPStatus.BAD_REQUEST
     return render(request, "home/index.html", status=status)
+
+
+def resend_verification_email(request):
+    """Resent verification emails, in case it's not received."""
+    form = ResendVerificationForm(request.POST or None)
+    status = HTTPStatus.OK
+
+    if request.method == "POST":
+        if form.is_valid():
+            entered_email = form.cleaned_data.get('email')
+            if Member.objects.filter(email=entered_email).exists():
+                user = Member.objects.get(email=entered_email)
+                if not user.verified:
+                    _send_verification_email(user, request)
+                    messages.info(request, "The verification email has been resent.")
+                    return redirect('login')
+
+        status = HTTPStatus.BAD_REQUEST
+        messages.error(request, "Email is not registered or is already verified!")
+
+    return render(request, "registration/resend_verification_email.html",
+                  context={ 'form': form }, status=status)
 
 
 def login_member(request):
@@ -110,16 +139,15 @@ def login_member(request):
             )
 
             if member is not None and member.verified is False:
-                messages.error(request, "Email not verified")
-                status = HTTPStatus.BAD_REQUEST
-                return render(request, "registration/login.html", {'form': form}, status=status)
+                messages.error(request, "Email not verified!")
+                return redirect("resend_verify")
 
             if member is not None and member.is_active is True:
                 login(request, member)
                 Member.objects.filter(username=member.username).update(
                         last_login=timezone.now()
                     )
-                return render(request, "account.html", status=status)
+                return redirect("account")
 
         messages.error(request, "Invalid username or password")
         status = HTTPStatus.UNAUTHORIZED
@@ -155,7 +183,7 @@ def get_new_key(request):
 
 @login_required(login_url='/login')
 def logout_member(request):
-    """Logout and reddirect to homepage"""
+    """Logout and redirect to homepage"""
     logout(request)
 
     return redirect('homepage')

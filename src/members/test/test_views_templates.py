@@ -282,7 +282,7 @@ class TestChangePassword(TestCase):
         self.assertTemplateUsed(response, 'registration/change_password.html')
 
 
-        # new password missmatch
+        # new password mismatch
         response = self.client.post(reverse('change_password'), {
                                                            'old_password': 'delfispace4242',
                                                           'new_password1': 'delfispace443',
@@ -309,8 +309,7 @@ class TestAccountVerification(TestCase):
         self.assertTemplateUsed(response, 'registration/login.html')
 
         response = self.client.post(reverse('login'), {'username': 'user', 'password': 'delfispace4242'})
-        self.assertEqual(response.status_code, 400)
-        self.assertTemplateUsed(response, 'registration/login.html') #account is not verified so we return to login
+        self.assertEqual(response.status_code, 302)
 
         self.user.verified = True #the user verified the account
         self.user.save()
@@ -352,7 +351,7 @@ class TestAccountVerification(TestCase):
         response = self.client.post(reverse('activate', args=[uid, token]))
         messages = list(response.context['messages'])
         self.assertTrue(len(messages)>0)
-        self.assertEqual(str(messages[0]), 'Activation link is invalid!')
+        self.assertEqual(str(messages[0]), 'Activation link is invalid or expired!')
         self.assertEqual(response.status_code, 400)
 
 
