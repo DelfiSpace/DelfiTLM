@@ -5,6 +5,7 @@ from django.test.client import Client
 from ..models import Member
 import re
 import django
+import time
 
 # pylint: disable=all
 
@@ -496,3 +497,138 @@ class TestAccountVerification(TestCase):
         response = self.client.post(reverse('login'), {'username': 'user', 'password': 'delfispace'})
         messages = list(response.context['messages'])
         self.assertEqual(str(messages[0]), 'Invalid username or password!')
+
+
+class TestEmailChangeRequest(TestCase):
+    def setUp(self):
+        self.client = Client()
+        self.user = Member.objects.create_user(username='user', email='user@email.com', verified=True)
+        self.user.set_password('delfispace4242')
+        self.user.save()
+        # add a second user
+        self.user = Member.objects.create_user(username='user2', email='user2@email.com', verified=True)
+        self.user.set_password('delfispace4242')
+        self.user.save()
+
+
+    def test_change_email(self):
+        # login
+        response = self.client.post(reverse('login'), {'username': 'user', 'password': 'delfispace4242'}, follow=True)
+        self.assertEqual(response.status_code, 200)
+        # request email change
+        response = self.client.get(reverse('change_email'))
+        self.assertEqual(response.status_code, 200)
+
+        response = self.client.post(reverse('change_email'), {'email': 'superuser@email.com', 'email_confirm': 'superuser@email.com'})
+        self.assertEqual(response.status_code, 302)
+        # check if new email gets updated
+        user = Member.objects.get(username='user')
+        self.assertEqual(user.email, "user@email.com")
+        self.assertEqual(user.new_email, "superuser@email.com")
+
+        # verify new email
+        token_regex = r"activate\/([A-Za-z0-9:\-]+)/([A-Za-z0-9:\-]+)"
+        email_content = django.core.mail.outbox[1].body
+        match = re.search(token_regex, email_content)
+
+        uid = match.group(1)
+        token = match.group(2)
+
+        response = self.client.post(reverse('activate', args=[uid, token]))
+        self.assertEqual(response.status_code, 200)
+
+        # check if update was successful
+        user = Member.objects.get(username='user')
+        self.assertEqual(user.email, "superuser@email.com")
+        self.assertEqual(user.new_email, None)
+
+
+    def test_change_email_duplicate_requests(self):
+        # login
+        response = self.client.post(reverse('login'), {'username': 'user', 'password': 'delfispace4242'}, follow=True)
+        self.assertEqual(response.status_code, 200)
+        # request email change
+        response = self.client.get(reverse('change_email'))
+        self.assertEqual(response.status_code, 200)
+
+        response = self.client.post(reverse('change_email'), {'email': 'superuser@email.com', 'email_confirm': 'superuser@email.com'})
+        self.assertEqual(response.status_code, 302)
+        # check if new email gets updated
+        user = Member.objects.get(username='user')
+        self.assertEqual(user.email, "user@email.com")
+        self.assertEqual(user.new_email, "superuser@email.com")
+
+        time.sleep(1)
+
+        # make a duplicate request with a different email address
+        response = self.client.post(reverse('login'), {'username': 'user', 'password': 'delfispace4242'}, follow=True)
+        self.assertEqual(response.status_code, 200)
+        response = self.client.post(reverse('change_email'), {'email': 'superuser2@email.com', 'email_confirm': 'superuser2@email.com'})
+        self.assertEqual(response.status_code, 302)
+
+        # check if new email gets updated
+        user = Member.objects.get(username='user')
+        self.assertEqual(user.email, "user@email.com")
+        self.assertEqual(user.new_email, "superuser2@email.com")
+
+        # # verify new email
+        token_regex = r"activate\/([A-Za-z0-9:\-]+)/([A-Za-z0-9:\-]+)"
+        email_content = django.core.mail.outbox[1].body
+        match = re.search(token_regex, email_content)
+
+        uid = match.group(1)
+        token = match.group(2)
+
+        # first link verification fails
+        response = self.client.post(reverse('activate', args=[uid, token]))
+        self.assertEqual(response.status_code, 400)
+        # new email is set to the most recently requested update
+        user = Member.objects.get(username='user')
+        self.assertEqual(user.email, "user@email.com")
+        self.assertEqual(user.new_email, "superuser2@email.com")
+
+        # most recent link successfully verifies the new email
+        token_regex = r"activate\/([A-Za-z0-9:\-]+)/([A-Za-z0-9:\-]+)"
+        email_content = django.core.mail.outbox[3].body
+        match = re.search(token_regex, email_content)
+
+        uid = match.group(1)
+        token = match.group(2)
+        # second link verification succeeds
+        response = self.client.post(reverse('activate', args=[uid, token]))
+        self.assertEqual(response.status_code, 200)
+
+        # check if update was successful
+        user = Member.objects.get(username='user')
+        self.assertEqual(user.email, "superuser2@email.com")
+        self.assertEqual(user.new_email, None)
+
+
+    def test_change_email_bad_weather(self):
+
+        response = self.client.post(reverse('login'), {'username': 'user', 'password': 'delfispace4242'}, follow=True)
+        self.assertEqual(response.status_code, 200)
+
+        # emails don't match
+        response = self.client.post(reverse('change_email'), {'email': 'superuser1@email.com', 'email_confirm': 'superuser@email.com'})
+        self.assertEqual(response.status_code, 400)
+
+        user = Member.objects.get(username='user')
+        self.assertEqual(user.email, "user@email.com")
+        self.assertEqual(user.new_email, None)
+
+        # email is the same as the current email
+        response = self.client.post(reverse('change_email'), {'email': 'user@email.com', 'email_confirm': 'user@email.com'})
+        self.assertEqual(response.status_code, 400)
+
+        user = Member.objects.get(username='user')
+        self.assertEqual(user.email, "user@email.com")
+        self.assertEqual(user.new_email, None)
+
+        # email is register at another account
+        response = self.client.post(reverse('change_email'), {'email': 'user2@email.com', 'email_confirm': 'user2@email.com'})
+        self.assertEqual(response.status_code, 400)
+
+        user = Member.objects.get(username='user')
+        self.assertEqual(user.email, "user@email.com")
+        self.assertEqual(user.new_email, None)

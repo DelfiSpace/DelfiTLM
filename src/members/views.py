@@ -69,8 +69,6 @@ def verify(request, uidb64, token):
         login(request, user)
         messages.info(request, "Your email has been successfully verified.")
     else:
-        user.new_email = None
-        user.save()
         messages.error(request, 'Verification link is invalid or expired!')
         status = HTTPStatus.BAD_REQUEST
     return render(request, "home/index.html", status=status)
@@ -168,7 +166,10 @@ def logout_member(request):
 
 @login_required(login_url='/login')
 def change_email_request(request):
-    """Handle email update request"""
+    """Handle email update request. If multiple requests are made without
+    completing verification, only the most recently submitted email addressed
+    can be verified and set as current."""
+
     form = ChangeEmailForm(request.POST or None)
     status = HTTPStatus.OK
     user = request.user
@@ -190,17 +191,18 @@ def change_email_request(request):
                 message += "Please confirm it to complete the update."
 
                 messages.info(request, message)
-                return redirect('homepage')
+                # logout to invalidate token, in case a change email request is made
+                # with an email address that differs from the previous one
+                return logout_member(request)
 
             if entered_email1 != entered_email2:
                 messages.error(request, "The entered emails don't match!")
-                status = HTTPStatus.BAD_REQUEST
 
             if Member.objects.filter(email=entered_email1).exists() or \
                 Member.objects.filter(new_email=entered_email1).exists():
                 messages.error(request, "The email address entered is already registered!")
-        else:
-            status = HTTPStatus.BAD_REQUEST
+
+        status = HTTPStatus.BAD_REQUEST
 
     return render(request, "registration/change_email_form.html", {'form': form }, status=status)
 
