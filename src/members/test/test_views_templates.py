@@ -53,31 +53,31 @@ class TestLogin(TestCase):
         # empty username field
         response = self.client.post(reverse('login'), {'username': '', 'password': 'delfispace4242'})
         messages = list(response.context['messages'])
-        self.assertEqual(str(messages[0]), 'Invalid username or password')
+        self.assertEqual(str(messages[0]), 'Invalid username or password!')
         self.assertTemplateUsed(response, 'registration/login.html')
 
         # empty password field
         response = self.client.post(reverse('login'), {'username': 'user', 'password': ''})
         messages = list(response.context['messages'])
-        self.assertEqual(str(messages[0]), 'Invalid username or password')
+        self.assertEqual(str(messages[0]), 'Invalid username or password!')
         self.assertTemplateUsed(response, 'registration/login.html')
 
         # wrong username
         response = self.client.post(reverse('login'), {'username': 'admin', 'password': 'delfispace4242'})
         messages = list(response.context['messages'])
-        self.assertEqual(str(messages[0]), 'Invalid username or password')
+        self.assertEqual(str(messages[0]), 'Invalid username or password!')
         self.assertTemplateUsed(response, 'registration/login.html')
 
         # wrong password
         response = self.client.post(reverse('login'), {'username': 'user', 'password': 'delfispace424'})
         messages = list(response.context['messages'])
-        self.assertEqual(str(messages[0]), 'Invalid username or password')
+        self.assertEqual(str(messages[0]), 'Invalid username or password!')
         self.assertTemplateUsed(response, 'registration/login.html')
 
         # wrong username and password
         response = self.client.post(reverse('login'), {'username': 'user1', 'password': 'delfispace424'})
         messages = list(response.context['messages'])
-        self.assertEqual(str(messages[0]), 'Invalid username or password')
+        self.assertEqual(str(messages[0]), 'Invalid username or password!')
         self.assertTemplateUsed(response, 'registration/login.html')
 
 class TestAccount(TestCase):
@@ -362,7 +362,7 @@ class TestChangePassword(TestCase):
 class TestAccountVerification(TestCase):
     def setUp(self):
         self.client = Client()
-        self.user = Member.objects.create_user(username='user', email='user@email.com')
+        self.user = Member.objects.create_user(username='user', email='user@email.com', verified=True)
         self.user.set_password('delfispace4242')
         self.user.save()
 
@@ -399,7 +399,7 @@ class TestAccountVerification(TestCase):
         # Get token from email
         # activate/
         token_regex = r"activate\/([A-Za-z0-9:\-]+)/([A-Za-z0-9:\-]+)"
-        email_content = django.core.mail.outbox[0].body
+        email_content = django.core.mail.outbox[1].body # get the second email since the first is the welcome email
         match = re.search(token_regex, email_content)
 
         uid = match.group(1)
@@ -407,7 +407,7 @@ class TestAccountVerification(TestCase):
 
         response = self.client.post(reverse('activate', args=[uid, token]))
         messages = list(response.context['messages'])
-        self.assertEqual(str(messages[0]), 'Please confirm your email address to complete the registration')
+        self.assertEqual(str(messages[0]), 'Please confirm your email address to complete the registration.')
 
         self.assertEqual(response.status_code, 200)
 
@@ -418,7 +418,7 @@ class TestAccountVerification(TestCase):
         response = self.client.post(reverse('activate', args=[uid, token]))
         messages = list(response.context['messages'])
         self.assertTrue(len(messages)>0)
-        self.assertEqual(str(messages[0]), 'Activation link is invalid or expired!')
+        self.assertEqual(str(messages[0]), 'Verification link is invalid or expired!')
         self.assertEqual(response.status_code, 400)
 
 
@@ -445,13 +445,14 @@ class TestAccountVerification(TestCase):
             'new_password1': 'delfispace',
             'new_password2': 'delfispace'
         }
+
         response = self.client.post(reverse('password_reset_confirm', args=[uid, token]), payload)
         self.assertEqual(response.status_code, 302)
 
         response = self.client.post(reverse('login'), {'username': 'user', 'password': 'delfispace'})
         self.assertEqual(response.status_code, 401)
         messages = list(response.context['messages'])
-        self.assertNotEqual(str(messages[0]), 'Invalid username or password')
+        self.assertNotEqual(str(messages[0]), 'Invalid username or password!')
 
 
     def test_reset_password_unregistered_email(self):
@@ -494,4 +495,4 @@ class TestAccountVerification(TestCase):
 
         response = self.client.post(reverse('login'), {'username': 'user', 'password': 'delfispace'})
         messages = list(response.context['messages'])
-        self.assertEqual(str(messages[0]), 'Invalid username or password')
+        self.assertEqual(str(messages[0]), 'Invalid username or password!')
