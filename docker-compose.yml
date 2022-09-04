@@ -65,6 +65,7 @@ services:
       - influxdb
     environment:
       - GF_SERVER_DOMAIN=${GF_SERVER_DOMAIN:-localhost}
+      - GF_INFLUXDB_V2_TOKEN=${INFLUXDB_V2_TOKEN:-adminpwd}
     restart: always
 
 volumes:
