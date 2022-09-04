@@ -32,14 +32,18 @@ def send_welcome_email(user):
         fail_silently=True,
         )
 
-def _send_email_with_token(request, user, email_template, subject):
+def _send_email_with_token(request, user, email_template, subject, email=None):
     """Helper method sending an email containing a verification token.
     User for email verification and password reset."""
     protocol = get_protocol(request)
     current_site = get_current_site(request)
 
+    if email is None:
+        email = user.email
+
     message = render_to_string(email_template, {
         'user': user,
+        'email': email,
         'domain': current_site.domain,
         'uid': urlsafe_base64_encode(force_bytes(user.pk)),
         'token': default_token_generator.make_token(user),
@@ -50,7 +54,7 @@ def _send_email_with_token(request, user, email_template, subject):
         subject=subject,
         message=message,
         from_email = None,
-        recipient_list = [user.email],
+        recipient_list = [email],
         fail_silently=True,
         )
 
@@ -60,6 +64,30 @@ def send_email_verification_registration(request, user):
     subject = "Verify your email"
 
     _send_email_with_token(request, user, email_template, subject)
+
+def send_email_change_request_confirmation(user):
+    """Sends an email the current email address to confirm it should be changed."""
+
+    email_template = "emails/confirm_email_address_change.html"
+    subject = "Email address change requested"
+
+    send_mail(
+        subject=subject,
+        message=render_to_string(email_template, {
+            'email': user.email
+        }),
+        from_email = None,
+        recipient_list = [user.email],
+        fail_silently=True,
+        )
+
+
+def send_new_email_verification(request, user):
+    """Upon email update request, sends an email the new email address to verify it."""
+    email_template = "emails/verify_new_email.html"
+    subject = "Verify your new email"
+    _send_email_with_token(request, user, email_template, subject, email=user.new_email)
+
 
 def send_password_reset_email(request, user):
     """Sends a password reset email with a link to the reset form."""

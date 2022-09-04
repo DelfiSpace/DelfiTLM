@@ -1,5 +1,4 @@
 """Customized forms for view/html files"""
-
 from django import forms
 from django.contrib.auth.forms import UserCreationForm, PasswordResetForm, PasswordChangeForm
 from .models import Member
@@ -28,10 +27,17 @@ class ResendVerificationForm(forms.Form):
     """Resend verification email form"""
     email = forms.EmailField(required=True)
 
+
 class LoginForm(forms.Form):
     """Login form"""
     username = forms.CharField(label="Username")
     password = forms.CharField(label="Password", widget=forms.PasswordInput())
+
+
+class ChangeEmailForm(forms.Form):
+    """Change email form"""
+    email = forms.EmailField(label="New email address", required=True)
+    email_confirm = forms.EmailField(label="Confirm the ew email address", required=True)
 
 
 class ChangePasswordForm(PasswordChangeForm):
