@@ -1,12 +1,10 @@
 """Test views html templates"""
-from django.test import SimpleTestCase, Client, TestCase
+from django.test import Client, TestCase
 from django.urls import reverse
 from django.test.client import Client
 from ..models import Member
 import re
 import django
-# import unittest
-# from django.contrib.auth.models import User
 
 # pylint: disable=all
 
@@ -26,7 +24,7 @@ class TestLogin(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'registration/login.html')
         # login request successful
-        response = self.client.post(reverse('login'), {'username': 'user', 'password': 'delfispace4242'})
+        response = self.client.post(reverse('login'), {'username': 'user', 'password': 'delfispace4242'}, follow=True)
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'account.html')
 
@@ -37,13 +35,14 @@ class TestLogin(TestCase):
         self.assertTemplateUsed(response, 'registration/login.html')
 
         # login request successful
-        response = self.client.post(reverse('login'), {'username': 'user', 'password': 'delfispace4242'})
+        response = self.client.post(reverse('login'), {'username': 'user', 'password': 'delfispace4242'}, follow=True)
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'account.html')
 
         # logout request successful, redirect to homepage
-        response = self.client.get(reverse('logout'))
-        self.assertEqual(response.status_code, 302)
+        response = self.client.get(reverse('logout'), follow=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'home/index.html')
 
 
     def test_login_wrong_credentials(self):
@@ -101,14 +100,16 @@ class TestAccount(TestCase):
 
     def test_user_not_logged_in(self):
         # the user is not logged in and since account is login protected the user is redirected to login
-        response = self.client.get(reverse('account'))
-        self.assertEqual(response.status_code, 302)
+        response = self.client.get(reverse('account'), follow=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'registration/login.html')
+
 
 class TestRegister(TestCase):
 
     def setUp(self):
         self.client = Client()
-        self.user = Member.objects.create_user(username='user', email='user@email.com')
+        self.user = Member.objects.create_user(username='user', email='user@email.com', verified=True)
         self.user.set_password('delfispace4242')
         self.user.save()
 
@@ -130,10 +131,72 @@ class TestRegister(TestCase):
         response = self.client.post(reverse('register'), {'username': 'user2',
                                                           'email': 'test2@email.com',
                                                           'password1': 'delfispace4242',
-                                                          'password2': 'delfispace4242'})
-        self.assertEqual(response.status_code, 302)
-        # self.assertTemplateUsed(response, 'account.html')
-        self.assertTemplateUsed(response, 'emails/register_email_verification.html') #when creating an account we receive an e-mail for verification
+                                                          'password2': 'delfispace4242'},
+                                    follow=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'home/index.html') #when creating an account we receive an e-mail for verification
+
+    def test_register_resend_verification(self):
+        # register form successfully retrieved
+        response = self.client.get(reverse('register'))
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'registration/register.html')
+
+        response = self.client.post(reverse('register'), {'username': 'user2',
+                                                          'email': 'test2@email.com',
+                                                          'password1': 'delfispace4242',
+                                                          'password2': 'delfispace4242'},
+                                    follow=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'home/index.html')
+
+        # login attempt with unverified emil
+        response = self.client.post(reverse('login'), {'username': 'user2', 'password': 'delfispace4242'},follow=True)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'registration/resend_verification_email.html')
+        # resend verification email
+        response = self.client.post(reverse('resend_verify'), {'email': 'test2@email.com'}, follow=True)
+        # redirect to login page
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'registration/login.html')
+
+
+    def test_register_email_resend_verification_bad_weather(self):
+        # register form successfully retrieved
+        response = self.client.get(reverse('register'))
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'registration/register.html')
+
+        response = self.client.post(reverse('register'), {'username': 'user2',
+                                                          'email': 'test2@email.com',
+                                                          'password1': 'delfispace4242',
+                                                          'password2': 'delfispace4242'},
+                                    follow=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'home/index.html')
+
+        response = self.client.post(reverse('login'), {'username': 'user2', 'password': 'delfispace4242'},follow=True)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'registration/resend_verification_email.html')
+
+        # request verification using an already verified email from the system
+        response = self.client.post(reverse('resend_verify'), {'email': 'user@email.com'}, follow=True)
+
+        self.assertEqual(response.status_code, 400)
+        self.assertTemplateUsed(response, 'registration/resend_verification_email.html')
+
+        messages = list(response.context['messages'])
+        self.assertEqual(str(messages[0]), 'Email is unknown or is already verified!')
+
+        # request verification using an unknown email
+        response = self.client.post(reverse('resend_verify'), {'email': 'foo@email.com'}, follow=True)
+        self.assertEqual(response.status_code, 400)
+        self.assertTemplateUsed(response, 'registration/resend_verification_email.html')
+
+        messages = list(response.context['messages'])
+        self.assertEqual(str(messages[0]), 'Email is unknown or is already verified!')
 
     def test_register_user_already_exists(self):
         # register form successfully retrieved
@@ -199,7 +262,7 @@ class TestRegister(TestCase):
         self.assertTrue(len(messages)>0)
         self.assertTemplateUsed(response, 'registration/register.html')
 
-        # password missmatch
+        # password mismatch
         response = self.client.post(reverse('register'), {'username': 'user3',
                                                           'email': 'test3@email.com',
                                                           'password1': 'delfispace4242',
@@ -222,9 +285,11 @@ class TestChangePassword(TestCase):
 
     def test_change_password_user_not_logged_in(self):
         # user is not logged in and password reset is login protected
-        # the user is redirected to the home page
-        response = self.client.get(reverse('change_password'))
-        self.assertEqual(response.status_code, 302)
+        # the user is redirected to the login page
+        response = self.client.get(reverse('change_password'), follow=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'registration/login.html')
+
 
     def test_change_password_user_logged_in(self):
         # user is logged in and password reset is login protected
@@ -247,10 +312,12 @@ class TestChangePassword(TestCase):
         response = self.client.post(reverse('change_password'), {
                                                           'old_password': 'delfispace4242',
                                                           'new_password1': 'delfispace424',
-                                                          'new_password2': 'delfispace424'})
+                                                          'new_password2': 'delfispace424'}, follow=True)
 
         # redirected to the account page
-        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'account.html')
+
 
     def test_change_invalid_password(self):
         # reset password form successfully retrieved
@@ -313,7 +380,7 @@ class TestAccountVerification(TestCase):
 
         self.user.verified = True #the user verified the account
         self.user.save()
-        response = self.client.post(reverse('login'), {'username': 'user', 'password': 'delfispace4242'})
+        response = self.client.post(reverse('login'), {'username': 'user', 'password': 'delfispace4242'}, follow=True)
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'account.html')  # account is verified so we proceed to account page
 

@@ -115,7 +115,7 @@ def resend_verification_email(request):
                     return redirect('login')
 
         status = HTTPStatus.BAD_REQUEST
-        messages.error(request, "Email is not registered or is already verified!")
+        messages.error(request, "Email is unknown or is already verified!")
 
     return render(request, "registration/resend_verification_email.html",
                   context={ 'form': form }, status=status)
