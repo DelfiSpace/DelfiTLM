@@ -11,9 +11,9 @@ from django.contrib.auth.tokens import default_token_generator
 from django.utils.encoding import force_text
 from django.utils.http import  urlsafe_base64_decode
 from .send_emails import send_welcome_email, send_email_verification_registration, \
-    send_password_reset_email
-from .forms import RegisterForm, LoginForm, ChangePasswordForm, PasswordResetForm, \
-    ResendVerificationForm
+    send_password_reset_email, send_confirm_account_deleted_email
+from .forms import DeleteAccountForm, RegisterForm, LoginForm, ChangePasswordForm, \
+    PasswordResetForm, ResendVerificationForm
 from .models import APIKey, Member
 
 
@@ -203,3 +203,44 @@ def password_reset_request(request):
         status = HTTPStatus.BAD_REQUEST
 
     return render(request, "registration/password_reset_form.html", {'form': form}, status=status)
+
+
+@login_required(login_url='/login')
+def delete_account_request(request):
+    """Delete user account upon request."""
+
+    form = DeleteAccountForm(request.POST or None)
+    status = HTTPStatus.OK
+
+    if request.method == "POST":
+        if form.is_valid():
+
+            entered_username = form.cleaned_data.get('username')
+            entered_password = form.cleaned_data.get('password')
+            entered_challenge = form.cleaned_data.get('challenge')
+
+            user = authenticate(
+                request,
+                username=entered_username,
+                password=entered_password
+            )
+
+            if user is not None and entered_challenge == "delete my account":
+                user = Member.objects.get(username=entered_username)
+                send_confirm_account_deleted_email(user)
+                user.delete()
+                messages.info(request, "Your account has been deleted.")
+                logout(request)
+                return redirect("homepage")
+
+            if user is None:
+                messages.error(request, "Invalid username or password!")
+                status = HTTPStatus.BAD_REQUEST
+
+            elif user is not None and entered_challenge != "delete my account":
+                messages.error(request, "Confirmation failed! Account was not deleted.")
+                status = HTTPStatus.BAD_REQUEST
+        else:
+            status = HTTPStatus.BAD_REQUEST
+
+    return render(request, "registration/delete_account_form.html", {'form': form}, status=status)
