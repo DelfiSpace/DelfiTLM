@@ -16,6 +16,11 @@ class TestLogin(TestCase):
         self.user.set_password('delfispace4242')
         self.user.save()
 
+        self.user = Member.objects.create_user(username='user1', email='user1@email.com',verified=True)
+        self.user.set_password('delfispace')
+        self.user.save()
+
+
     def tearDown(self):
         self.client.logout()
 
@@ -28,6 +33,18 @@ class TestLogin(TestCase):
         response = self.client.post(reverse('login'), {'username': 'user', 'password': 'delfispace4242'}, follow=True)
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'account.html')
+
+
+    def test_login_with_email(self):
+        # login form retrieved
+        response = self.client.get(reverse('login'))
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'registration/login.html')
+        # login request successful
+        response = self.client.post(reverse('login'), {'username': 'user@email.com', 'password': 'delfispace4242'}, follow=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'account.html')
+
 
     def test_logout(self):
         # login form retrieved
@@ -65,6 +82,13 @@ class TestLogin(TestCase):
 
         # wrong username
         response = self.client.post(reverse('login'), {'username': 'admin', 'password': 'delfispace4242'})
+        messages = list(response.context['messages'])
+        self.assertEqual(str(messages[0]), 'Invalid username or password!')
+        self.assertTemplateUsed(response, 'registration/login.html')
+
+
+        # wrong email
+        response = self.client.post(reverse('login'), {'username': 'user1@email.com', 'password': 'delfispace4242'})
         messages = list(response.context['messages'])
         self.assertEqual(str(messages[0]), 'Invalid username or password!')
         self.assertTemplateUsed(response, 'registration/login.html')

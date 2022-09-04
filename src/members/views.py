@@ -104,12 +104,18 @@ def login_member(request):
 
     if request.method == "POST":
         if form.is_valid():
-            entered_username = form.cleaned_data.get('username')
+            entered_username_or_email = form.cleaned_data.get('username')
             entered_password = form.cleaned_data.get('password')
+            username = entered_username_or_email
+
+            # lookup database for email and retrieve username
+            if Member.objects.filter(email=entered_username_or_email).exists():
+                user = Member.objects.get(email=entered_username_or_email)
+                username = user.username
 
             member = authenticate(
                 request,
-                username=entered_username,
+                username=username,
                 password=entered_password
             )
 

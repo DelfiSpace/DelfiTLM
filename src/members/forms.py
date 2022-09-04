@@ -30,7 +30,7 @@ class ResendVerificationForm(forms.Form):
 
 class LoginForm(forms.Form):
     """Login form"""
-    username = forms.CharField(label="Username")
+    username = forms.CharField(label="Username or email")
     password = forms.CharField(label="Password", widget=forms.PasswordInput())
 
 
