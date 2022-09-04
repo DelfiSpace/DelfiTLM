@@ -1,4 +1,6 @@
 """Test views html templates"""
+from transmission.models import Downlink, Satellite, Uplink
+from transmission.processing.save_raw_data import  store_frame
 from django.test import Client, TestCase
 from django.urls import reverse
 from django.test.client import Client
@@ -359,6 +361,7 @@ class TestChangePassword(TestCase):
         self.assertTrue(len(messages)>0)
         self.assertTemplateUsed(response, 'registration/change_password.html')
 
+
 class TestAccountVerification(TestCase):
     def setUp(self):
         self.client = Client()
@@ -496,3 +499,107 @@ class TestAccountVerification(TestCase):
         response = self.client.post(reverse('login'), {'username': 'user', 'password': 'delfispace'})
         messages = list(response.context['messages'])
         self.assertEqual(str(messages[0]), 'Invalid username or password!')
+
+
+class TestAccountDeletion(TestCase):
+    def setUp(self):
+        self.client = Client()
+        self.user = Member.objects.create_superuser(username='user', email='user@email.com', verified=True)
+        self.user.set_password('delfispace4242')
+        self.user.save()
+
+        Satellite.objects.create(sat='delfipq', norad_id=1).save()
+
+        # add 3 valid frames from delfi_pq
+        f1 = { "qos": 98.6, "sat": "delfipq", "timestamp": "2021-12-19T02:20:14.959630Z", "frequency": 2455.66,
+              "frame": "8EA49EAA9C88E088988C92A0A26103F00008730150020002008100400000002D63007DE95A02FF64FFF1FFFF000F0BC3004411B00F990F8A000E03ECFFB3FFC300000000000000240000000000000EB80014FFFF0021000010CD0FE111560EECFF7CFEE0FF65FF0F00080000001000000FA20146104D012C00100000000500000B0001460B3B"}
+        f2 = { "qos": 98.6, "sat": "delfipq", "timestamp": "2021-12-19T02:20:14.959630Z", "frequency": 2455.66,
+              "frame": "8EA49EAA9C88E088988C92A0A26103F000081B015002000300000000000000000000000000000000000000000000"}
+        f3 = { "qos": 98.6, "sat": "delfipq", "timestamp": "2021-12-19T02:20:14.959630Z", "frequency": 2455.66,
+              "frame": "8EA49EAA9C88E088988C92A0A26103F000082801500200040093000E00000000AB0078993702FFEDFC10250027FFDDFF8D011A000000000000FFB4"}
+
+        for f in [f1, f2, f3]:
+            store_frame(f, "uplink", "user")
+            store_frame(f, "downlink", "user")
+
+
+    def test_delete_account(self):
+        # when not logged in redirect to login
+        response = self.client.get(reverse('delete_account'), follow=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'registration/login.html')
+
+        # login
+        self.client.post(reverse('login'), {'username': 'user', 'password': 'delfispace4242'})
+        # get delete form
+        response = self.client.get(reverse('delete_account'))
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'registration/delete_account_form.html')
+
+        self.client.post(reverse('delete_account'), {'username': 'user', 'password': 'delfispace4242', 'challenge': 'delete my account'})
+
+        self.assertEqual(Member.objects.filter(username='user').exists(), False)
+        self.assertEqual(len(django.core.mail.outbox), 1)
+
+
+    def test_delete_account_bad_form(self):
+        # login
+        self.client.post(reverse('login'), {'username': 'user', 'password': 'delfispace4242'})
+        # get delete form
+        response = self.client.get(reverse('delete_account'))
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'registration/delete_account_form.html')
+
+        # wrong username
+        response = self.client.post(reverse('delete_account'), {'username': 'user1', 'password': 'delfispace4242', 'challenge': 'delete my account'})
+        self.assertEqual(response.status_code, 400)
+        self.assertTemplateUsed(response, 'registration/delete_account_form.html')
+
+        # wrong password
+        response = self.client.post(reverse('delete_account'), {'username': 'user', 'password': 'delfispace', 'challenge': 'delete my account'})
+        self.assertEqual(response.status_code, 400)
+        self.assertTemplateUsed(response, 'registration/delete_account_form.html')
+
+        # wrong challenge
+        response = self.client.post(reverse('delete_account'), {'username': 'user', 'password': 'delfispace', 'challenge': 'delete'})
+        self.assertEqual(response.status_code, 400)
+        self.assertTemplateUsed(response, 'registration/delete_account_form.html')
+
+        # user still exists, no emails have been sent
+        self.assertEqual(Member.objects.filter(username='user').exists(), True)
+        self.assertEqual(len(django.core.mail.outbox), 0)
+
+
+    def test_telemetry_persistence_after_account_deletion(self):
+        # check number of frames
+        self.assertEqual(len(Downlink.objects.all()), 3)
+        self.assertEqual(len(Uplink.objects.all()), 3)
+
+        for frame in Downlink.objects.all():
+            self.assertEquals(frame.observer, 'user')
+
+        for frame in Uplink.objects.all():
+            self.assertEquals(frame.operator, 'user')
+
+        # login
+        self.client.post(reverse('login'), {'username': 'user', 'password': 'delfispace4242'})
+        # get delete form
+        response = self.client.get(reverse('delete_account'))
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'registration/delete_account_form.html')
+
+        self.client.post(reverse('delete_account'), {'username': 'user', 'password': 'delfispace4242', 'challenge': 'delete my account'})
+
+        self.assertEqual(Member.objects.filter(username='user').exists(), False)
+        self.assertEqual(len(django.core.mail.outbox), 1)
+
+        # check number of frames
+        self.assertEqual(len(Downlink.objects.all()), 3)
+        self.assertEqual(len(Uplink.objects.all()), 3)
+
+        for frame in Downlink.objects.all():
+            self.assertEquals(frame.observer, 'user')
+
+        for frame in Uplink.objects.all():
+            self.assertEquals(frame.operator, 'user')
+
