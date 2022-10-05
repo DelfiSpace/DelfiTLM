@@ -1,4 +1,10 @@
-# DelfiTLM
+---
+layout: default
+title: Deployment instructions
+nav_order: 5
+---
+
+# DelfiTLM Deployment
 
 ## Requirements
 
@@ -44,10 +50,7 @@ After this, you can access the application on http://127.0.0.1:8000/ and a pgAdm
 
 ![image](https://user-images.githubusercontent.com/15870306/145728488-ada8aacf-ec53-42d1-8e4d-b7198c70cc77.png)
 
-InfluxDB can accessed at http://localhost:8086/, username:admin, password:adminpwd.
-
-Grafana runs on http://localhost:3000/, username:admin, password:adminpwd with the following InfluxDB datasource config:
-![image](https://user-images.githubusercontent.com/43474282/179267387-554aeb2e-b789-408f-ad24-74f1afd281e2.png)
+InfluxDB can accessed at http://localhost:8086/, and Grafana at http://localhost:3000/, both with username:admin, password:adminpwd.
 
 The datasource and dashboards confing for Grafana can be changed from `grafana/provisioning/grafana-datasources.yml` and `grafana/dashboards/grafana-dashboard.yml` respectively. New dashboards can also be created in Grafana and exported as json, then added to `grafana/dashboards`, to be loaded when the container restarts.
 
