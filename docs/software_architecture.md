@@ -28,6 +28,12 @@ The incoming submitted satellite communications data is first validated by the s
 2. Scraped from SatNOGS
    - SatNOGS data is added directly to the InfluxDB raw data bucket together with validated submitted frames. At this stage the operators can trigger a processing task that parses newly added, unprocessed data and adds the parsed values to the corresponding bucket. This is final part of the processing pipeline and corresponds with the *Frame Processing InfluxDB* from the sequence diagram. Now the data can be used to create Grafana Dashboards.
 
+In the event of processing failures, a frame timestamp range is maintained such that processing can be reattempted. Operators can in fact choose between 3 processing options for the InfluxDB raw data buckets:
+
+   - process only new (unprocessed) data
+   - process data from the failed processing time range
+   - process the entire raw data bucket and override previously processed data
+
 
 ![data-processing](diagrams/delfi_space_data_processing.png "Data Processing Sequence Diagram") *Data Processing Sequence Diagram*
 
