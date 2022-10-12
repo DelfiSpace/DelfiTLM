@@ -1,6 +1,6 @@
 ---
 layout: default
-description: User management
+title: User Management
 nav_order: 2
 ---
 

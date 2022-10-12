@@ -1,1 +1,6 @@
-theme: jekyll-theme-slate
+remote_theme: just-the-docs/just-the-docs
+theme: just-the-docs
+
+title: DelfiTLM
+github_repo_url: "https://github.com/iiacoban42/DelfiTLM/"
+description: Ground Segment Software for CubeSats

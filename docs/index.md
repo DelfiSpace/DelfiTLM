@@ -1,6 +1,6 @@
 ---
-layout: home
-title: Home
+layout: default
+title: Feature Highlights
 description: DelfiTLM - Feature highlights
 nav_order: 1
 ---

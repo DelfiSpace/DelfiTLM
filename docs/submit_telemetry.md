@@ -1,6 +1,6 @@
 ---
 layout: default
-title: Submit TLM
+title: Telemetry Submissions
 nav_order: 4
 ---
 

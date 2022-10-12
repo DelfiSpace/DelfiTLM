@@ -1,6 +1,6 @@
 ---
 layout: default
-title: Software architecture
+title: Software Architecture
 nav_order: 3
 ---
 

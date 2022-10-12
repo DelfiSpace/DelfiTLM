@@ -1,6 +1,6 @@
 ---
 layout: default
-title: Deployment instructions
+title: Deployment Instructions
 nav_order: 5
 ---
 
