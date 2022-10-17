@@ -24,10 +24,16 @@
 {% endif %}
 <br>
 
+<p> Account email: {{ user.email }}
+<br>
+<br>
+
+<a href="{% url 'change_email' %}"><input type="submit" value="Update Email"></input></a>
 <a href="{% url 'change_password' %}"><input type="submit" value="Change Password"></input></a>
 <a href="{% url 'get_new_key' %}"><input type="submit" value="Create an API key"></input></a>
 <br>
 <br>
+
 
 {% if key is not null %}
     <p>API KEY:  {{ key }}</p>

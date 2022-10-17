@@ -11,9 +11,10 @@ from django.contrib.auth.tokens import default_token_generator
 from django.utils.encoding import force_text
 from django.utils.http import  urlsafe_base64_decode
 from .send_emails import send_welcome_email, send_email_verification_registration, \
-    send_password_reset_email, send_confirm_account_deleted_email
+    send_password_reset_email, send_confirm_account_deleted_email, \
+    send_email_change_request_confirmation, send_new_email_verification
 from .forms import DeleteAccountForm, RegisterForm, LoginForm, ChangePasswordForm, \
-    PasswordResetForm, ResendVerificationForm
+    PasswordResetForm, ResendVerificationForm, ChangeEmailForm
 from .models import APIKey, Member
 
 
@@ -57,11 +58,16 @@ def verify(request, uidb64, token):
         user = None
     if user is not None and default_token_generator.check_token(user, token):
         user.verified = True
+
+        # update email address
+        if user.new_email is not None:
+            user.email = user.new_email
+            user.new_email = None
+
+        user.last_login = timezone.now()
         user.save()
 
         login(request, user)
-        Member.objects.filter(username=user.username).update(last_login=timezone.now())
-
         messages.info(request, "Your email has been successfully verified.")
     else:
         messages.error(request, 'Verification link is invalid or expired!')
@@ -99,12 +105,18 @@ def login_member(request):
 
     if request.method == "POST":
         if form.is_valid():
-            entered_username = form.cleaned_data.get('username')
+            entered_username_or_email = form.cleaned_data.get('username')
             entered_password = form.cleaned_data.get('password')
+            username = entered_username_or_email
+
+            # lookup database for email and retrieve username
+            if Member.objects.filter(email=entered_username_or_email).exists():
+                user = Member.objects.get(email=entered_username_or_email)
+                username = user.username
 
             member = authenticate(
                 request,
-                username=entered_username,
+                username=username,
                 password=entered_password
             )
 
@@ -157,6 +169,49 @@ def logout_member(request):
     logout(request)
 
     return redirect('homepage')
+
+
+@login_required(login_url='/login')
+def change_email_request(request):
+    """Handle email update request. If multiple requests are made without
+    completing verification, only the most recently submitted email addressed
+    can be verified and set as current."""
+
+    form = ChangeEmailForm(request.POST or None)
+    status = HTTPStatus.OK
+    user = request.user
+    if request.method == 'POST':
+        if form.is_valid():
+            entered_email1 = form.cleaned_data.get('email')
+            entered_email2 = form.cleaned_data.get('email_confirm')
+
+            # check if emails match and new email is not in use
+            if entered_email1 == entered_email2 and \
+                not Member.objects.filter(email=entered_email1).exists():
+
+                user.new_email = entered_email1
+                user.save()
+
+                send_email_change_request_confirmation(user)
+                send_new_email_verification(request, user)
+                message =  "A verification email has been sent to your new email address. "
+                message += "Please confirm it to complete the update."
+
+                messages.info(request, message)
+                # logout to invalidate token, in case a change email request is made
+                # with an email address that differs from the previous one
+                return logout_member(request)
+
+            if entered_email1 != entered_email2:
+                messages.error(request, "The entered emails don't match!")
+
+            if Member.objects.filter(email=entered_email1).exists() or \
+                Member.objects.filter(new_email=entered_email1).exists():
+                messages.error(request, "The email address entered is already registered!")
+
+        status = HTTPStatus.BAD_REQUEST
+
+    return render(request, "registration/change_email_form.html", {'form': form }, status=status)
 
 
 @login_required(login_url='/login')

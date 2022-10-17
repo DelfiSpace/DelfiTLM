@@ -10,6 +10,7 @@ class Member(AbstractUser):
     UUID = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     username = models.CharField(max_length=32, unique=True)
     email = models.EmailField(max_length=254, unique=True, null=False, blank=False)
+    new_email = models.EmailField(max_length=254, null=True, blank=True)
     password = models.CharField(max_length=128, null=False, blank=False)
     role = models.CharField(max_length=64, default="radio_amateur")
     is_active = models.BooleanField(default=True)
