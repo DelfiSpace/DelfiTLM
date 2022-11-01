@@ -7,13 +7,14 @@ from transmission.processing.telemetry_scraper import TIME_FORMAT
 
 #pylint: disable=all
 
+
 class Satellite(models.Model):
-    """Table contaning all satellites managed in this db"""
+    """Table containing all satellites managed in this db"""
     sat = models.CharField(null=False, max_length=32, unique=True)
     norad_id = models.IntegerField(null=True, unique=True)
 
     def __str__(self) -> str:
-        return self.sat
+        return str(self.sat)
 
 
 class TLE(models.Model):
@@ -58,7 +59,6 @@ class Uplink(models.Model):
     frequency = models.FloatField(null=False)
     frame = models.TextField(default=None, null=False)
     metadata = models.JSONField(null=True, blank=True)
-
 
     def to_dictionary(self) -> dict:
         """Convert Uplink object to dict"""

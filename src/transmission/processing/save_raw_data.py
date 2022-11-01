@@ -35,7 +35,7 @@ def store_frame(frame: dict, link: str, username: str, application:str=None) -> 
         if not user.has_perm("transmission.add_downlink"):
             raise PermissionDenied()
         frame_entry = Downlink()
-        frame_entry.observer = user
+        frame_entry.observer = user.UUID
 
     else:
         raise ValueError("Invalid frame link.")

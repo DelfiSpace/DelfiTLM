@@ -1,7 +1,9 @@
 """Test views html templates"""
+
 from transmission.models import Downlink, Satellite, Uplink
-from transmission.processing.save_raw_data import  store_frame
-from django.test import Client, TestCase
+from transmission.processing.save_raw_data import store_frame
+from django.contrib.auth.models import Permission
+from django.test import TestCase
 from django.urls import reverse
 from django.test.client import Client
 from ..models import Member
@@ -10,6 +12,7 @@ import django
 import time
 
 # pylint: disable=all
+
 
 class TestLogin(TestCase):
     def setUp(self):
@@ -21,7 +24,6 @@ class TestLogin(TestCase):
         self.user = Member.objects.create_user(username='user1', email='user1@email.com',verified=True)
         self.user.set_password('delfispace')
         self.user.save()
-
 
     def tearDown(self):
         self.client.logout()
@@ -36,7 +38,6 @@ class TestLogin(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'account.html')
 
-
     def test_login_with_email(self):
         # login form retrieved
         response = self.client.get(reverse('login'))
@@ -46,7 +47,6 @@ class TestLogin(TestCase):
         response = self.client.post(reverse('login'), {'username': 'user@email.com', 'password': 'delfispace4242'}, follow=True)
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'account.html')
-
 
     def test_logout(self):
         # login form retrieved
@@ -63,7 +63,6 @@ class TestLogin(TestCase):
         response = self.client.get(reverse('logout'), follow=True)
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'home/index.html')
-
 
     def test_login_wrong_credentials(self):
         # login form retrieved
@@ -88,7 +87,6 @@ class TestLogin(TestCase):
         self.assertEqual(str(messages[0]), 'Invalid username or password!')
         self.assertTemplateUsed(response, 'registration/login.html')
 
-
         # wrong email
         response = self.client.post(reverse('login'), {'username': 'user1@email.com', 'password': 'delfispace4242'})
         messages = list(response.context['messages'])
@@ -106,6 +104,7 @@ class TestLogin(TestCase):
         messages = list(response.context['messages'])
         self.assertEqual(str(messages[0]), 'Invalid username or password!')
         self.assertTemplateUsed(response, 'registration/login.html')
+
 
 class TestAccount(TestCase):
     def setUp(self):
@@ -317,7 +316,6 @@ class TestChangePassword(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'registration/login.html')
 
-
     def test_change_password_user_logged_in(self):
         # user is logged in and password reset is login protected
         # the user receives the change password form
@@ -326,15 +324,13 @@ class TestChangePassword(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'registration/change_password.html')
 
-
     def test_password_changed(self):
         # user is logged in and password reset is login protected
-        # the user receives the changedjango password form
+        # the user receives the change django password form
         self.client.login(username='user', password='delfispace4242')
         response = self.client.get(reverse('change_password'))
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'registration/change_password.html')
-
 
         response = self.client.post(reverse('change_password'), {
                                                           'old_password': 'delfispace4242',
@@ -345,14 +341,12 @@ class TestChangePassword(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'account.html')
 
-
     def test_change_invalid_password(self):
         # reset password form successfully retrieved
         self.client.login(username='user', password='delfispace4242')
         response = self.client.get(reverse('change_password'))
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'registration/change_password.html')
-
 
         # password only numeric
         response = self.client.post(reverse('change_password'), {
@@ -364,17 +358,14 @@ class TestChangePassword(TestCase):
         self.assertTrue(len(messages)>0)
         self.assertTemplateUsed(response, 'registration/change_password.html')
 
-
         # password too short
         response = self.client.post(reverse('change_password'), {
                                                           'old_password': 'delfispace4242',
                                                           'new_password1': 'short',
                                                           'new_password2': 'short'})
-
         messages = list(response.context['messages'])
         self.assertTrue(len(messages)>0)
         self.assertTemplateUsed(response, 'registration/change_password.html')
-
 
         # new password mismatch
         response = self.client.post(reverse('change_password'), {
@@ -449,7 +440,6 @@ class TestAccountVerification(TestCase):
         self.assertEqual(str(messages[0]), 'Verification link is invalid or expired!')
         self.assertEqual(response.status_code, 400)
 
-
     def test_reset_password(self):
         payload = {
             'email': 'user@email.com'
@@ -497,7 +487,6 @@ class TestAccountVerification(TestCase):
 
         self.assertEqual(str(messages[0]), 'Invalid email address')
 
-
     def test_reset_password_bad_token(self):
         payload = {
             'email': 'user@email.com'
@@ -529,7 +518,15 @@ class TestAccountVerification(TestCase):
 class TestAccountDeletion(TestCase):
     def setUp(self):
         self.client = Client()
-        self.user = Member.objects.create_superuser(username='user', email='user@email.com', verified=True)
+        self.user = Member.objects.create_user(username='user', email='user@email.com', verified=True)
+        self.user.set_password('delfispace4242')
+        self.add_downlink_permission = Permission.objects.get(codename='add_downlink')
+        self.add_uplink_permission = Permission.objects.get(codename='add_uplink')
+        self.user.user_permissions.add(self.add_downlink_permission)
+        self.user.user_permissions.add(self.add_uplink_permission)
+        self.user.save()
+
+        self.admin_user = Member.objects.create_superuser(username='admin', email='admin@email.com', verified=True)
         self.user.set_password('delfispace4242')
         self.user.save()
 
@@ -547,6 +544,23 @@ class TestAccountDeletion(TestCase):
             store_frame(f, "uplink", "user")
             store_frame(f, "downlink", "user")
 
+    def test_delete_account_operator(self):
+        # operators and superusers cannot delete their accounts by themselves
+        # when not logged in redirect to login
+        response = self.client.get(reverse('delete_account'), follow=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'registration/login.html')
+
+        # login
+        self.client.post(reverse('login'), {'username': 'admin', 'password': 'delfispace4242'})
+        # get delete form
+        response = self.client.get(reverse('delete_account'))
+        self.assertEqual(response.status_code, 302)
+
+        self.client.post(reverse('delete_account'), {'username': 'user', 'password': 'delfispace4242', 'challenge': 'delete my account'})
+
+        self.assertEqual(Member.objects.filter(username='admin').exists(), True)
+        self.assertEqual(len(django.core.mail.outbox), 0)
 
     def test_delete_account(self):
         # when not logged in redirect to login
@@ -565,7 +579,6 @@ class TestAccountDeletion(TestCase):
 
         self.assertEqual(Member.objects.filter(username='user').exists(), False)
         self.assertEqual(len(django.core.mail.outbox), 1)
-
 
     def test_delete_account_bad_form(self):
         # login
@@ -601,7 +614,7 @@ class TestAccountDeletion(TestCase):
         self.assertEqual(len(Uplink.objects.all()), 3)
 
         for frame in Downlink.objects.all():
-            self.assertEquals(frame.observer, 'user')
+            self.assertEquals(frame.observer, str(self.user.UUID))
 
         for frame in Uplink.objects.all():
             self.assertEquals(frame.operator, 'user')
@@ -623,10 +636,11 @@ class TestAccountDeletion(TestCase):
         self.assertEqual(len(Uplink.objects.all()), 3)
 
         for frame in Downlink.objects.all():
-            self.assertEquals(frame.observer, 'user')
+            self.assertEquals(frame.observer, str(self.user.UUID))
 
         for frame in Uplink.objects.all():
             self.assertEquals(frame.operator, 'user')
+
 
 class TestEmailChangeRequest(TestCase):
     def setUp(self):
@@ -638,7 +652,6 @@ class TestEmailChangeRequest(TestCase):
         self.user = Member.objects.create_user(username='user2', email='user2@email.com', verified=True)
         self.user.set_password('delfispace4242')
         self.user.save()
-
 
     def test_change_email(self):
         # login
@@ -670,7 +683,6 @@ class TestEmailChangeRequest(TestCase):
         user = Member.objects.get(username='user')
         self.assertEqual(user.email, "superuser@email.com")
         self.assertEqual(user.new_email, None)
-
 
     def test_change_email_duplicate_requests(self):
         # login
@@ -731,7 +743,6 @@ class TestEmailChangeRequest(TestCase):
         user = Member.objects.get(username='user')
         self.assertEqual(user.email, "superuser2@email.com")
         self.assertEqual(user.new_email, None)
-
 
     def test_change_email_bad_weather(self):
 

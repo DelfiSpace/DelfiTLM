@@ -21,6 +21,7 @@ from .processing.save_raw_data import process_frames, store_frame
 
 QUERY_ROW_LIMIT = 100
 
+
 @permission_classes([HasAPIKey,])
 def submit_frame(request): #pylint:disable=R0911
     """Add frames to Uplink/Downlink table. The input is a list of json objects embedded in to the
@@ -105,6 +106,7 @@ def submit_frame(request): #pylint:disable=R0911
     return JsonResponse({"result": "failure", "message": "Method not allowed"},
                         status=HTTPStatus.METHOD_NOT_ALLOWED)
 
+
 def add_dummy_downlink(request):
     """Add dummy frames to Downlink table as admin user."""
 
@@ -161,7 +163,6 @@ def process(request, link):
 
         processed_frame_count = process_frames(frames, link)
         logger.info("%s %s frames were successfully processed", processed_frame_count, link)
-
 
         messages.info(request, f"{processed_frame_count} {link} frames were processed.")
 

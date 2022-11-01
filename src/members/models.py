@@ -4,6 +4,7 @@ from django.db import models
 from django.contrib.auth.models import AbstractUser
 from rest_framework_api_key.models import AbstractAPIKey
 
+
 class Member(AbstractUser):
     """Extended custom user from User"""
 
@@ -19,7 +20,7 @@ class Member(AbstractUser):
     last_login = models.DateTimeField(null=True, blank=True)
     latitude = models.FloatField(null=True, blank=True)
     longitude = models.FloatField(null=True, blank=True)
-    #by default, when creating an user, the account is not verified
+    # by default, when creating a user, the account is not verified
     verified = models.BooleanField(default=False)
 
     def __str__(self):
