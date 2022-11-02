@@ -1,22 +1,32 @@
 """Customized forms for view/html files"""
 from django import forms
+from django.core.validators import MaxValueValidator, MinValueValidator
 from django.contrib.auth.forms import UserCreationForm, PasswordResetForm, PasswordChangeForm
 from .models import Member
+
 
 class RegisterForm(UserCreationForm):
     """Register user form"""
     email = forms.EmailField(required=True)
     username = forms.CharField(required=True)
+    latitude = forms.FloatField(
+        validators=[MinValueValidator(-90.0), MaxValueValidator(90.0)],
+    )
+    longitude = forms.FloatField(
+        validators=[MinValueValidator(-180.0), MaxValueValidator(180.0)]
+    )
 
     class Meta:
         """Meta class to specify db model"""
         model = Member
-        fields = ("username", "email", "password1", "password2")
+        fields = ("username", "email", "password1", "password2", "latitude", "longitude")
 
     def save(self, commit=True):
         user = super().save(commit=False)
-        user.email = self.cleaned_data['email']
-        user.username = self.cleaned_data['username']
+        user.email = self.cleaned_data["email"]
+        user.username = self.cleaned_data["username"]
+        user.latitude = self.cleaned_data["latitude"]
+        user.longitude = self.cleaned_data["longitude"]
 
         if commit:
             user.save()

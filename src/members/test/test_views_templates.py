@@ -157,10 +157,11 @@ class TestRegister(TestCase):
         response = self.client.post(reverse('register'), {'username': 'user2',
                                                           'email': 'test2@email.com',
                                                           'password1': 'delfispace4242',
-                                                          'password2': 'delfispace4242'},
-                                    follow=True)
+                                                          'password2': 'delfispace4242',
+                                                          'latitude': '80',
+                                                          'longitude': '80'}, follow=True)
         self.assertEqual(response.status_code, 200)
-        self.assertTemplateUsed(response, 'home/index.html') #when creating an account we receive an e-mail for verification
+        self.assertTemplateUsed(response, 'home/index.html') # when creating an account we receive an e-mail for verification
 
     def test_register_resend_verification(self):
         # register form successfully retrieved
@@ -171,7 +172,10 @@ class TestRegister(TestCase):
         response = self.client.post(reverse('register'), {'username': 'user2',
                                                           'email': 'test2@email.com',
                                                           'password1': 'delfispace4242',
-                                                          'password2': 'delfispace4242'},
+                                                          'password2': 'delfispace4242',
+                                                          'latitude': '80',
+                                                          'longitude': '80'
+                                                          },
                                     follow=True)
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'home/index.html')
@@ -197,8 +201,9 @@ class TestRegister(TestCase):
         response = self.client.post(reverse('register'), {'username': 'user2',
                                                           'email': 'test2@email.com',
                                                           'password1': 'delfispace4242',
-                                                          'password2': 'delfispace4242'},
-                                    follow=True)
+                                                          'password2': 'delfispace4242',
+                                                          'latitude': '80',
+                                                          'longitude': '80'}, follow=True)
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'home/index.html')
 
@@ -233,7 +238,9 @@ class TestRegister(TestCase):
         response = self.client.post(reverse('register'), {'username': 'user',
                                                           'email': 'test@email.com',
                                                           'password1': 'delfispace4242',
-                                                          'password2': 'delfispace4242'})
+                                                          'password2': 'delfispace4242',
+                                                          'latitude': '80',
+                                                          'longitude': '80'})
         messages = list(response.context['messages'])
         self.assertEqual(str(messages[0]), 'Unsuccessful registration')
         self.assertTemplateUsed(response, 'registration/register.html')
@@ -247,10 +254,43 @@ class TestRegister(TestCase):
         response = self.client.post(reverse('register'), {'username': 'user3',
                                                           'email': 'test',
                                                           'password1': 'delfispace4242',
-                                                          'password2': 'delfispace4242'})
+                                                          'password2': 'delfispace4242',
+                                                          'latitude': '80',
+                                                          'longitude': '80'
+                                                          })
 
         messages = list(response.context['messages'])
         self.assertTrue(len(messages)>0)
+        self.assertTemplateUsed(response, 'registration/register.html')
+
+    def test_register_invalid_lat_long(self):
+        # register form successfully retrieved
+        response = self.client.get(reverse('register'))
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'registration/register.html')
+        # bad latitude
+        response = self.client.post(reverse('register'), {'username': 'user3',
+                                                          'email': 'test@email.com',
+                                                          'password1': 'delfispace4242',
+                                                          'password2': 'delfispace4242',
+                                                          'latitude': '300',
+                                                          'longitude': '80'
+                                                          })
+
+        messages = list(response.context['messages'])
+        self.assertTrue(len(messages) > 0)
+
+        # bad longitude
+        response = self.client.post(reverse('register'), {'username': 'user3',
+                                                          'email': 'test@email.com',
+                                                          'password1': 'delfispace4242',
+                                                          'password2': 'delfispace4242',
+                                                          'latitude': '80',
+                                                          'longitude': '300'
+                                                          })
+
+        messages = list(response.context['messages'])
+        self.assertTrue(len(messages) > 0)
         self.assertTemplateUsed(response, 'registration/register.html')
 
     def test_register_invalid_password(self):
@@ -262,7 +302,10 @@ class TestRegister(TestCase):
         response = self.client.post(reverse('register'), {'username': 'user3',
                                                           'email': 'test3@email.com',
                                                           'password1': '1155239711568432464',
-                                                          'password2': '1155239711568432464'})
+                                                          'password2': '1155239711568432464',
+                                                          'latitude': '80',
+                                                          'longitude': '80'}
+                                    )
 
         messages = list(response.context['messages'])
         self.assertTrue(len(messages)>0)
@@ -282,7 +325,10 @@ class TestRegister(TestCase):
         response = self.client.post(reverse('register'), {'username': 'qwertyuser',
                                                           'email': 'test3@email.com',
                                                           'password1': 'qwertyuser',
-                                                          'password2': 'qwertyuser'})
+                                                          'password2': 'qwertyuser',
+                                                          'latitude': '80',
+                                                          'longitude': '80'}
+                                    )
 
         messages = list(response.context['messages'])
         self.assertTrue(len(messages)>0)
@@ -292,7 +338,11 @@ class TestRegister(TestCase):
         response = self.client.post(reverse('register'), {'username': 'user3',
                                                           'email': 'test3@email.com',
                                                           'password1': 'delfispace4242',
-                                                          'password2': 'delfispace424'})
+                                                          'password2': 'delfispace424',
+                                                          'latitude': '80',
+                                                          'longitude': '80'}
+                                    )
+
 
         messages = list(response.context['messages'])
         self.assertTrue(len(messages)>0)
@@ -411,6 +461,8 @@ class TestAccountVerification(TestCase):
             'password1': 'TestpassUltra1',
             'password2': 'TestpassUltra1',
             'username': username,
+            'latitude': '80',
+            'longitude': '80'
         }
         response = self.client.post(reverse('register'), payload)
         self.assertEqual(response.status_code, 302)
