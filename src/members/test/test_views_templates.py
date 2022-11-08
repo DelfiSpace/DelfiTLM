@@ -451,7 +451,7 @@ class TestAccountVerification(TestCase):
         self.user.save()
         response = self.client.post(reverse('login'), {'username': 'user', 'password': 'delfispace4242'}, follow=True)
         self.assertEqual(response.status_code, 200)
-        self.assertTemplateUsed(response, 'account.html')  # account is verified so we proceed to account page
+        self.assertTemplateUsed(response, 'home/index.html')  # account is verified so we proceed to home page
 
     def test_verify_email(self):
         # Verify email address
@@ -594,7 +594,7 @@ class TestAccountDeletion(TestCase):
 
         for f in [f1, f2, f3]:
             store_frame(f, "user")
-            f['link'] = 'uplink'
+            f["link"] = "uplink"
             store_frame(f, "user")
 
     def test_delete_account_operator(self):
