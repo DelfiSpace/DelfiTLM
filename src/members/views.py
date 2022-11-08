@@ -103,6 +103,9 @@ def login_member(request):
     form = LoginForm(request.POST or None)
     status = HTTPStatus.OK
 
+    if request.user.is_authenticated:
+        return redirect('homepage')
+
     if request.method == "POST":
         if form.is_valid():
             entered_username_or_email = form.cleaned_data.get('username')

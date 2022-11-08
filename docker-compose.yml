@@ -4,7 +4,7 @@ version: '3.7'
 
 services:
   db:
-    image: postgres
+    image: postgres:latest
     volumes:
       - db_data:/var/lib/postgresql/data
     environment:
@@ -12,6 +12,12 @@ services:
       - POSTGRES_USER=${POSTGRES_DB:-postgres}
       - POSTGRES_PASSWORD=${POSTGRES_DB:-postgres}
     restart: always
+
+    logging:
+      driver: "json-file"
+      options:
+        max-file: "5"   # file count
+        max-size: "10m" # file size
 
   app:
     build:
@@ -29,6 +35,12 @@ services:
       - "db"
       - "grafana"
       - "influxdb"
+    logging:
+      driver: "json-file"
+      options:
+        max-file: "5"   # file count
+        max-size: "10m" # file size
+
 
   influxdb:
     image: influxdb:latest
@@ -37,11 +49,16 @@ services:
     volumes:
       - influxdb_storage:/var/lib/influxdb2
     restart: always
+    logging:
+      driver: "json-file"
+      options:
+        max-file: "5"   # file count
+        max-size: "10m" # file size
+
 
   influx-cli:
     #  initializes influxdb user/password/bucket...
     image: influxdb:latest
-    container_name: influx-cli
     depends_on:
       - influxdb
     command: sh -c 'sleep 5; influx setup
@@ -66,7 +83,14 @@ services:
       - influxdb
     environment:
       - GF_SERVER_DOMAIN=${GF_SERVER_DOMAIN:-localhost}
+      - GF_INFLUXDB_V2_TOKEN=${INFLUXDB_V2_TOKEN:-adminpwd}
     restart: always
+    logging:
+      driver: "json-file"
+      options:
+        max-file: "5"   # file count
+        max-size: "10m" # file size
+
 
 volumes:
     db_data:

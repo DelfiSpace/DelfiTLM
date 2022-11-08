@@ -10,20 +10,22 @@
 {% block nav-sidebar %}{% endblock %}
 
 {% block usertools %}
-{% if perms.transmission.view_downlink %}
-<a href="{% url 'get_frames_table' link='downlink'%}" >{% translate 'Downlink Transmission' %}</a>
-{% endif %}
-
-{% if perms.transmission.view_uplink %}
-    <a href="{% url 'get_frames_table' link='uplink' %}" >{% translate 'Uplink Transmission' %}</a>
-{% endif %}
-
-    {% if user.is_authenticated %}
-        <a href="{% url 'account' %}">{% translate 'Account' %}</a>
-        {% else %}
-        <a href="{% url 'login' %}">{% translate 'Login' %}</a>
+    {% if perms.transmission.view_downlink %}
+    <a href="{% url 'get_frames_table' link='downlink'%}" >{% translate 'Downlink Transmission' %}</a>
     {% endif %}
+
+    {% if perms.transmission.view_uplink %}
+        <a href="{% url 'get_frames_table' link='uplink' %}" >{% translate 'Uplink Transmission' %}</a>
+    {% endif %}
+
+    {% if perms.transmission.view_uplink and perms.transmission.view_downlink %}
+        <a href="{% url 'submit_job' %}" >{% translate 'Processing' %}</a>
+    {% endif %}
+
+        <a href="{% url 'account' %}">{% translate 'Account' %}</a>
+
 {% endblock %}
+
 
 {% block content %}
     <head>
@@ -37,11 +39,11 @@
     <body>
         <h1>{{table_name}} Frames</h1>
         <div>
-        {% if table_name == 'Downlink' and perms.transmission.view_downlink %}
+        <!-- {% if table_name == 'Downlink' and perms.transmission.view_downlink %}
             <a href="{% url 'process' link='downlink'%}"><input type="submit" value="Process Frames"></input></a>
         {% elif table_name == 'Uplink' and perms.transmission.view_uplink %}
             <a href="{% url 'process' link='uplink'%}"><input type="submit" value="Process Frames"></input></a>
-        {% endif %}
+        {% endif %} -->
 
         {% if table_name == 'Downlink' and perms.transmission.delete_downlink %}
             <a href="{% url 'delete_processed_frames' link='downlink'%}"><input type="submit" value="Delete Processed Frames"></input></a>

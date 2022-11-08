@@ -68,7 +68,9 @@ class TestTableViews(TestCase):
         read_ranges = read_time_range_file(self.input_file)
         self.assertEqual(read_ranges, busy_ranges)
         # reset delfi_pq intervals
-        reset_new_data_timestamps("delfi_pq", self.input_file)
+        reset_new_data_timestamps("delfi_pq","uplink", self.input_file)
+        reset_new_data_timestamps("delfi_pq","downlink", self.input_file)
+
         read_ranges = read_time_range_file(self.input_file)
         for sat in read_ranges:
             if sat != "delfi_pq": # check that the rest of the sats kept the same intervals
