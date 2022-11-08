@@ -27,7 +27,7 @@ class TLE(models.Model):
 class Downlink(models.Model):
     """Table for downlink data frames"""
     timestamp = models.DateTimeField(null=False, default=timezone.now, auto_now=False, auto_now_add=False)
-    observer = models.CharField(null=False, max_length=32)
+    observer = models.CharField(null=False, max_length=128)
     application = models.TextField(null=True, blank=True)
     processed = models.BooleanField(default=False, null=False)
     invalid = models.BooleanField(null=True, blank=True)
@@ -52,7 +52,7 @@ class Downlink(models.Model):
 class Uplink(models.Model):
     """Table for uplink data frames"""
     timestamp = models.DateTimeField(null=False, default=timezone.now, auto_now=False, auto_now_add=False)
-    operator = models.CharField(null=False, max_length=32)
+    operator = models.CharField(null=False, max_length=128)
     application = models.TextField(null=True, blank=True)
     processed = models.BooleanField(default=False, null=False)
     invalid = models.BooleanField(null=True, blank=True)

@@ -593,8 +593,9 @@ class TestAccountDeletion(TestCase):
               "frame": "8EA49EAA9C88E088988C92A0A26103F000082801500200040093000E00000000AB0078993702FFEDFC10250027FFDDFF8D011A000000000000FFB4"}
 
         for f in [f1, f2, f3]:
-            store_frame(f, "uplink", "user")
-            store_frame(f, "downlink", "user")
+            store_frame(f, "user")
+            f['link'] = 'uplink'
+            store_frame(f, "user")
 
     def test_delete_account_operator(self):
         # operators and superusers cannot delete their accounts by themselves
