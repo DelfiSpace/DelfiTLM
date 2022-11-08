@@ -13,6 +13,9 @@ https://docs.djangoproject.com/en/3.2/ref/settings/
 import os
 import sys
 
+from django.shortcuts import redirect
+from django.urls import reverse
+
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -99,6 +102,9 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
+if DEBUG == 0:
+    MIDDLEWARE.append("pycrowdsec.django.crowdsec_middleware")
+
 ROOT_URLCONF = 'delfitlm.urls'
 
 TEMPLATES = [
@@ -126,6 +132,20 @@ TEMPLATES = [
 ASGI_APPLICATION = 'delfitlm.asgi.application'
 
 WSGI_APPLICATION = 'delfitlm.wsgi.application'
+
+
+# Crowdsec bouncer: https://github.com/crowdsecurity/pycrowdsec
+
+PYCROWDSEC_LAPI_KEY = os.environ.get('CROWDSEC_LAPI')
+PYCROWDSEC_LAPI_URL = os.environ.get('CROWDSEC_URL')
+
+PYCROWDSEC_ACTIONS = {
+    "ban": lambda request: redirect(reverse("ban_view")),
+}
+# IMPORTANT: If any action is doing a redirect to some view, always exclude it for pycrowdsec. Otherwise the middleware will trigger the redirect on the action view too.
+PYCROWDSEC_EXCLUDE_VIEWS = {"ban_view"}
+
+PYCROWDSEC_POLL_INTERVAL = 10
 
 
 # Database
@@ -168,7 +188,6 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 AUTH_USER_MODEL = 'members.Member'
-
 
 REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': [

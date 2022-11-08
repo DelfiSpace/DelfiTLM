@@ -14,6 +14,8 @@ services:
             - SMTP_HOST=${SMTP_HOST}
             - SMTP_PORT=${SMTP_PORT}
             - FROM_EMAIL=${FROM_EMAIL:-webmaster@localhost}
+            - CROWDSEC_LAPI=${CROWDSEC_LAPI:-6a601f2baf982825d472200826fb44b5}
+            - CROWDSEC_URL=${CROWDSEC_URL:-http://crowdsec:8080/}
         restart: always
         logging:
             driver: "json-file"
@@ -28,6 +30,7 @@ services:
         volumes:
             - static_data:/vol:ro
             - certificates:/certs:ro
+            - logs:/var/log/nginx
         ports:
             - "80:8080"
             - "443:8443"
@@ -47,7 +50,8 @@ services:
                 max-size: "10m" # file size
 
     pgadmin:
-        image: dpage/pgadmin4:6.5
+        container_name: pgadmin4_container
+        image: dpage/pgadmin4:latest
         restart: always
         environment:
             - PGADMIN_DEFAULT_EMAIL=${PGADMIN_DEFAULT_EMAIL:-admin@admin.com}
@@ -62,8 +66,45 @@ services:
                 max-file: "5"   # file count
                 max-size: "10m" # file size
 
+
+    crowdsec:
+        image: crowdsecurity/crowdsec:latest
+        restart: always
+        ports:
+            - "8080:8080"
+        environment:
+            #this is the list of collections we want to install
+            #https://hub.crowdsec.net/author/crowdsecurity/collections/nginx
+            COLLECTIONS: "crowdsecurity/nginx"
+            GID: "${GID-1000}"
+        depends_on:
+            - 'proxy'
+        volumes:
+            - ./crowdsec/acquis.yaml:/etc/crowdsec/acquis.yaml
+            - logs:/var/log/nginx/:ro
+            - crowdsec_db:/var/lib/crowdsec/data/
+            - crowdsec_config:/etc/crowdsec/
+
+    #metabase, because security is cool, but dashboards are cooler
+    # crowdsec_dashboard:
+    #     #we're using a custom Dockerfile so that metabase pops with pre-configured dashboards
+    #     build: ./crowdsec/dashboard
+    #     restart: always
+    #     ports:
+    #         - 3100:3000
+    #     environment:
+    #         MB_DB_FILE: /data/metabase.db
+    #         MGID: "${GID-1000}"
+    #     depends_on:
+    #         - 'crowdsec'
+    #     volumes:
+    #         - crowdsec_db:/metabase-data/
+
 volumes:
+    logs:
     app_logs:
     static_data:
     certificates:
     pgadmin_persistent:
+    crowdsec_db:
+    crowdsec_config:
