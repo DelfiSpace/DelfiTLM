@@ -7,13 +7,14 @@ from transmission.processing.telemetry_scraper import TIME_FORMAT
 
 #pylint: disable=all
 
+
 class Satellite(models.Model):
-    """Table contaning all satellites managed in this db"""
+    """Table containing all satellites managed in this db"""
     sat = models.CharField(null=False, max_length=32, unique=True)
     norad_id = models.IntegerField(null=True, unique=True)
 
     def __str__(self) -> str:
-        return self.sat
+        return str(self.sat)
 
 
 class TLE(models.Model):
@@ -26,7 +27,7 @@ class TLE(models.Model):
 class Downlink(models.Model):
     """Table for downlink data frames"""
     timestamp = models.DateTimeField(null=False, default=timezone.now, auto_now=False, auto_now_add=False)
-    observer = models.CharField(null=False, max_length=32)
+    observer = models.CharField(null=False, max_length=128)
     application = models.TextField(null=True, blank=True)
     processed = models.BooleanField(default=False, null=False)
     invalid = models.BooleanField(null=True, blank=True)
@@ -51,14 +52,13 @@ class Downlink(models.Model):
 class Uplink(models.Model):
     """Table for uplink data frames"""
     timestamp = models.DateTimeField(null=False, default=timezone.now, auto_now=False, auto_now_add=False)
-    operator = models.CharField(null=False, max_length=32)
+    operator = models.CharField(null=False, max_length=128)
     application = models.TextField(null=True, blank=True)
     processed = models.BooleanField(default=False, null=False)
     invalid = models.BooleanField(null=True, blank=True)
     frequency = models.FloatField(null=False)
     frame = models.TextField(default=None, null=False)
     metadata = models.JSONField(null=True, blank=True)
-
 
     def to_dictionary(self) -> dict:
         """Convert Uplink object to dict"""

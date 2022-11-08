@@ -9,11 +9,12 @@ from django.contrib.auth import login, authenticate, logout, update_session_auth
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.tokens import default_token_generator
 from django.utils.encoding import force_text
-from django.utils.http import  urlsafe_base64_decode
+from django.utils.http import urlsafe_base64_decode
 from .send_emails import send_welcome_email, send_email_verification_registration, \
-    send_password_reset_email, send_confirm_account_deleted_email
+    send_password_reset_email, send_confirm_account_deleted_email, \
+    send_email_change_request_confirmation, send_new_email_verification
 from .forms import DeleteAccountForm, RegisterForm, LoginForm, ChangePasswordForm, \
-    PasswordResetForm, ResendVerificationForm
+    PasswordResetForm, ResendVerificationForm, ChangeEmailForm
 from .models import APIKey, Member
 
 
@@ -32,7 +33,7 @@ def register(request):
     if request.method == "POST":
         if form.is_valid():
             user = form.save(commit=False)
-            user.date_joined=timezone.now()
+            user.date_joined = timezone.now()
             user.save()
             send_welcome_email(user)
             send_email_verification_registration(request, user)
@@ -57,11 +58,16 @@ def verify(request, uidb64, token):
         user = None
     if user is not None and default_token_generator.check_token(user, token):
         user.verified = True
+
+        # update email address
+        if user.new_email is not None:
+            user.email = user.new_email
+            user.new_email = None
+
+        user.last_login = timezone.now()
         user.save()
 
         login(request, user)
-        Member.objects.filter(username=user.username).update(last_login=timezone.now())
-
         messages.info(request, "Your email has been successfully verified.")
     else:
         messages.error(request, 'Verification link is invalid or expired!')
@@ -88,7 +94,7 @@ def resend_verification_email(request):
         messages.error(request, "Email is unknown or is already verified!")
 
     return render(request, "registration/resend_verification_email.html",
-                  context={ 'form': form }, status=status)
+                  context={'form': form}, status=status)
 
 
 def login_member(request):
@@ -102,12 +108,18 @@ def login_member(request):
 
     if request.method == "POST":
         if form.is_valid():
-            entered_username = form.cleaned_data.get('username')
+            entered_username_or_email = form.cleaned_data.get('username')
             entered_password = form.cleaned_data.get('password')
+            username = entered_username_or_email
+
+            # lookup database for email and retrieve username
+            if Member.objects.filter(email=entered_username_or_email).exists():
+                user = Member.objects.get(email=entered_username_or_email)
+                username = user.username
 
             member = authenticate(
                 request,
-                username=entered_username,
+                username=username,
                 password=entered_password
             )
 
@@ -118,28 +130,27 @@ def login_member(request):
             if member is not None and member.is_active is True:
                 login(request, member)
                 Member.objects.filter(username=member.username).update(
-                        last_login=timezone.now()
-                    )
+                    last_login=timezone.now()
+                )
                 return redirect("account")
 
         messages.error(request, "Invalid username or password!")
         status = HTTPStatus.UNAUTHORIZED
 
-    return render(request, "registration/login.html", context={ 'form': form }, status=status)
+    return render(request, "registration/login.html", context={'form': form}, status=status)
 
 
 @login_required(login_url='/login')
 def generate_key(request):
     """Generates an API key"""
 
-    if len(APIKey.objects.filter(name=request.user.username))!=0:
+    if len(APIKey.objects.filter(name=request.user.username)) != 0:
         key = APIKey.objects.filter(name=request.user.username)
         key.delete()
 
-
     api_key_name, generated_key = APIKey.objects.create_key(
-                            name=request.user.username,
-                            username=Member.objects.get(username=request.user.username),
+        name=request.user.username,
+        username=Member.objects.get(username=request.user.username),
     )
 
     return JsonResponse({"api_key": str(api_key_name), "generated_key": str(generated_key)})
@@ -163,6 +174,49 @@ def logout_member(request):
 
 
 @login_required(login_url='/login')
+def change_email_request(request):
+    """Handle email update request. If multiple requests are made without
+    completing verification, only the most recently submitted email addressed
+    can be verified and set as current."""
+
+    form = ChangeEmailForm(request.POST or None)
+    status = HTTPStatus.OK
+    user = request.user
+    if request.method == 'POST':
+        if form.is_valid():
+            entered_email1 = form.cleaned_data.get('email')
+            entered_email2 = form.cleaned_data.get('email_confirm')
+
+            # check if emails match and new email is not in use
+            if entered_email1 == entered_email2 and \
+                    not Member.objects.filter(email=entered_email1).exists():
+
+                user.new_email = entered_email1
+                user.save()
+
+                send_email_change_request_confirmation(user)
+                send_new_email_verification(request, user)
+                message = "A verification email has been sent to your new email address. "
+                message += "Please confirm it to complete the update."
+
+                messages.info(request, message)
+                # logout to invalidate token, in case a change email request is made
+                # with an email address that differs from the previous one
+                return logout_member(request)
+
+            if entered_email1 != entered_email2:
+                messages.error(request, "The entered emails don't match!")
+
+            if Member.objects.filter(email=entered_email1).exists() or \
+                    Member.objects.filter(new_email=entered_email1).exists():
+                messages.error(request, "The email address entered is already registered!")
+
+        status = HTTPStatus.BAD_REQUEST
+
+    return render(request, "registration/change_email_form.html", {'form': form}, status=status)
+
+
+@login_required(login_url='/login')
 def change_password(request):
     """Render change password page and reset password"""
 
@@ -175,15 +229,15 @@ def change_password(request):
             user = form.save()
             update_session_auth_hash(request, user)
             Member.objects.filter(username=user.username).update(
-                        last_changed=timezone.now()
-                    )
+                last_changed=timezone.now()
+            )
             messages.info(request, "Password has been changed successfully.")
             return redirect('account')
 
         messages.error(request, "Invalid password!")
         status = HTTPStatus.BAD_REQUEST
 
-    return render(request, "registration/change_password.html", {'form': form }, status=status)
+    return render(request, "registration/change_password.html", {'form': form}, status=status)
 
 
 def password_reset_request(request):
@@ -215,7 +269,14 @@ def delete_account_request(request):
     form = DeleteAccountForm(request.POST or None)
     status = HTTPStatus.OK
 
-    if request.method == "POST":
+    # prevent operators and superusers from deleting their accounts
+    if request.user.has_perm('transmission.delete_downlink') or \
+            request.user.has_perm('transmission.view_uplink') or \
+            request.user.role == "operator":
+        status = HTTPStatus.BAD_REQUEST
+        messages.error(request, "Your account could not be deleted!")
+
+    elif request.method == "POST":
         if form.is_valid():
 
             entered_username = form.cleaned_data.get('username')
@@ -230,8 +291,10 @@ def delete_account_request(request):
 
             if user is not None and entered_challenge == "delete my account":
                 user = Member.objects.get(username=entered_username)
+
                 send_confirm_account_deleted_email(user)
                 user.delete()
+
                 messages.info(request, "Your account has been deleted.")
                 logout(request)
                 return redirect("homepage")

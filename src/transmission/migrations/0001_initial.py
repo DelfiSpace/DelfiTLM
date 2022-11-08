@@ -18,7 +18,7 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('timestamp', models.DateTimeField(default=django.utils.timezone.now)),
-                ('observer', models.CharField(max_length=32)),
+                ('observer', models.CharField(max_length=128)),
                 ('application', models.TextField(blank=True, null=True)),
                 ('processed', models.BooleanField(default=False)),
                 ('invalid', models.BooleanField(blank=True, null=True)),
@@ -40,7 +40,7 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('timestamp', models.DateTimeField(default=django.utils.timezone.now)),
-                ('operator', models.CharField(max_length=32)),
+                ('operator', models.CharField(max_length=128)),
                 ('application', models.TextField(blank=True, null=True)),
                 ('processed', models.BooleanField(default=False)),
                 ('invalid', models.BooleanField(blank=True, null=True)),

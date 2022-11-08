@@ -10,6 +10,7 @@ urlpatterns = [
     path('register/', views.register, name='register'),
     path('activate/<uidb64>/<token>/', views.verify, name='activate'),
     path('resend-verification-email/', views.resend_verification_email, name='resend_verify'),
+    path('update-email/', views.change_email_request, name="change_email"),
 
     path('login/', views.login_member, name='login'),
     path('logout/', views.logout_member, name='logout'),
