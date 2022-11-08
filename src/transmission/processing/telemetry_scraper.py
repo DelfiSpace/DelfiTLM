@@ -1,14 +1,15 @@
 """Satnogs scraper"""
 from datetime import datetime, timedelta
 import json
+import os
 import time
 import re
 import requests
 
 from django_logger import logger
 from transmission.processing.satellites import SATELLITES, TIME_FORMAT
-from transmission.processing.bookkeep_new_data_time_range import get_new_data_file_path, \
-    include_timestamp_in_time_range
+from transmission.processing.bookkeep_new_data_time_range import get_new_data_scraper_temp_folder, \
+    include_timestamp_in_time_range, save_timestamps_to_file
 from transmission.processing.influxdb_api import save_raw_frame_to_influxdb
 
 SATNOGS_PATH = "https://db.satnogs.org/api/telemetry/"
@@ -18,10 +19,12 @@ SATNOGS_TOKEN_PATH = "tokens/satnogs_token.txt"
 def get_satnogs_headers() -> dict:
     """Get satnogs request headers"""
 
-    with open(SATNOGS_TOKEN_PATH, "r", encoding="utf-8") as file:
-        cookie_auth = file.read()
+    token = os.environ.get('SATNOGS_TOKEN')
+    if token in ['', None]:
+        with open(SATNOGS_TOKEN_PATH, "r", encoding="utf-8") as file:
+            token = file.read()
 
-    headers = {'accept': 'application/json', 'Authorization': 'Token ' + cookie_auth}
+    headers = {'accept': 'application/json', 'Authorization': 'Token ' + token}
     return headers
 
 
@@ -58,12 +61,14 @@ def strip_tlm_list(telemetry: list, fields: list) -> list:
     return stripped_tlm_list
 
 
+
 def scrape(satellite: str, save_to_db=True, save_to_file=False) -> None:
     """Scrape satnogs for new telemetry"""
 
     telemetry = []
     telemetry_tmp = []
     logger.info("SatNOGS scraper started. Scraping %s telemetry.", satellite)
+    time_range = {}
     while True:
         response = requests.get(
             SATNOGS_PATH,
@@ -85,11 +90,11 @@ def scrape(satellite: str, save_to_db=True, save_to_file=False) -> None:
             if save_to_db:
                 fields_to_save = ["frame", "timestamp", "observer"]
                 stripped_tlm = strip_tlm_list(telemetry_tmp, fields_to_save)
-                stored = save_raw_frame_to_influxdb(satellite, "downlink", stripped_tlm)
-                if stored:
-                    file = get_new_data_file_path(satellite, "downlink")
-                    include_timestamp_in_time_range(satellite, 'downlink', first["timestamp"], file)
-                    include_timestamp_in_time_range(satellite, 'downlink', last["timestamp"], file)
+                if save_raw_frame_to_influxdb(satellite, "downlink", stripped_tlm):
+                    time_range = include_timestamp_in_time_range(satellite, 'downlink',
+                                        first["timestamp"], existing_range=time_range)
+                    time_range = include_timestamp_in_time_range(satellite, 'downlink',
+                                        last["timestamp"], existing_range=time_range)
 
                 # if the frame is not stored (due to it being stored in a past scrape) and
                 # the next request retrieves data older than a week -> stop
@@ -108,6 +113,9 @@ def scrape(satellite: str, save_to_db=True, save_to_file=False) -> None:
                     delay = re.findall('[0-9]+', telemetry_tmp["detail"])[0]
                     logger.debug("Sleeping %s s (request throttled)", delay)
                     time.sleep(int(delay))
+                    path = get_new_data_scraper_temp_folder(satellite)
+                    path += satellite + "_downlink_" + str(len(os.listdir(path))) + ".json"
+                    save_timestamps_to_file(time_range, path)
                 else:
                     break
             else:
