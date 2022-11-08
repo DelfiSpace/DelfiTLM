@@ -20,27 +20,30 @@ from transmission.processing.influxdb_api import save_raw_frame_to_influxdb
 from transmission.processing.telemetry_scraper import strip_tlm
 
 
-def store_frame(frame: dict, link: str, username: str, application:str=None) -> None:
+def store_frame(frame: dict, username: str, application:str=None) -> None:
     """Adds one json frame to the uplink/downlink table"""
 
     frame_entry = None
 
+    if "link" not in frame:
+        frame["link"] = "downlink"
+
     user = Member.objects.get(username=username)
 
-    if link == "uplink":
+    if frame["link"] == "uplink":
         if not user.has_perm("transmission.add_uplink"):
             raise PermissionDenied()
         frame_entry = Uplink()
         frame_entry.operator = user
 
-    elif link == "downlink":
+    elif frame["link"] == "downlink":
         if not user.has_perm("transmission.add_downlink"):
             raise PermissionDenied()
         frame_entry = Downlink()
         frame_entry.observer = user
 
     else:
-        raise ValueError("Invalid frame link.")
+        raise ValidationError("Invalid frame link.")
 
     # store the application name/version used to submit the data (can be null)
     frame_entry.application = application
