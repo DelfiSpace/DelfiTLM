@@ -1,0 +1,73 @@
+{% extends "admin/base.html" %}
+{% load i18n static %}
+{% block extrastyle %}{{ block.super }}<link rel="stylesheet" type="text/css" href="{% static "admin/css/forms.css" %}">{% endblock %}
+{% block breadcrumbs %}
+<div class="breadcrumbs">
+    <a href="{% url 'homepage' %}">{% translate 'Home' %}</a>
+    &rsaquo; {% translate 'Processing' %}
+</div>
+{% endblock %}
+
+{% block nav-sidebar %}{% endblock %}
+
+{% block usertools %}
+    {% if perms.transmission.view_downlink %}
+    <a href="{% url 'get_frames_table' link='downlink'%}" >{% translate 'Downlink Transmission' %}</a>
+    {% endif %}
+
+    {% if perms.transmission.view_uplink %}
+        <a href="{% url 'get_frames_table' link='uplink' %}" >{% translate 'Uplink Transmission' %}</a>
+    {% endif %}
+
+    {% if perms.transmission.view_uplink and perms.transmission.view_downlink %}
+        <a href="{% url 'submit_job' %}" >{% translate 'Processing' %}</a>
+    {% endif %}
+
+
+    <a href="{% url 'account' %}">{% translate 'Account' %}</a>
+
+{% endblock %}
+
+
+{% block content %}
+
+<h1>Submit job</h1>
+<form class="post-form" method="POST">{% csrf_token %}
+    <fieldset class="module aligned wide">
+    {% for field in form %}
+        <div class="form-row">
+            {{ field.errors }}
+            {{ field.label_tag }}
+            {{ field }}
+        </div>
+    {% endfor %}
+    <input type="submit" value="Submit">
+</fieldset>
+</form>
+
+<p>[1]: Satellite will only be considered for scraping and bucket processing jobs.</p>
+<br>
+<p>[2]: Link will only be considered for bucket processing jobs.</p>
+<br>
+<br>
+<p> Running jobs:</p>
+    {% for job in running_jobs %}
+        <p> - {{ job }} </p>
+        <br>
+    {% endfor %}
+
+<p> Pending jobs:</p>
+    {% for job in pending_jobs %}
+        <p> - {{ job }} </p>
+        <br>
+    {% endfor %}
+
+{% if messages %}
+<ul class="messages">
+    {% for message in messages %}
+    <li {% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+    {% endfor %}
+</ul>
+{% endif %}
+
+{% endblock %}

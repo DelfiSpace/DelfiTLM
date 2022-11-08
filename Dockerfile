@@ -36,8 +36,7 @@ RUN chown -R user:user /vol
 RUN chmod -R 755 /vol/web
 
 RUN chmod -R 777 /app/logs
-RUN chmod -R 777 /app/transmission/processing/new_data.json
-RUN chmod -R 777 /app/transmission/processing/failed_processing.json
+RUN chmod -R 777 /app/transmission/processing/temp
 # switch to unprivileged user
 USER user
 
