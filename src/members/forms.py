@@ -23,8 +23,13 @@ class RegisterForm(UserCreationForm):
             user.save()
         return user
 
+
+class ResendVerificationForm(forms.Form):
+    """Resend verification email form"""
+    email = forms.EmailField(required=True)
+
 class LoginForm(forms.Form):
-    """login form"""
+    """Login form"""
     username = forms.CharField(label="Username")
     password = forms.CharField(label="Password", widget=forms.PasswordInput())
 
@@ -37,7 +42,7 @@ class ChangePasswordForm(PasswordChangeForm):
 
 
 class ForgotPasswordForm(PasswordResetForm):
-    """reset password form"""
+    """Reset password form"""
     class Meta:
         """Meta class to specify db model"""
         model = Member

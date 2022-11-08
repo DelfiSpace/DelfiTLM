@@ -22,7 +22,7 @@ class Member(AbstractUser):
     verified = models.BooleanField(default=False)
 
     def __str__(self):
-        return self.username
+        return str(self.username)
 
 
 class APIKey(AbstractAPIKey):
