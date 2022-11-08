@@ -57,7 +57,9 @@ To reset the containers and remove the volumes run the `./reset_docker.sh` scrip
 
 1. In case SSL certificates are used, create a volume named delfitlm\_certificates [example](https://github.com/moby/moby/issues/25245#issuecomment-365980572) and copy inside _server.pem_ and _server.key_. Ensure they are owned by root and that permissions are 644 before copying them.
 
-2. Build and run Docker deployment script (runs on port 80 - default web port):
+2. Set up the firewall bouncer for CrowdSec, instructions in `crowdsec/README.md`.
+
+3. Build and run Docker deployment script (runs on port 80 - default web port):
 `docker-compose -f docker-compose.yml -f docker-compose-deploy.yml up --build`
 
 3. Access the container to initialize Django (only required the first time):

@@ -4,6 +4,14 @@ from datetime import datetime, timedelta
 import json
 from transmission.processing.satellites import TIME_FORMAT
 
+FAILED_PROCESSING_FILE = "transmission/processing/time_range_files/failed_processing.json"
+TIME_RANGE_FILES_DIR = "transmission/processing/time_range_files/"
+
+
+def get_new_data_file_path(satellite: str, link: str) -> str:
+    """Return filepath of the new data time range file"""
+    return TIME_RANGE_FILES_DIR + satellite + "_" + link + ".json"
+
 
 def read_time_range_file(input_file: str) -> dict:
     """Read scraped_telemetry.json."""
@@ -14,13 +22,10 @@ def read_time_range_file(input_file: str) -> dict:
     return new_data_time_range
 
 
-def reset_new_data_timestamps(satellite: str, input_file: str) -> None:
+def reset_new_data_timestamps(satellite: str, link: str, input_file: str) -> None:
     """Replace timestamps in scraped_telemetry.json with []."""
     new_data_time_range = read_time_range_file(input_file)
-    new_data_time_range[satellite] = {
-        "uplink": [],
-        "downlink": []
-    }
+    new_data_time_range[satellite][link] = []
 
     with open(input_file, "w", encoding="utf-8") as file:
         file.write(json.dumps(new_data_time_range, indent=4))

@@ -17,7 +17,6 @@ services:
       - ./src:/app
 
   pgadmin:
-    container_name: pgadmin4_container
     image: dpage/pgadmin4:6.4
     restart: always
     environment:

@@ -17,6 +17,7 @@ urlpatterns = [
          ),
     path('TLEs/', views.get_tle_table, name='get_tle_table'),
     path('submit/', csrf_exempt(views.submit_frame), name='submit_frame'),
+    path('schedule-job/', views.submit_job, name='submit_job'),
 ]
 
 # add path only in debug mode
