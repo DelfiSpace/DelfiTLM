@@ -1,13 +1,13 @@
 # DelfiTLM
 
-# Requirements
+## Requirements
 
-- A modern python version
+- Python3 and Java 8 or higher
 - For local running/development: The postgres client library (For apt users: `apt install libpq-dev`)
 - Docker and docker-compose if running the system or the database from a container
 - For running without docker: Set up a Postgres instance on port 5432
 
-# Setup (Run locally/on host machine)
+## Setup (Run locally/on host machine)
 
 1. Create a python environment (one time instruction):
 `python3 -m venv env`
@@ -33,7 +33,7 @@
 8. To run pylint:
 `find src -name "*.py" | xargs pylint`
 
-# Setup (Run via docker)
+## Setup (Run via docker)
 
 This method should be sufficient for most development tasks as any (file) changes you make are monitored by StatReloader. To start the environment, run:
 `docker-compose up --build`
@@ -53,14 +53,16 @@ The datasource and dashboards confing for Grafana can be changed from `grafana/p
 
 To reset the containers and remove the volumes run the `./reset_docker.sh` script.
 
-# Deployment
+## Deployment
 
 1. In case SSL certificates are used, create a volume named delfitlm\_certificates [example](https://github.com/moby/moby/issues/25245#issuecomment-365980572) and copy inside _server.pem_ and _server.key_. Ensure they are owned by root and that permissions are 644 before copying them.
 
-2. Build and run Docker deployment script (runs on port 80 - default web port):
+2. Set up the firewall bouncer for CrowdSec, instructions in `crowdsec/README.md`.
+
+3. Build and run Docker deployment script (runs on port 80 - default web port):
 `docker-compose -f docker-compose.yml -f docker-compose-deploy.yml up --build`
 
-3. Access the container to initialise Django (only required the first time):
+3. Access the container to initialize Django (only required the first time):
 `docker exec -it delfitlm_app_1 /bin/bash`
 
 4. Run the database migration to create the tables (only required the first time):
@@ -68,7 +70,7 @@ To reset the containers and remove the volumes run the `./reset_docker.sh` scrip
 
 Note: remove `--build` to skip building the container, will use the cached one (last build)
 
-# Testing
+## Testing
 
 1. To run the unit tests execute `python manage.py test` from within the `src` folder
 

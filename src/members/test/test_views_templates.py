@@ -385,7 +385,7 @@ class TestAccountVerification(TestCase):
         self.user.save()
         response = self.client.post(reverse('login'), {'username': 'user', 'password': 'delfispace4242'}, follow=True)
         self.assertEqual(response.status_code, 200)
-        self.assertTemplateUsed(response, 'account.html')  # account is verified so we proceed to account page
+        self.assertTemplateUsed(response, 'home/index.html')  # account is verified so we proceed to home page
 
     def test_verify_email(self):
         # Verify email address
