@@ -7,4 +7,4 @@ set -e
 python manage.py collectstatic --noinput --clear
 
 # run a TCP socket
-uwsgi --socket :8000 --master --enable-threads --module delfitlm.wsgi
+uwsgi --socket :8000 --master --module delfitlm.wsgi --enable-threads --processes 1 --threads 2

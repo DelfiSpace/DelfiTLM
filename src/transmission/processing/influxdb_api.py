@@ -56,7 +56,8 @@ def write_frame_to_raw_bucket(write_api, satellite, link, timestamp, frame_field
     "fields": frame_fields
     }
 
-    logger.info("%s: raw frame stored. Frame timestamp: %s, link: %s", satellite, timestamp, link)
+    logger.info("%s: raw frame stored or updated. Frame timestamp: %s, link: %s",
+                satellite, timestamp, link)
 
     write_api.write(bucket, INFLUX_ORG, db_fields)
 
@@ -76,8 +77,8 @@ def commit_frame(write_api, query_api, satellite: str, link: str, tlm: dict) -> 
     # check if frame already exists
     query = f'''from(bucket: "{bucket}")
     |> range(start: {time_range_lower_bound}, stop: {time_range_upper_bound})
-    |> filter(fn: (r) => r._measurement == "{satellite + "_" + link + "_raw_data"}" and
-    r["_field"] == "frame" and r["_value"] == "{tlm["frame"]}")
+    |> filter(fn: (r) => r._measurement == "{satellite + "_" + link + "_raw_data"}")
+    |> filter(fn: (r) => r["_field"] == "frame" and r["_value"] == "{tlm["frame"]}")
     '''
     # store frame only if not stored already
     if len(query_api.query(query=query)) != 0:

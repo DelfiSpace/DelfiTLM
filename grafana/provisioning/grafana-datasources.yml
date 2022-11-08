@@ -7,7 +7,7 @@ datasources:
     access: proxy
     url: http://influxdb:8086
     secureJsonData:
-      token: adminpwd
+      token: $GF_INFLUXDB_V2_TOKEN
     jsonData:
       version: Flux
       organization: Delfi Space
