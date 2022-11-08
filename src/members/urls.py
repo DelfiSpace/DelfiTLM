@@ -27,4 +27,6 @@ urlpatterns = [
 
     path('key/', views.generate_key, name='generate_key'),
     path('new-key/', views.get_new_key, name='get_new_key'),
+
+    path('delete-account', views.delete_account_request, name='delete_account'),
 ]

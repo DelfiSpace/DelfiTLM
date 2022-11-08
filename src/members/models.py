@@ -8,10 +8,10 @@ class Member(AbstractUser):
     """Extended custom user from User"""
 
     UUID = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    username = models.CharField(max_length=191, unique=True)
-    email = models.EmailField(max_length=320, unique=True, null=False, blank=False)
-    password = models.CharField(max_length=120, null=False, blank=False)
-    role = models.CharField(max_length=60, default="radio_amateur")
+    username = models.CharField(max_length=32, unique=True)
+    email = models.EmailField(max_length=254, unique=True, null=False, blank=False)
+    password = models.CharField(max_length=128, null=False, blank=False)
+    role = models.CharField(max_length=64, default="radio_amateur")
     is_active = models.BooleanField(default=True)
     date_joined = models.DateTimeField(null=True, blank=True)
     last_changed = models.DateTimeField(null=True, blank=True)

@@ -46,3 +46,10 @@ class ForgotPasswordForm(PasswordResetForm):
     class Meta:
         """Meta class to specify db model"""
         model = Member
+
+
+class DeleteAccountForm(forms.Form):
+    """Delete account form"""
+    username = forms.CharField(label="Username")
+    challenge = forms.CharField(label='Type "delete my account" to confirm')
+    password = forms.CharField(label="Password", widget=forms.PasswordInput())
