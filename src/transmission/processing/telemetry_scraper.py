@@ -7,13 +7,13 @@ import requests
 
 from django_logger import logger
 from transmission.processing.satellites import SATELLITES, TIME_FORMAT
-from transmission.processing.bookkeep_new_data_time_range import update_new_data_timestamps
+from transmission.processing.bookkeep_new_data_time_range import get_new_data_file_path, \
+    include_timestamp_in_time_range
 from transmission.processing.influxdb_api import save_raw_frame_to_influxdb
 
 SATNOGS_PATH = "https://db.satnogs.org/api/telemetry/"
 SATNOGS_TOKEN_PATH = "tokens/satnogs_token.txt"
 
-NEW_DATA_FILE = "transmission/processing/new_data.json"
 
 def get_satnogs_headers() -> dict:
     """Get satnogs request headers"""
@@ -65,14 +65,12 @@ def scrape(satellite: str, save_to_db=True, save_to_file=False) -> None:
     telemetry_tmp = []
     logger.info("SatNOGS scraper started. Scraping %s telemetry.", satellite)
     while True:
-        satnogs_params = get_satnogs_params(satellite)
         response = requests.get(
             SATNOGS_PATH,
-            params=satnogs_params,
+            params=get_satnogs_params(satellite),
             headers=get_satnogs_headers()
         )
         telemetry_tmp = response.json()
-        # print(telemetry_tmp)
         try:
             last = telemetry_tmp[-1]
             first = telemetry_tmp[0]
@@ -88,17 +86,14 @@ def scrape(satellite: str, save_to_db=True, save_to_file=False) -> None:
                 fields_to_save = ["frame", "timestamp", "observer"]
                 stripped_tlm = strip_tlm_list(telemetry_tmp, fields_to_save)
                 stored = save_raw_frame_to_influxdb(satellite, "downlink", stripped_tlm)
-                # stop scraping if frames are already stored
                 if stored:
-                    # print("DB successfully updated.")
-                    # break
-                    update_new_data_timestamps(satellite,
-                                                  "downlink",
-                                                  last["timestamp"] - timedelta(seconds=1),
-                                                  first["timestamp"] + timedelta(seconds=1),
-                                                  NEW_DATA_FILE
-                                                  )
-                else:
+                    file = get_new_data_file_path(satellite, "downlink")
+                    include_timestamp_in_time_range(satellite, 'downlink', first["timestamp"], file)
+                    include_timestamp_in_time_range(satellite, 'downlink', last["timestamp"], file)
+
+                # if the frame is not stored (due to it being stored in a past scrape) and
+                # the next request retrieves data older than a week -> stop
+                elif (datetime.now() - next_time).days > 7:
                     logger.info("SatNOGS scraper stopped. Done scraping %s telemetry.", satellite)
                     break # stop scraping
 

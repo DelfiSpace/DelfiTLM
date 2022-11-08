@@ -13,8 +13,11 @@ from rest_framework_api_key.permissions import HasAPIKey
 from rest_framework.decorators import permission_classes
 from django_logger import logger
 from members.models import APIKey
+from transmission.forms.forms import SubmitJob
 from transmission.processing.process_raw_bucket import process_raw_bucket
 from transmission.processing.add_dummy_data import add_dummy_downlink_frames
+from transmission.processing.submit_job_to_scheduler import schedule_job
+from transmission.scheduler import Scheduler
 from .models import Uplink, Downlink, TLE
 from .filters import TelemetryDownlinkFilter, TelemetryUplinkFilter, TLEFilter
 from .processing.save_raw_data import process_frames, store_frame
@@ -233,3 +236,32 @@ def get_tle_table(request):
 
     context = {'telemetry_filter': tle_filter, 'page_obj': page_obj, 'table_name': 'TLE'}
     return render(request, "transmission/tle_table.html", context)
+
+
+@login_required(login_url='/login')
+def submit_job(request):
+    """Submit a task to be scheduled (scraping or bucket processing)"""
+
+    if not request.user.is_superuser:
+        return HttpResponseForbidden()
+
+    running_jobs = []
+    pending_jobs = []
+
+    form = SubmitJob(request.POST or None)
+    if request.method == 'POST':
+
+        if form.is_valid():
+            form_data = form.cleaned_data
+            schedule_job(form_data["sat"], form_data["job_type"], form_data["link"])
+
+    else:
+        form = SubmitJob()
+
+    scheduler = Scheduler()
+    running_jobs = scheduler.get_running_jobs
+    pending_jobs = scheduler.get_pending_jobs
+    return render(request,
+                  'transmission/submit_job.html',
+                  {'form':form, 'running_jobs': running_jobs, 'pending_jobs': pending_jobs}
+                  )

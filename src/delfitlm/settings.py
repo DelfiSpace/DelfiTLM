@@ -131,6 +131,8 @@ TEMPLATES = [
 
 ASGI_APPLICATION = 'delfitlm.asgi.application'
 
+WSGI_APPLICATION = 'delfitlm.wsgi.application'
+
 
 # Crowdsec bouncer: https://github.com/crowdsecurity/pycrowdsec
 
@@ -227,48 +229,77 @@ STATICFILES_DIRS = [
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
+# prevent logger deadlock in debug mode
+# in debug mode the server runs 2 processes that try to access the log files at the same time
+if DEBUG and os.environ.get('RUN_MAIN', None) != 'true':
+    LOGGING = {}
+
 LOGGING = {
     'version': 1,
     'disable_existing_loggers' : False,
     'loggers': {
         'django_logger': {
-            'handlers': ['debug_console', 'debug', 'info', 'warning', 'error'],
+            'handlers': ['docker_logger', 'debug', 'info', 'warning', 'error', 'mail_admin'],
             'level': 1
         }
+    },
+    'filters': {
+        'require_debug_false': {
+            '()': 'django.utils.log.RequireDebugFalse',
+        },
+        'require_debug_true': {
+            '()': 'django.utils.log.RequireDebugTrue',
+        },
     },
     'handlers': {
         'std_err': {
             'class': 'logging.StreamHandler'
         },
-        'debug_console': {
+        'docker_logger': {
             'class': 'logging.StreamHandler',
             'level': 'WARNING',
             'formatter': 'default',
+            'filters': ['require_debug_false'],
         },
         'debug': {
-            'class': 'logging.FileHandler',
+            'class': 'logging.handlers.RotatingFileHandler',
             'filename': 'logs/debug.log',
             'level': 'DEBUG',
             'formatter': 'default',
+            'backupCount': 2,
+            'maxBytes': 5*1024*1024, #bytes (5MB)
+            'filters': ['require_debug_true'],
+
         },
         'info': {
-            'class': 'logging.FileHandler',
+            'class': 'logging.handlers.RotatingFileHandler',
             'filename': 'logs/info.log',
             'level': 'INFO',
             'formatter': 'default',
+            'backupCount': 2,
+            'maxBytes': 5*1024*1024,
         },
         'warning': {
-            'class': 'logging.FileHandler',
+            'class': 'logging.handlers.RotatingFileHandler',
             'filename': 'logs/warning.log',
             'level': 'WARNING',
             'formatter': 'default',
+            'backupCount': 2,
+            'maxBytes': 5*1024*1024,
         },
         'error': {
-            'class': 'logging.FileHandler',
+            'class': 'logging.handlers.RotatingFileHandler',
             'filename': 'logs/error.log',
             'level': 'ERROR',
             'formatter': 'error',
+            'backupCount': 2,
+            'maxBytes': 5*1024*1024,
         },
+        'mail_admin': {
+            'level': 'ERROR',
+            'filters': ['require_debug_false'],
+            'class': 'django.utils.log.AdminEmailHandler'
+        }
     },
     'formatters': {
         'default': {

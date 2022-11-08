@@ -6,22 +6,21 @@ import transmission.processing.bookkeep_new_data_time_range as time_range
 from transmission.processing.influxdb_api import INFLUX_ORG, commit_frame, \
 get_influx_db_read_and_query_api, write_frame_to_raw_bucket
 
-from transmission.processing.telemetry_scraper import NEW_DATA_FILE
-
 write_api, query_api = get_influx_db_read_and_query_api()
-FAILED_PROCESSING_FILE = "transmission/processing/failed_processing.json"
 
 def store_raw_frame(satellite, timestamp, frame: str, observer: str, link: str):
     """Store raw unprocessed frame in influxdb"""
     frame_fields = {
         "frame": frame,
         "observer": observer,
-        "timestamp": timestamp
+        "timestamp": timestamp,
+        "processed": False
     }
 
     stored = commit_frame(write_api, query_api, satellite, link, frame_fields)
     if stored:
-        time_range.include_timestamp_in_time_range(satellite, link, timestamp, NEW_DATA_FILE)
+        file = time_range.get_new_data_file_path(satellite, link)
+        time_range.include_timestamp_in_time_range(satellite, link, timestamp, file)
     return stored
 
 
@@ -78,11 +77,15 @@ def process_raw_bucket(satellite, link) -> tuple:
     """Parse frames, store the parsed form and mark the raw entry as processed.
     Return the total number of frames attempting to process and
     how many frames were successfully processed."""
-
-    scraped_telemetry = time_range.read_time_range_file(NEW_DATA_FILE)
+    file = time_range.get_new_data_file_path(satellite, link)
+    scraped_telemetry = time_range.read_time_range_file(file)
 
     processed_frames_count = 0
     total_frames_count = 0
+
+    radio_amateur = 'observer'
+    if link == 'uplink':
+        radio_amateur = 'operator'
 
     if scraped_telemetry[satellite][link] != []:
 
@@ -92,29 +95,29 @@ def process_raw_bucket(satellite, link) -> tuple:
         get_unprocessed_frames_query = f'''
         from(bucket: "{satellite +  "_raw_data"}")
         |> range(start: {start_time}, stop: {end_time})
-        |> filter(fn: (r) => r._measurement == "{satellite + "_" + link + "_raw_data"}" and
-                    r["_field"] == "processed" and r["_value"] == false or
-                    r["_field"] == "frame" or r["_field"] == "observer")
+        |> filter(fn: (r) => r._measurement == "{satellite + "_" + link + "_raw_data"}")
+        |> filter(fn: (r) => r["_field"] == "processed" or
+                r["_field"] == "frame" or
+                r["_field"] == "{radio_amateur}")
         |> pivot(rowKey:["_time"], columnKey: ["_field"], valueColumn: "_value")
         '''
         # query result as dataframe
         dataframe = query_api.query_data_frame(query=get_unprocessed_frames_query)
-        # convert dataframe to dict and only include the frame and observer columns
-        df_as_dict = dataframe.loc[:, dataframe.columns.isin(['frame', 'observer'])]
-        df_as_dict = df_as_dict.to_dict(orient='records')
-        total_frames_count = len(df_as_dict)
-
+        dataframe = dataframe.reset_index()
         # process each frame
-        for i, row in dataframe.iterrows():
+        for _, row in dataframe.iterrows():
             try:
-                parse_and_store_frame(satellite, row["_time"], row["frame"], row["observer"],  link)
-                df_as_dict[i]["processed"] = True
+                if row["processed"]: # skip frame if it's processed
+                    continue
+                # store processed frame
+                parse_and_store_frame(satellite,row["_time"],row["frame"],row[radio_amateur],link)
+                # mark raw frame as processed
                 write_frame_to_raw_bucket(
                     write_api,
                     satellite,
                     link,
                     row["_time"],
-                    df_as_dict[i]
+                    {'processed': True}
                     )
                 processed_frames_count += 1
             except xtce_parser.XTCEException as ex:
@@ -122,11 +125,19 @@ def process_raw_bucket(satellite, link) -> tuple:
                 time_range.include_timestamp_in_time_range(satellite,
                                                            link,
                                                            row["_time"],
-                                                           FAILED_PROCESSING_FILE
+                                                           time_range.FAILED_PROCESSING_FILE
                                                            )
+                # mark frame as unprocessed
+                write_frame_to_raw_bucket(
+                    write_api,
+                    satellite,
+                    link,
+                    row["_time"],
+                    {'processed': False}
+                    )
 
         if processed_frames_count == total_frames_count:
-            time_range.reset_new_data_timestamps(satellite, NEW_DATA_FILE)
+            time_range.reset_new_data_timestamps(satellite, link, file)
             logger.info("%s: %s data was processed from %s - %s",satellite,link,start_time,end_time)
     else:
         logger.info("%s: no frames to process", satellite)

@@ -4,6 +4,7 @@ services:
     app:
         volumes:
             - static_data:/vol/web
+            - app_logs:/app/logs
         environment:
             # TODO: change the key
             # could also add database config here and remove it from settings.py
@@ -16,6 +17,12 @@ services:
             - CROWDSEC_LAPI=${CROWDSEC_LAPI:-6a601f2baf982825d472200826fb44b5}
             - CROWDSEC_URL=${CROWDSEC_URL:-http://crowdsec:8080/}
         restart: always
+        logging:
+            driver: "json-file"
+            options:
+                max-file: "5"   # file count
+                max-size: "10m" # file size
+
 
     proxy:
         build:
@@ -36,6 +43,11 @@ services:
             - pgadmin
             - grafana
         restart: always
+        logging:
+            driver: "json-file"
+            options:
+                max-file: "5"   # file count
+                max-size: "10m" # file size
 
     pgadmin:
         container_name: pgadmin4_container
@@ -48,6 +60,12 @@ services:
             - "db"
         volumes:
             - pgadmin_persistent:/var/lib/pgadmin
+        logging:
+            driver: "json-file"
+            options:
+                max-file: "5"   # file count
+                max-size: "10m" # file size
+
 
     crowdsec:
         image: crowdsecurity/crowdsec:latest
@@ -67,8 +85,6 @@ services:
             - crowdsec_db:/var/lib/crowdsec/data/
             - crowdsec_config:/etc/crowdsec/
 
-
-
     #metabase, because security is cool, but dashboards are cooler
     # crowdsec_dashboard:
     #     #we're using a custom Dockerfile so that metabase pops with pre-configured dashboards
@@ -86,6 +102,7 @@ services:
 
 volumes:
     logs:
+    app_logs:
     static_data:
     certificates:
     pgadmin_persistent:

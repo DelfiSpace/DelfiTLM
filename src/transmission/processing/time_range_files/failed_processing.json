@@ -1,7 +1,10 @@
 {
     "delfi_pq": {
         "uplink": [],
-        "downlink": []
+        "downlink": [
+            "2022-01-15T12:50:40Z",
+            "2022-01-25T08:10:14Z"
+        ]
     },
     "delfi_next": {
         "uplink": [],
