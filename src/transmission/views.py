@@ -7,8 +7,9 @@ from django.forms import ValidationError
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import BadRequest, PermissionDenied
+from django.http import HttpResponseRedirect
 from django.http.response import JsonResponse, HttpResponseBadRequest, HttpResponseForbidden
-from django.shortcuts import redirect, render
+from django.shortcuts import redirect, render, reverse
 from rest_framework_api_key.permissions import HasAPIKey
 from rest_framework.decorators import permission_classes
 from django_logger import logger
@@ -246,6 +247,7 @@ def submit_job(request):
         if form.is_valid():
             form_data = form.cleaned_data
             schedule_job(form_data["sat"], form_data["job_type"], form_data["link"])
+            return HttpResponseRedirect(reverse("submit_job"))
 
     else:
         form = SubmitJob()

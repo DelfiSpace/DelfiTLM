@@ -43,7 +43,7 @@ class TestFramesProcessing(TestCase):
 
     @patch('transmission.processing.save_raw_data.store_frame_to_influxdb')
     def test_delete_processed_frames(self, mock_store_frame_to_influxdb):
-        mock_store_frame_to_influxdb.return_value = True
+        mock_store_frame_to_influxdb.return_value = (True, 'delfi_pq')
 
         self.assertEqual(len(Downlink.objects.all()), 3)
         self.assertEqual(len(Uplink.objects.all()), 3)
@@ -81,7 +81,8 @@ class TestFramesProcessing(TestCase):
 
     @patch('transmission.processing.save_raw_data.store_frame_to_influxdb')
     def test_delete_no_processed_frames(self, mock_store_frame_to_influxdb):
-        mock_store_frame_to_influxdb.return_value = False
+        mock_store_frame_to_influxdb.return_value = (False, None)
+
         self.assertEqual(len(Downlink.objects.all()), 3)
         self.assertEqual(len(Uplink.objects.all()), 3)
 
@@ -110,7 +111,7 @@ class TestFramesProcessing(TestCase):
         unauthorized_user.set_password('delfispace4242')
         unauthorized_user.save()
 
-        mock_store_frame_to_influxdb.return_value = True
+        mock_store_frame_to_influxdb.return_value = (True, 'delfi_pq')
         self.assertEqual(len(Downlink.objects.all()), 3)
         self.assertEqual(len(Uplink.objects.all()), 3)
 
@@ -134,7 +135,7 @@ class TestFramesProcessing(TestCase):
     @patch('transmission.processing.save_raw_data.store_frame_to_influxdb')
     def test_frames_processing_request(self, mock_store_frame_to_influxdb):
 
-        mock_store_frame_to_influxdb.return_value = True
+        mock_store_frame_to_influxdb.return_value = (True, "delfi_pq")
         # request to process frames
         request = self.factory.post(path='transmission/process-frames/', content_type='application/json')
         setattr(request, 'session', 'session')
@@ -157,7 +158,7 @@ class TestFramesProcessing(TestCase):
     @patch('transmission.processing.save_raw_data.store_frame_to_influxdb')
     def test_frames_processing_request_bad_request(self, mock_store_frame_to_influxdb):
 
-        mock_store_frame_to_influxdb.return_value = True
+        mock_store_frame_to_influxdb.return_value = (True, 'delfi_pq')
         request = self.factory.post(path='transmission/process-frames/', content_type='application/json')
         setattr(request, 'session', 'session')
         setattr(request, '_messages', FallbackStorage(request))
@@ -177,7 +178,7 @@ class TestFramesProcessing(TestCase):
     @patch('transmission.processing.save_raw_data.store_frame_to_influxdb')
     def test_frames_processing_request_forbidden(self, mock_store_frame_to_influxdb):
 
-        mock_store_frame_to_influxdb.return_value = True
+        mock_store_frame_to_influxdb.return_value = (True, 'delfi_pq')
 
         unauthorized_user = Member.objects.create_user(username='unauthorized_user', email='unauthorized_user@email.com')
         unauthorized_user.set_password('delfispace4242')
@@ -203,7 +204,7 @@ class TestFramesProcessing(TestCase):
     @patch('transmission.processing.influxdb_api.commit_frame')
     @patch('transmission.processing.influxdb_api.save_raw_frame_to_influxdb')
     def test_valid_frames_processing(self, mock_commit_frame, mock_save_raw_frame_to_influxdb):
-        mock_save_raw_frame_to_influxdb.return_value = True
+        mock_save_raw_frame_to_influxdb.return_value = (True, 'delfi_pq')
         mock_commit_frame.return_value = True
 
         request = self.factory.post(path='transmission/process-frames/', content_type='application/json')
@@ -229,7 +230,7 @@ class TestFramesProcessing(TestCase):
     @patch('transmission.processing.influxdb_api.commit_frame')
     @patch('transmission.processing.influxdb_api.save_raw_frame_to_influxdb')
     def test_invalid_frames_processing(self, mock_commit_frame, mock_save_raw_frame_to_influxdb):
-        mock_save_raw_frame_to_influxdb.return_value = True
+        mock_save_raw_frame_to_influxdb.return_value = (True, 'delfi_pq')
         mock_commit_frame.return_value = True
 
         request = self.factory.post(path='transmission/process-frames/', content_type='application/json')
