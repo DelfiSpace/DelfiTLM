@@ -4,27 +4,18 @@ import json
 from django.http.response import JsonResponse
 from django.utils import timezone
 from django.shortcuts import redirect, render
-from django.contrib.auth import login, authenticate, logout
 from django.contrib import messages
+from django.contrib.auth import login, authenticate, logout, update_session_auth_hash
 from django.contrib.auth.decorators import login_required
-from django.contrib.auth import update_session_auth_hash
 from django.contrib.auth.tokens import default_token_generator
-from django.core.mail import send_mail
-from django.contrib.sites.shortcuts import get_current_site
-from django.utils.encoding import force_bytes, force_text
-from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
-from django.template.loader import render_to_string
-from .tokens import account_activation_token
-from .forms import RegisterForm, LoginForm, ChangePasswordForm, PasswordResetForm
+from django.utils.encoding import force_text
+from django.utils.http import urlsafe_base64_decode
+from .send_emails import send_welcome_email, send_email_verification_registration, \
+    send_password_reset_email, send_confirm_account_deleted_email, \
+    send_email_change_request_confirmation, send_new_email_verification
+from .forms import DeleteAccountForm, RegisterForm, LoginForm, ChangePasswordForm, \
+    PasswordResetForm, ResendVerificationForm, ChangeEmailForm
 from .models import APIKey, Member
-
-def get_protocol(request):
-    """Return the HTTP or HTTPS based on
-    the protocol chosen in the request."""
-
-    if request.is_secure():
-        return 'https'
-    return 'http'
 
 
 @login_required(login_url='/login')
@@ -42,24 +33,12 @@ def register(request):
     if request.method == "POST":
         if form.is_valid():
             user = form.save(commit=False)
+            user.date_joined = timezone.now()
             user.save()
-            current_site = get_current_site(request)
-
-            message = render_to_string('emails/register_email_verification.html', {
-                'user': user,
-                'domain': current_site.domain,
-                'uid': urlsafe_base64_encode(force_bytes(user.pk)),
-                'token': account_activation_token.make_token(user),
-                'protocol': get_protocol(request)
-            })
-            to_email = user.email
-            send_mail( subject="Welcome to DelfiTLM",
-                message=message,
-                from_email = None,
-                recipient_list = [to_email],
-                fail_silently=True,
-                )
-            messages.info(request, "Please confirm your email address to complete the registration")
+            send_welcome_email(user)
+            send_email_verification_registration(request, user)
+            message = "Please confirm your email address to complete the registration."
+            messages.info(request, message)
             return redirect("homepage")
 
         messages.error(request, "Unsuccessful registration")
@@ -67,8 +46,9 @@ def register(request):
 
     return render(request, "registration/register.html", {'form': form}, status=status)
 
-def activate(request, uidb64, token):
-    """Activate user email"""
+
+def verify(request, uidb64, token):
+    """Verify user email"""
     status = HTTPStatus.OK
     try:
         uid = force_text(urlsafe_base64_decode(uidb64))
@@ -76,20 +56,45 @@ def activate(request, uidb64, token):
 
     except(TypeError, ValueError, OverflowError):
         user = None
-    if user is not None and account_activation_token.check_token(user, token):
+    if user is not None and default_token_generator.check_token(user, token):
         user.verified = True
+
+        # update email address
+        if user.new_email is not None:
+            user.email = user.new_email
+            user.new_email = None
+
+        user.last_login = timezone.now()
         user.save()
+
         login(request, user)
-        Member.objects.filter(username=user.username).update(
-                    date_joined=timezone.now(),
-                    last_login=timezone.now()
-                )
-        messages.info(request, "Thank you for your email confirmation. \
-                            Now you can login into your account.")
+        messages.info(request, "Your email has been successfully verified.")
     else:
-        messages.error(request, 'Activation link is invalid!')
+        messages.error(request, 'Verification link is invalid or expired!')
         status = HTTPStatus.BAD_REQUEST
     return render(request, "home/index.html", status=status)
+
+
+def resend_verification_email(request):
+    """Resent verification emails, in case it's not received."""
+    form = ResendVerificationForm(request.POST or None)
+    status = HTTPStatus.OK
+
+    if request.method == "POST":
+        if form.is_valid():
+            entered_email = form.cleaned_data.get('email')
+            if Member.objects.filter(email=entered_email).exists():
+                user = Member.objects.get(email=entered_email)
+                if not user.verified:
+                    send_email_verification_registration(request, user)
+                    messages.info(request, "The verification email has been resent.")
+                    return redirect('login')
+
+        status = HTTPStatus.BAD_REQUEST
+        messages.error(request, "Email is unknown or is already verified!")
+
+    return render(request, "registration/resend_verification_email.html",
+                  context={'form': form}, status=status)
 
 
 def login_member(request):
@@ -98,47 +103,54 @@ def login_member(request):
     form = LoginForm(request.POST or None)
     status = HTTPStatus.OK
 
+    if request.user.is_authenticated:
+        return redirect('homepage')
+
     if request.method == "POST":
         if form.is_valid():
-            entered_username = form.cleaned_data.get('username')
+            entered_username_or_email = form.cleaned_data.get('username')
             entered_password = form.cleaned_data.get('password')
+            username = entered_username_or_email
+
+            # lookup database for email and retrieve username
+            if Member.objects.filter(email=entered_username_or_email).exists():
+                user = Member.objects.get(email=entered_username_or_email)
+                username = user.username
 
             member = authenticate(
                 request,
-                username=entered_username,
+                username=username,
                 password=entered_password
             )
 
             if member is not None and member.verified is False:
-                messages.error(request, "Email not verified")
-                status = HTTPStatus.BAD_REQUEST
-                return render(request, "registration/login.html", {'form': form}, status=status)
+                messages.error(request, "Email not verified!")
+                return redirect("resend_verify")
 
             if member is not None and member.is_active is True:
                 login(request, member)
                 Member.objects.filter(username=member.username).update(
-                        last_login=timezone.now()
-                    )
-                return render(request, "account.html", status=status)
+                    last_login=timezone.now()
+                )
+                return redirect("account")
 
-        messages.error(request, "Invalid username or password")
+        messages.error(request, "Invalid username or password!")
         status = HTTPStatus.UNAUTHORIZED
 
-    return render(request, "registration/login.html", context={ 'form': form }, status=status)
+    return render(request, "registration/login.html", context={'form': form}, status=status)
 
 
 @login_required(login_url='/login')
 def generate_key(request):
     """Generates an API key"""
 
-    if len(APIKey.objects.filter(name=request.user.username))!=0:
+    if len(APIKey.objects.filter(name=request.user.username)) != 0:
         key = APIKey.objects.filter(name=request.user.username)
         key.delete()
 
-
     api_key_name, generated_key = APIKey.objects.create_key(
-                            name=request.user.username,
-                            username=Member.objects.get(username=request.user.username),
+        name=request.user.username,
+        username=Member.objects.get(username=request.user.username),
     )
 
     return JsonResponse({"api_key": str(api_key_name), "generated_key": str(generated_key)})
@@ -155,10 +167,53 @@ def get_new_key(request):
 
 @login_required(login_url='/login')
 def logout_member(request):
-    """Logout and reddirect to homepage"""
+    """Logout and redirect to homepage"""
     logout(request)
 
     return redirect('homepage')
+
+
+@login_required(login_url='/login')
+def change_email_request(request):
+    """Handle email update request. If multiple requests are made without
+    completing verification, only the most recently submitted email addressed
+    can be verified and set as current."""
+
+    form = ChangeEmailForm(request.POST or None)
+    status = HTTPStatus.OK
+    user = request.user
+    if request.method == 'POST':
+        if form.is_valid():
+            entered_email1 = form.cleaned_data.get('email')
+            entered_email2 = form.cleaned_data.get('email_confirm')
+
+            # check if emails match and new email is not in use
+            if entered_email1 == entered_email2 and \
+                    not Member.objects.filter(email=entered_email1).exists():
+
+                user.new_email = entered_email1
+                user.save()
+
+                send_email_change_request_confirmation(user)
+                send_new_email_verification(request, user)
+                message = "A verification email has been sent to your new email address. "
+                message += "Please confirm it to complete the update."
+
+                messages.info(request, message)
+                # logout to invalidate token, in case a change email request is made
+                # with an email address that differs from the previous one
+                return logout_member(request)
+
+            if entered_email1 != entered_email2:
+                messages.error(request, "The entered emails don't match!")
+
+            if Member.objects.filter(email=entered_email1).exists() or \
+                    Member.objects.filter(new_email=entered_email1).exists():
+                messages.error(request, "The email address entered is already registered!")
+
+        status = HTTPStatus.BAD_REQUEST
+
+    return render(request, "registration/change_email_form.html", {'form': form}, status=status)
 
 
 @login_required(login_url='/login')
@@ -174,15 +229,15 @@ def change_password(request):
             user = form.save()
             update_session_auth_hash(request, user)
             Member.objects.filter(username=user.username).update(
-                        last_changed=timezone.now()
-                    )
-            messages.info(request, "Password has been changed successfully")
+                last_changed=timezone.now()
+            )
+            messages.info(request, "Password has been changed successfully.")
             return redirect('account')
 
-        messages.error(request, "Invalid password")
+        messages.error(request, "Invalid password!")
         status = HTTPStatus.BAD_REQUEST
 
-    return render(request, "registration/change_password.html", {'form': form }, status=status)
+    return render(request, "registration/change_password.html", {'form': form}, status=status)
 
 
 def password_reset_request(request):
@@ -196,21 +251,8 @@ def password_reset_request(request):
             entered_email = form.cleaned_data['email']
             if Member.objects.filter(email=entered_email).exists():
                 user = Member.objects.get(email=entered_email)
-                current_site = get_current_site(request)
-                message = render_to_string('emails/password_reset_email.html', {
-                    'user': user.username,
-                    'domain': current_site.domain,
-                    'uid': urlsafe_base64_encode(force_bytes(user.pk)),
-                    'token': default_token_generator.make_token(user),
-                    'protocol': get_protocol(request)
-                })
-                send_mail( subject="DelfiTLM Password Reset Requested",
-                    message=message,
-                    from_email = None,
-                    recipient_list = [entered_email],
-                    fail_silently=True,
-                    )
-                message = "A message with reset password instructions has been sent to your inbox"
+                send_password_reset_email(request, user)
+                message = "A message with reset password instructions has been sent to your inbox."
                 messages.info(request, message)
                 return redirect("homepage")
 
@@ -218,3 +260,53 @@ def password_reset_request(request):
         status = HTTPStatus.BAD_REQUEST
 
     return render(request, "registration/password_reset_form.html", {'form': form}, status=status)
+
+
+@login_required(login_url='/login')
+def delete_account_request(request):
+    """Delete user account upon request."""
+
+    form = DeleteAccountForm(request.POST or None)
+    status = HTTPStatus.OK
+
+    # prevent operators and superusers from deleting their accounts
+    if request.user.has_perm('transmission.delete_downlink') or \
+            request.user.has_perm('transmission.view_uplink') or \
+            request.user.role == "operator":
+        status = HTTPStatus.BAD_REQUEST
+        messages.error(request, "Your account could not be deleted!")
+
+    elif request.method == "POST":
+        if form.is_valid():
+
+            entered_username = form.cleaned_data.get('username')
+            entered_password = form.cleaned_data.get('password')
+            entered_challenge = form.cleaned_data.get('challenge')
+
+            user = authenticate(
+                request,
+                username=entered_username,
+                password=entered_password
+            )
+
+            if user is not None and entered_challenge == "delete my account":
+                user = Member.objects.get(username=entered_username)
+
+                send_confirm_account_deleted_email(user)
+                user.delete()
+
+                messages.info(request, "Your account has been deleted.")
+                logout(request)
+                return redirect("homepage")
+
+            if user is None:
+                messages.error(request, "Invalid username or password!")
+                status = HTTPStatus.BAD_REQUEST
+
+            elif user is not None and entered_challenge != "delete my account":
+                messages.error(request, "Confirmation failed! Account was not deleted.")
+                status = HTTPStatus.BAD_REQUEST
+        else:
+            status = HTTPStatus.BAD_REQUEST
+
+    return render(request, "registration/delete_account_form.html", {'form': form}, status=status)

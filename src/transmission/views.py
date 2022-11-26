@@ -7,19 +7,24 @@ from django.forms import ValidationError
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import BadRequest, PermissionDenied
+from django.http import HttpResponseRedirect
 from django.http.response import JsonResponse, HttpResponseBadRequest, HttpResponseForbidden
-from django.shortcuts import redirect, render
+from django.shortcuts import redirect, render, reverse
 from rest_framework_api_key.permissions import HasAPIKey
 from rest_framework.decorators import permission_classes
 from django_logger import logger
 from members.models import APIKey
+from transmission.forms.forms import SubmitJob
 from transmission.processing.process_raw_bucket import process_raw_bucket
 from transmission.processing.add_dummy_data import add_dummy_downlink_frames
+from transmission.processing.submit_job_to_scheduler import schedule_job
+from transmission.scheduler import Scheduler
 from .models import Uplink, Downlink, TLE
 from .filters import TelemetryDownlinkFilter, TelemetryUplinkFilter, TLEFilter
 from .processing.save_raw_data import process_frames, store_frame
 
 QUERY_ROW_LIMIT = 100
+
 
 @permission_classes([HasAPIKey,])
 def submit_frame(request): #pylint:disable=R0911
@@ -35,20 +40,12 @@ def submit_frame(request): #pylint:disable=R0911
             # retrieve the user agent (if present, empty otherwise)
             user_agent = request.META.get('HTTP_USER_AGENT', '')
 
-            if 'HTTP_FRAME_LINK' in request.META and \
-                request.META.get('HTTP_FRAME_LINK', '') is not None:
-
-                link = request.META.get('HTTP_FRAME_LINK', '')
-
-                if link not in ["uplink", "downlink"]:
-                    raise BadRequest("HTTP_FRAME_LINK can be either 'uplink' or 'downlink'" )
-
             # search for the user name matching the API key
             api_key_name = APIKey.objects.get_from_key(key)
             # retrieve the JSON frame just submitted
             frame_to_add = json.loads(request.body)
             # add the frame to the database
-            store_frame(frame_to_add, link, username=api_key_name,  application=user_agent)
+            store_frame(frame_to_add, username=api_key_name,  application=user_agent)
 
             logger.info("%s submited a frame. Frame successfully stored.", api_key_name)
             return JsonResponse({"result": "success", "message": "Successful submission"},
@@ -104,6 +101,7 @@ def submit_frame(request): #pylint:disable=R0911
     # POST is the only supported method, return error
     return JsonResponse({"result": "failure", "message": "Method not allowed"},
                         status=HTTPStatus.METHOD_NOT_ALLOWED)
+
 
 def add_dummy_downlink(request):
     """Add dummy frames to Downlink table as admin user."""
@@ -161,7 +159,6 @@ def process(request, link):
 
         processed_frame_count = process_frames(frames, link)
         logger.info("%s %s frames were successfully processed", processed_frame_count, link)
-
 
         messages.info(request, f"{processed_frame_count} {link} frames were processed.")
 
@@ -233,3 +230,33 @@ def get_tle_table(request):
 
     context = {'telemetry_filter': tle_filter, 'page_obj': page_obj, 'table_name': 'TLE'}
     return render(request, "transmission/tle_table.html", context)
+
+
+@login_required(login_url='/login')
+def submit_job(request):
+    """Submit a task to be scheduled (scraping or bucket processing)"""
+
+    if not request.user.is_superuser:
+        return HttpResponseForbidden()
+
+    running_jobs = []
+    pending_jobs = []
+
+    form = SubmitJob(request.POST or None)
+    if request.method == 'POST':
+
+        if form.is_valid():
+            form_data = form.cleaned_data
+            schedule_job(form_data["sat"], form_data["job_type"], form_data["link"])
+            return HttpResponseRedirect(reverse("submit_job"))
+
+    else:
+        form = SubmitJob()
+
+    scheduler = Scheduler()
+    running_jobs = scheduler.get_running_jobs
+    pending_jobs = scheduler.get_pending_jobs
+    return render(request,
+                  'transmission/submit_job.html',
+                  {'form':form, 'running_jobs': running_jobs, 'pending_jobs': pending_jobs}
+                  )

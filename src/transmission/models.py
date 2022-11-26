@@ -7,13 +7,14 @@ from transmission.processing.telemetry_scraper import TIME_FORMAT
 
 #pylint: disable=all
 
+
 class Satellite(models.Model):
-    """Table contaning all satellites managed in this db"""
-    sat = models.CharField(null=False, max_length=70, unique=True)
+    """Table containing all satellites managed in this db"""
+    sat = models.CharField(null=False, max_length=32, unique=True)
     norad_id = models.IntegerField(null=True, unique=True)
 
     def __str__(self) -> str:
-        return self.sat
+        return str(self.sat)
 
 
 class TLE(models.Model):
@@ -26,7 +27,7 @@ class TLE(models.Model):
 class Downlink(models.Model):
     """Table for downlink data frames"""
     timestamp = models.DateTimeField(null=False, default=timezone.now, auto_now=False, auto_now_add=False)
-    observer = models.ForeignKey(Member, to_field="username", db_column="observer", default=None, null=True, on_delete=DO_NOTHING)
+    observer = models.CharField(null=False, max_length=128)
     application = models.TextField(null=True, blank=True)
     processed = models.BooleanField(default=False, null=False)
     invalid = models.BooleanField(null=True, blank=True)
@@ -38,7 +39,7 @@ class Downlink(models.Model):
         """Convert Downlink object to dict"""
         frame_dict = {}
         frame_dict["timestamp"] = self.timestamp.strftime(TIME_FORMAT)
-        frame_dict["observer"] = self.observer.username
+        frame_dict["observer"] = self.observer
         frame_dict["application"] = self.application
         frame_dict["processed"] = self.processed
         frame_dict["frequency"] = self.frequency
@@ -51,7 +52,7 @@ class Downlink(models.Model):
 class Uplink(models.Model):
     """Table for uplink data frames"""
     timestamp = models.DateTimeField(null=False, default=timezone.now, auto_now=False, auto_now_add=False)
-    operator = models.ForeignKey(Member, to_field="username", db_column="operator", null=False, on_delete=DO_NOTHING)
+    operator = models.CharField(null=False, max_length=128)
     application = models.TextField(null=True, blank=True)
     processed = models.BooleanField(default=False, null=False)
     invalid = models.BooleanField(null=True, blank=True)
@@ -59,12 +60,11 @@ class Uplink(models.Model):
     frame = models.TextField(default=None, null=False)
     metadata = models.JSONField(null=True, blank=True)
 
-
     def to_dictionary(self) -> dict:
         """Convert Uplink object to dict"""
         frame_dict = {}
         frame_dict["timestamp"] = self.timestamp.strftime(TIME_FORMAT)
-        frame_dict["operator"] = self.operator.username
+        frame_dict["operator"] = self.operator
         frame_dict["application"] = self.application
         frame_dict["processed"] = self.processed
         frame_dict["frequency"] = self.frequency

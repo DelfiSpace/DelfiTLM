@@ -1,0 +1,13 @@
+{% load i18n %}
+{% autoescape off %}
+Hello,
+
+Please confirm that you have changed your DelfiTLM account email to the following one {{ email }} by clicking the link: {{ protocol }}://{{ domain }}{% url 'activate' uidb64=uid token=token %}.
+
+As soon as the new email is verified, the previous email address will be overriden and will no longer be associated with your account.
+
+Best regards,
+
+The Delfi Space Team
+
+{% endautoescape %}
