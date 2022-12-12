@@ -2,14 +2,21 @@
 
 CrowdSec is included as a service in the `docker-compose-deploy.yml`. CrowdSec parses nginx access logs as configured in `crowdsec/acquis.yaml` and checks against a set of scenarios that could indicate an attack is happening. If that is to happen, CrowdSec issues an alert and the bouncer will block that specific IP address. The bouncer polls CrowdSec at a regular interval to obtain the updated list of banned IP addresses and enforces the ban. The exact interval length is configurable.
 
-To access the CrowdSec cli (cscli) run: `docker exec -it crowdsec_app_1 /bin/bash`.
+To access the CrowdSec cli (cscli) run: `docker exec -it delfitlm_crowdsec_1 /bin/bash`.
+
+## Install collections 
+
+Crowdsec Hub can be used to install scenarios under which bans are enforced: https://docs.crowdsec.net/docs/user_guides/hub_mgmt/.
+
+1. Access the container for cscli: `docker exec -it delfitlm_crowdsec_1 /bin/bash`.
+
+2. Install the `nginx` scenario collection: `cscli collections install crowdsecurity/nginx`.
 
 ## Create API keys for bouncers
 
-1. Access the container for cscli: `docker exec -it crowdsec_app_1 /bin/bash`.
+1. Access the container for cscli: `docker exec -it delfitlm_crowdsec_1 /bin/bash`.
 
-2. Create an api key with: `cscli bouncers add BouncerName`.
-
+2. Create an api key with: `cscli bouncers add BouncerName`. (save it for the firewall setup)
 
 ## Firewall bouncer setup
 
