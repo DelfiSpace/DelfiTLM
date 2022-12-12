@@ -2,16 +2,17 @@
 from django.db import models
 from django.db.models.deletion import DO_NOTHING
 from django.utils import timezone
-from members.models import Member
 from transmission.processing.telemetry_scraper import TIME_FORMAT
 
-#pylint: disable=all
+
+# pylint: disable=all
 
 
 class Satellite(models.Model):
     """Table containing all satellites managed in this db"""
     sat = models.CharField(null=False, max_length=32, unique=True)
     norad_id = models.IntegerField(null=True, unique=True)
+    status = models.SlugField
 
     def __str__(self) -> str:
         return str(self.sat)
@@ -37,7 +38,7 @@ class Downlink(models.Model):
 
     def to_dictionary(self) -> dict:
         """Convert Downlink object to dict"""
-        frame_dict = {}
+        frame_dict = dict()
         frame_dict["timestamp"] = self.timestamp.strftime(TIME_FORMAT)
         frame_dict["observer"] = self.observer
         frame_dict["application"] = self.application

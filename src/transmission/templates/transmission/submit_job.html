@@ -35,15 +35,15 @@
 <h1>Submit job</h1>
 <form class="post-form" method="POST">{% csrf_token %}
     <fieldset class="module aligned wide">
-    {% for field in form %}
+    {% for field in submit_job_form %}
         <div class="form-row">
             {{ field.errors }}
             {{ field.label_tag }}
             {{ field }}
         </div>
     {% endfor %}
-    <input type="submit" value="Submit">
-</fieldset>
+    <input type="submit" name="Submit Job" value="Submit Job">
+    </fieldset>
 </form>
 
 <p>[1]: Satellite will only be considered for scraping and bucket processing jobs.</p>
@@ -70,5 +70,24 @@
     {% endfor %}
 </ul>
 {% endif %}
+
+<br>
+<br>
+
+<h1>Remove job</h1>
+
+<form class="post-form" method="POST">{% csrf_token %}
+    <fieldset class="module aligned wide">
+    {% for field in remove_job_form %}
+        <div class="form-row">
+            {{ field.errors }}
+            {{ field.label_tag }}
+            {{ field }}
+        </div>
+    {% endfor %}
+    <input type="submit" name="Remove Job" value="Remove Job">
+    </fieldset>
+</form>
+
 
 {% endblock %}

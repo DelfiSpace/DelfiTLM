@@ -1,15 +1,20 @@
 """Scheduler for planning telemetry scrapes and frame processing"""
+import datetime
 from typing import Callable
+
 from apscheduler.schedulers.background import BackgroundScheduler
+from apscheduler.triggers.interval import IntervalTrigger
+from apscheduler.triggers.date import DateTrigger
 from apscheduler.executors.pool import ThreadPoolExecutor
-from apscheduler.events import EVENT_JOB_ADDED, EVENT_JOB_REMOVED,\
-EVENT_JOB_EXECUTED,EVENT_JOB_SUBMITTED
+from apscheduler.events import EVENT_JOB_ADDED, EVENT_JOB_REMOVED, \
+    EVENT_JOB_EXECUTED, EVENT_JOB_SUBMITTED
 from django_logger import logger
 
 
 class Singleton(type):
     """Singleton class"""
     _instances = {}
+
     def __call__(cls, *args, **kwargs):
         if cls not in cls._instances:
             cls._instances[cls] = super(Singleton, cls).__call__(*args, **kwargs)
@@ -22,9 +27,9 @@ class Scheduler(metaclass=Singleton):
 
     # Scheduler workflow: add job -> remove job -> submit job -> execute job
     # Task Triggers:
-        # date: use when you want to run the job just once at a certain point of time
-        # interval: use when you want to run the job at fixed intervals of time
-        # cron: use when you want to run the job periodically at certain time(s) of day
+    # date: use when you want to run the job just once at a certain point of time
+    # interval: use when you want to run the job at fixed intervals of time
+    # cron: use when you want to run the job periodically at certain time(s) of day
 
     __instance = None
 
@@ -42,7 +47,7 @@ class Scheduler(metaclass=Singleton):
                 # 'processpool': ProcessPoolExecutor(0)
             }
             job_defaults = {
-                'coalesce': False,
+                'coalesce': True,
                 'max_instances': 1
             }
 
@@ -60,55 +65,61 @@ class Scheduler(metaclass=Singleton):
 
             self.start_scheduler()
 
-
     def add_job_listener(self, event):
         """Listens to newly added jobs"""
         logger.info("Scheduler added job: %s", event.job_id)
         self.pending_jobs.add(event.job_id)
-
 
     def remove_job_listener(self, event):
         """Listens to removed jobs"""
         logger.info("Scheduler removed job: %s", event.job_id)
         self.pending_jobs.remove(event.job_id)
 
-
     def executed_job_listener(self, event):
         """Listens to executed jobs"""
         logger.info("Scheduler executed job: %s", event.job_id)
         self.running_jobs.remove(event.job_id)
-
 
     def submitted_job_listener(self, event):
         """Listens to submitted jobs"""
         self.running_jobs.add(event.job_id)
         logger.info("Scheduler submitted job: %s", event.job_id)
 
-
-    def get_pending_jobs(self) -> list:
+    def get_pending_jobs(self) -> set:
         """Get the ids of the currently scheduled jobs."""
         return self.pending_jobs
 
-    def get_running_jobs(self) -> list:
+    def get_running_jobs(self) -> set:
         """Get the ids of the currently running jobs."""
         return self.running_jobs
 
-
-    def add_job_to_schedule(self, function: Callable, args:list, job_id:str) -> None:
+    def add_job_to_schedule(self, function: Callable, args: list, job_id: str, date: datetime = None,
+                            interval: int = None) -> None:
         """Add a job to the schedule if not already scheduled."""
-        if job_id not in self.running_jobs and job_id not in self.pending_jobs:
-            self.scheduler.add_job(
-                    function,
-                    args=args,
-                    id=job_id,
-                )
+        if interval is not None:
+            trigger = IntervalTrigger(minutes=interval, start_date=date)
+        else:
+            trigger = DateTrigger(run_date=date)
 
+        if job_id not in self.running_jobs:
+            self.scheduler.add_job(
+                function,
+                args=args,
+                id=job_id,
+                trigger=trigger,
+            )
+        elif job_id in self.pending_jobs:
+            self.scheduler.reschedule_job(job_id, trigger=trigger)
+
+    def remove_job_from_schedule(self, job_id: str):
+        """Remove a job to the schedule if it exists."""
+        if job_id in self.pending_jobs:
+            self.scheduler.remove_job(job_id)
 
     def start_scheduler(self) -> None:
         """Start the background scheduler"""
         logger.info("Scheduler started")
         self.scheduler.start()
-
 
     def stop_scheduler(self) -> None:
         """Stop the scheduler"""
