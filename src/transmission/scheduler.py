@@ -1,7 +1,15 @@
-"""Scheduler for planning telemetry scrapes and frame processing"""
+"""Scheduler for planning telemetry scrapes and frame processing and
+ methods for adding frame processing jobs to the scheduler.
+Scraping, buffer processing and bucket processing can be parallelized.
+Limitations:
+- Duplicate tasks are not considered.
+- Each satellite can have only 1 bucket processing job scheduled out of the following:
+    - raw_bucket_processing
+    - reprocess_entire_raw_bucket
+    - reprocess_failed_raw_bucket
+"""
 import datetime
 from typing import Callable
-
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.interval import IntervalTrigger
 from apscheduler.triggers.date import DateTrigger
@@ -9,6 +17,57 @@ from apscheduler.executors.pool import ThreadPoolExecutor
 from apscheduler.events import EVENT_JOB_ADDED, EVENT_JOB_REMOVED, \
     EVENT_JOB_EXECUTED, EVENT_JOB_SUBMITTED
 from django_logger import logger
+from transmission.processing.satellites import SATELLITES
+from transmission.processing.process_raw_bucket import process_raw_bucket
+from transmission.processing.telemetry_scraper import scrape
+from transmission.processing.save_raw_data import process_uplink_and_downlink
+
+
+def get_job_id(satellite: str, job_description: str) -> str:
+    """Create an id, job description"""
+
+    if "bucket" in job_description:
+        return satellite + "_bucket_processing"
+
+    return satellite + "_" + job_description
+
+
+def remove_job(satellite: str, job_type: str):
+    """Remove job from schedule"""
+    job_id = get_job_id(satellite, job_type)
+    scheduler = Scheduler()
+    scheduler.remove_job_from_schedule(job_id)
+
+
+def schedule_job(satellite: str, job_type: str, link: str,
+                 date: datetime = None, interval: int = None) -> None:
+    """Schedule job"""
+    scheduler = Scheduler()
+
+    if job_type == "scraper":
+        args = [satellite]
+        job_id = get_job_id(satellite, job_type)
+        scheduler.add_job_to_schedule(scrape, args, job_id, date, interval)
+
+    elif job_type == "buffer_processing":
+        args = []
+        job_id = job_type
+        scheduler.add_job_to_schedule(process_uplink_and_downlink, args, job_id, date, interval)
+
+    elif job_type == "raw_bucket_processing":
+        args = [satellite, link]
+        job_id = get_job_id(satellite, job_type)
+        scheduler.add_job_to_schedule(process_raw_bucket, args, job_id, date, interval)
+
+    elif job_type == "reprocess_entire_raw_bucket":
+        args = [satellite, link, True, False]
+        job_id = get_job_id(satellite, job_type)
+        scheduler.add_job_to_schedule(process_raw_bucket, args, job_id, date, interval)
+
+    elif job_type == "reprocess_failed_raw_bucket":
+        args = [satellite, link, False, True]
+        job_id = get_job_id(satellite, job_type)
+        scheduler.add_job_to_schedule(process_raw_bucket, args, job_id, date, interval)
 
 
 class Singleton(type):
@@ -65,22 +124,35 @@ class Scheduler(metaclass=Singleton):
 
             self.start_scheduler()
 
-    def add_job_listener(self, event):
+    def add_job_listener(self, event) -> None:
         """Listens to newly added jobs"""
         logger.info("Scheduler added job: %s", event.job_id)
         self.pending_jobs.add(event.job_id)
 
-    def remove_job_listener(self, event):
+    def remove_job_listener(self, event) -> None:
         """Listens to removed jobs"""
         logger.info("Scheduler removed job: %s", event.job_id)
         self.pending_jobs.remove(event.job_id)
 
-    def executed_job_listener(self, event):
+    def executed_job_listener(self, event) -> None:
         """Listens to executed jobs"""
         logger.info("Scheduler executed job: %s", event.job_id)
         self.running_jobs.remove(event.job_id)
 
-    def submitted_job_listener(self, event):
+        # automated processing pipeline:
+        # - when a buffer processing task completes that will trigger the raw bucket processing
+        # - when a scraper task completes that will trigger the raw bucket processing
+        if "buffer_processing" in event.job_id:
+            for sat in SATELLITES:
+                schedule_job(sat, "raw_bucket_processing", "uplink")
+                schedule_job(sat, "raw_bucket_processing", "downlink")
+
+        elif "scraper" in event.job_id:
+            for sat in SATELLITES:
+                if sat in event.job_id:
+                    schedule_job(sat, "raw_bucket_processing", "downlink")
+
+    def submitted_job_listener(self, event) -> None:
         """Listens to submitted jobs"""
         self.running_jobs.add(event.job_id)
         logger.info("Scheduler submitted job: %s", event.job_id)
@@ -93,8 +165,9 @@ class Scheduler(metaclass=Singleton):
         """Get the ids of the currently running jobs."""
         return self.running_jobs
 
-    def add_job_to_schedule(self, function: Callable, args: list, job_id: str, date: datetime = None,
-                            interval: int = None) -> None:
+    # pylint:disable=R0913
+    def add_job_to_schedule(self, function: Callable, args: list, job_id: str,
+                            date: datetime = None, interval: int = None) -> None:
         """Add a job to the schedule if not already scheduled."""
         if interval is not None:
             trigger = IntervalTrigger(minutes=interval, start_date=date)
@@ -111,7 +184,7 @@ class Scheduler(metaclass=Singleton):
         elif job_id in self.pending_jobs:
             self.scheduler.reschedule_job(job_id, trigger=trigger)
 
-    def remove_job_from_schedule(self, job_id: str):
+    def remove_job_from_schedule(self, job_id: str) -> None:
         """Remove a job to the schedule if it exists."""
         if job_id in self.pending_jobs:
             self.scheduler.remove_job(job_id)

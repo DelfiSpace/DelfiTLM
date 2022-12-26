@@ -52,7 +52,7 @@ def submit_frame(request):  # pylint:disable=R0911
                         api_key_name, number_of_saved_frames)
 
             return JsonResponse({"result": "success",
-                                 "message": f"Successful submission, {number_of_saved_frames} frames saved"},
+                                 "message": f"Successful, {number_of_saved_frames} frames saved"},
                                 status=HTTPStatus.CREATED)
 
         except APIKey.DoesNotExist as _:  # pylint:disable=C0103
