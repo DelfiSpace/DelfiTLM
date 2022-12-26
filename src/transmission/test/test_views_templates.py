@@ -5,8 +5,8 @@ from rest_framework.test import force_authenticate
 from django.contrib.auth.models import Permission
 from django.urls import reverse
 from transmission.models import Downlink, Satellite, Uplink
-from transmission.processing.save_raw_data import store_frame
-from transmission.views import  submit_frame
+from transmission.processing.save_raw_data import store_frames
+from transmission.views import submit_frame
 
 from members.models import Member
 from members.views import generate_key
@@ -30,9 +30,9 @@ class TestTableViews(TestCase):
     def test_requested_tables(self):
         # access uplink/downlink tables
         frame = { "link": "downlink", "qos": 98.6, "sat": "delfic3", "timestamp": "2021-12-19T02:20:14.959630Z", "frequency": 2455.66, "frame": "A8989A40404000888C9C66B0A80003F0890FFDAD776500001E601983C008C39C10D02911E2F0FF71230DECE70032044C09500311119B8CA092A08B5E85919492938285939C7900000000000000000000005602F637005601F3380000006D70000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000434B1345B440BF3C9736D0301D240E000004B82C4050B26DDB942EB4D0CFE4E9D64946"}
-        store_frame(frame, "user")
+        store_frames(frame, "user")
         frame = { "link": "uplink", "qos": 98.6, "sat": "delfic3", "timestamp": "2021-12-19T02:20:14.959630Z", "frequency": 2455.66, "frame": "A8989A40404000888C9C66B0A80003F0890FFDAD776500001E601983C008C39C10D02911E2F0FF71230DECE70032044C09500311119B8CA092A08B5E85919492938285939C7900000000000000000000005602F637005601F3380000006D70000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000434B1345B440BF3C9736D0301D240E000004B82C4050B26DDB942EB4D0CFE4E9D64946"}
-        store_frame(frame, "user")
+        store_frames(frame, "user")
 
         response = self.client.post(reverse('login'), {'username': 'user', 'password': 'delfispace4242'})
         self.assertEqual(response.status_code, 302)

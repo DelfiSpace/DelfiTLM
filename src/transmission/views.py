@@ -17,11 +17,10 @@ from members.models import APIKey
 from transmission.forms.forms import SubmitJob, RemoveJob
 from transmission.processing.process_raw_bucket import process_raw_bucket
 from transmission.processing.add_dummy_data import add_dummy_downlink_frames
-from transmission.processing.submit_job_to_scheduler import schedule_job, remove_job
-from transmission.scheduler import Scheduler
+from transmission.scheduler import Scheduler, remove_job, schedule_job
 from .models import Uplink, Downlink, TLE
 from .filters import TelemetryDownlinkFilter, TelemetryUplinkFilter, TLEFilter
-from .processing.save_raw_data import process_frames, store_frame
+from .processing.save_raw_data import process_frames, store_frames
 
 QUERY_ROW_LIMIT = 100
 
@@ -40,15 +39,20 @@ def submit_frame(request):  # pylint:disable=R0911
             # retrieve the user agent (if present, empty otherwise)
             user_agent = request.META.get('HTTP_USER_AGENT', '')
 
-            # search for the user name matching the API key
+            # search for the username matching the API key
             api_key_name = APIKey.objects.get_from_key(key)
             # retrieve the JSON frame just submitted
             frame_to_add = json.loads(request.body)
             # add the frame to the database
-            store_frame(frame_to_add, username=api_key_name, application=user_agent)
+            number_of_saved_frames = store_frames(frame_to_add,
+                                                  username=api_key_name,
+                                                  application=user_agent)
 
-            logger.info("%s submited a frame. Frame successfully stored.", api_key_name)
-            return JsonResponse({"result": "success", "message": "Successful submission"},
+            logger.info("%s made a frame submission: %s frames saved.",
+                        api_key_name, number_of_saved_frames)
+
+            return JsonResponse({"result": "success",
+                                 "message": f"Successful submission, {number_of_saved_frames} frames saved"},
                                 status=HTTPStatus.CREATED)
 
         except APIKey.DoesNotExist as _:  # pylint:disable=C0103

@@ -6,21 +6,26 @@ from transmission.processing.satellites import TIME_FORMAT
 
 TIME_RANGE_FILES_DIR = "transmission/processing/temp/"
 
+
 def get_new_data_file_path(satellite: str, link: str) -> str:
     """Return filepath of the new data time range file."""
     return TIME_RANGE_FILES_DIR + satellite + "/" + satellite + "_" + link + ".json"
+
 
 def get_failed_data_file_path(satellite: str, link: str) -> str:
     """Return filepath of the time range file storing the interval ."""
     return TIME_RANGE_FILES_DIR + satellite + "/" + "failed" + "_" + link + ".json"
 
+
 def get_new_data_scraper_temp_folder(satellite: str) -> str:
     """Return filepath of the scraper process temp time range files."""
     return TIME_RANGE_FILES_DIR + satellite + "/scraper/"
 
+
 def get_new_data_buffer_temp_folder(satellite: str) -> str:
     """Return filepath of the buffer process temp time range files."""
     return TIME_RANGE_FILES_DIR + satellite + "/buffer/"
+
 
 def read_time_range_file(input_file: str) -> dict:
     """Read time range file and return contents as dictionary."""
@@ -31,7 +36,7 @@ def read_time_range_file(input_file: str) -> dict:
     return new_data_time_range
 
 
-def save_timestamps_to_file(timestamps:dict, input_file: str) -> None:
+def save_timestamps_to_file(timestamps: dict, input_file: str) -> None:
     """Dump timestamps to the input file in json format."""
     with open(input_file, "w", encoding="utf-8") as file:
         file.write(json.dumps(timestamps, indent=4))
@@ -47,7 +52,7 @@ def reset_new_data_timestamps(satellite: str, link: str, input_file: str) -> Non
 
 
 def include_timestamp_in_time_range(satellite: str, link: str, timestamp,
-                                    input_file:str=None, existing_range:dict=None)->dict:
+                                    input_file: str = None, existing_range: dict = None) -> dict:
     """This function ensures that a given timestamp will be included in the
     time range such that it can then be processed and parsed from raw form.
     The range can be maintained in memory given an existing_range or in file given an input_file."""
@@ -64,8 +69,8 @@ def include_timestamp_in_time_range(satellite: str, link: str, timestamp,
                                       (start_time, end_time), input_file, existing_range)
 
 
-def update_new_data_timestamps(satellite: str, link: str, new_time_range:tuple,
-                               input_file:str=None, existing_range:dict=None) -> None:
+def update_new_data_timestamps(satellite: str, link: str, new_time_range: tuple,
+                               input_file: str = None, existing_range: dict = None) -> None:
     """Bookkeep time range of unprocessed telemetry.
      If an input_file is specified, the timestamps from the file, will be updated and dumped.
      If the existing_range is specified, if will be updated and returned as a dictionary.
@@ -87,20 +92,19 @@ def update_new_data_timestamps(satellite: str, link: str, new_time_range:tuple,
     else:
         new_data_time_range = existing_range
 
-
     # No time range saved
     if new_data_time_range[satellite][link] == []:
         new_data_time_range[satellite][link] = [start_time, end_time]
     # Update time range
     else:
         new_data_time_range[satellite][link][0] = min(
-                                                new_data_time_range[satellite][link][0],
-                                                start_time
-                                                )
+            new_data_time_range[satellite][link][0],
+            start_time
+        )
         new_data_time_range[satellite][link][1] = max(
-                                                new_data_time_range[satellite][link][1],
-                                                end_time
-                                                )
+            new_data_time_range[satellite][link][1],
+            end_time
+        )
     if input_file is not None:
         with open(input_file, "w", encoding="utf-8") as file:
             json.dump(new_data_time_range, file, indent=4)
