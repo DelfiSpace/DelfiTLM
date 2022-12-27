@@ -21,4 +21,4 @@ jobs:
       run: |
         cd src
         find -name "*.py" -not -path "*/migrations/*" -not -path "*/test/*" -not -path "*/delfitlm/*" |
-        xargs pylint --load-plugins pylint_django --django-settings-module=delfitlm.settings
+        xargs pylint --max-line-length=120 --load-plugins pylint_django --django-settings-module=delfitlm.settings
