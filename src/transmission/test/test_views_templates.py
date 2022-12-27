@@ -5,6 +5,8 @@ from rest_framework.test import force_authenticate
 from django.contrib.auth.models import Permission
 from django.urls import reverse
 from transmission.models import Downlink, Satellite, Uplink
+from transmission.processing.bookkeep_new_data_time_range import combine_time_ranges
+from transmission.processing.satellites import SATELLITES
 from transmission.processing.save_raw_data import store_frames
 from transmission.views import submit_frame
 
@@ -13,6 +15,111 @@ from members.views import generate_key
 
 from unittest.mock import patch
 # pylint: disable=all
+
+class TestJobSubmission(TestCase):
+    def setUp(self):
+        self.factory = RequestFactory()
+        self.client = Client()
+        self.user = Member.objects.create_superuser(username='user', email='user@email.com', verified=True)
+        self.user.set_password('delfispace4242')
+        self.user.save()
+
+        self.client.post(reverse('login'), {'username': 'user', 'password': 'delfispace4242'})
+
+        Satellite.objects.create(sat='delfic3', norad_id=1).save()
+
+    def testBadFormSubmission(self):
+        response = self.client.post(reverse('submit_job'), {'sat': '', 'job_type': 'scraper', 'link': ''}, follow=True)
+
+        self.assertTemplateUsed(response, 'transmission/submit_job.html')
+        self.assertEqual(response.status_code, 200)
+
+        messages = list(response.context['messages'])
+        self.assertEqual(str(messages[0]), "['Select a satellite and/or link!']")
+
+    @patch("transmission.scheduler.Scheduler.add_job_to_schedule")
+    def testBucketProcessingJob(self, mock_scheduler):
+        response = self.client.post(reverse('submit_job'), {'sat': '', 'job_type': 'raw_bucket_processing', 'link': ''}, follow=True)
+
+        self.assertTemplateUsed(response, 'transmission/submit_job.html')
+        self.assertEqual(response.status_code, 200)
+
+        messages = list(response.context['messages'])
+        self.assertEqual(str(messages[0]), "['Select a satellite and/or link!']")
+
+        response = self.client.post(reverse('submit_job'), {'sat': 'delfi_c3', 'job_type': 'raw_bucket_processing', 'link': 'downlink'}, follow=True)
+
+        self.assertTemplateUsed(response, 'transmission/submit_job.html')
+        self.assertEqual(response.status_code, 200)
+
+        messages = list(response.context['messages'])
+        self.assertTrue("bucket_processing" in str(messages[0]))
+
+
+    @patch("transmission.scheduler.Scheduler.add_job_to_schedule")
+    def testBucketReprocessingJob(self, mock_scheduler):
+        response = self.client.post(reverse('submit_job'), {'sat': '', 'job_type': 'reprocess_entire_raw_bucket', 'link': ''}, follow=True)
+
+        self.assertTemplateUsed(response, 'transmission/submit_job.html')
+        self.assertEqual(response.status_code, 200)
+
+        messages = list(response.context['messages'])
+        self.assertEqual(str(messages[0]), "['Select a satellite and/or link!']")
+
+        response = self.client.post(reverse('submit_job'), {'sat': 'delfi_c3', 'job_type': 'reprocess_entire_raw_bucket', 'link': 'downlink'}, follow=True)
+
+        self.assertTemplateUsed(response, 'transmission/submit_job.html')
+        self.assertEqual(response.status_code, 200)
+
+        messages = list(response.context['messages'])
+        self.assertTrue("reprocess_entire_raw_bucket" in str(messages[0]))
+
+
+        response = self.client.post(reverse('submit_job'), {'sat': '', 'job_type': 'reprocess_failed_raw_bucket', 'link': ''}, follow=True)
+
+        self.assertTemplateUsed(response, 'transmission/submit_job.html')
+        self.assertEqual(response.status_code, 200)
+
+        messages = list(response.context['messages'])
+        self.assertEqual(str(messages[0]), "['Select a satellite and/or link!']")
+
+        response = self.client.post(reverse('submit_job'), {'sat': 'delfi_c3', 'job_type': 'reprocess_failed_raw_bucket', 'link': 'downlink'}, follow=True)
+
+        self.assertTemplateUsed(response, 'transmission/submit_job.html')
+        self.assertEqual(response.status_code, 200)
+
+        messages = list(response.context['messages'])
+        self.assertTrue("reprocess_failed_raw_bucket" in str(messages[0]))
+
+
+    @patch("transmission.scheduler.Scheduler.add_job_to_schedule")
+    def testScraperJob(self, mock_scheduler):
+        response = self.client.post(reverse('submit_job'), {'sat': '', 'job_type': 'scraper', 'link': ''}, follow=True)
+
+        self.assertTemplateUsed(response, 'transmission/submit_job.html')
+        self.assertEqual(response.status_code, 200)
+
+        messages = list(response.context['messages'])
+        self.assertEqual(str(messages[0]), "['Select a satellite and/or link!']")
+
+        response = self.client.post(reverse('submit_job'), {'sat': 'delfi_c3', 'job_type': 'scraper', 'link': 'downlink'}, follow=True)
+
+        self.assertTemplateUsed(response, 'transmission/submit_job.html')
+        self.assertEqual(response.status_code, 200)
+
+        messages = list(response.context['messages'])
+        self.assertTrue("scraper" in str(messages[0]))
+
+
+    @patch("transmission.scheduler.Scheduler.add_job_to_schedule")
+    def testBufferProcessingJob(self, mock_scheduler):
+        response = self.client.post(reverse('submit_job'), {'sat': '', 'job_type': 'buffer_processing', 'link': ''}, follow=True)
+
+        self.assertTemplateUsed(response, 'transmission/submit_job.html')
+        self.assertEqual(response.status_code, 200)
+
+        messages = list(response.context['messages'])
+        self.assertTrue("buffer_processing" in str(messages[0]))
 
 
 class TestTableViews(TestCase):
@@ -25,6 +132,9 @@ class TestTableViews(TestCase):
         Satellite.objects.create(sat='delfic3', norad_id=1).save()
 
     def tearDown(self):
+        for sat in SATELLITES:
+            combine_time_ranges(sat, 'uplink')
+            combine_time_ranges(sat, 'downlink')
         self.client.logout()
 
     def test_requested_tables(self):
@@ -85,6 +195,10 @@ class TestSubmitFrames(TestCase):
         Satellite.objects.create(sat='delfic3', norad_id=1).save()
 
     def tearDown(self):
+        for sat in SATELLITES:
+            combine_time_ranges(sat, 'uplink')
+            combine_time_ranges(sat, 'downlink')
+
         self.client.logout()
 
     def test_submit_get_request_not_allowed(self):
@@ -207,6 +321,54 @@ class TestSubmitFrames(TestCase):
         self.assertEquals(response.status_code, 201)
         self.assertEqual(len(Uplink.objects.all()), 1) # uplink table has 1 entry
         self.assertEqual(str(Uplink.objects.first().timestamp), "2021-12-19 02:20:14.959630+00:00")
+
+
+
+    def test_submit_with_timestamps(self):
+
+        self.assertEqual(len(Downlink.objects.all()), 0) # downlink table empty
+        self.assertEqual(len(Uplink.objects.all()), 0) # uplink table empty
+
+        f1 = { "qos": 98.6, "sat": "delfipq", "timestamp": "2021-12-19T02:20:14.959630Z", "frequency": 2455.66,
+              "frame": "8EA49EAA9C88E088988C92A0A26103F00008730150020002008100400000002D63007DE95A02FF64FFF1FFFF000F0BC3004411B00F990F8A000E03ECFFB3FFC300000000000000240000000000000EB80014FFFF0021000010CD0FE111560EECFF7CFEE0FF65FF0F00080000001000000FA20146104D012C00100000000500000B0001460B3B"}
+        f2 = { "qos": 98.6, "sat": "delfipq", "timestamp": "2021-12-19T02:20:14.959630Z", "frequency": 2455.66,
+              "frame": "8EA49EAA9C88E088988C92A0A26103F000081B015002000300000000000000000000000000000000000000000000"}
+        f3 = { "qos": 98.6, "sat": "delfipq", "timestamp": "2021-12-19T02:20:14.959630Z", "frequency": 2455.66,
+              "frame": "8EA49EAA9C88E088988C92A0A26103F000082801500200040093000E00000000AB0078993702FFEDFC10250027FFDDFF8D011A000000000000FFB4"}
+
+        frame_list = [f1, f2, f3]
+        for f in frame_list:
+            f["link"] = "downlink"
+
+        request_key = self.factory.get(path='members/key/', content_type='application/json')
+
+        user = Member.objects.get(username='user')
+        force_authenticate(request_key, user=user)
+
+        request_key.user = user
+        response_key = generate_key(request_key).content
+
+        request = self.factory.post(path='submit_frame', data=frame_list, content_type='application/json')
+        request.user = user
+        request.META['HTTP_AUTHORIZATION'] = json.loads(response_key)['generated_key']
+
+        # test downlink
+        response = submit_frame(request)
+
+        self.assertEquals(response.status_code, 201)
+        self.assertEqual(len(Downlink.objects.all()), 3) # downlink table has 1 entry
+
+        # test uplink
+        frame_list = [f1, f2, f3]
+        for f in frame_list:
+            f["link"] = "uplink"
+        request = self.factory.post(path='submit_frame', data=frame_list, content_type='application/json')
+        request.user = user
+        request.META['HTTP_AUTHORIZATION'] = json.loads(response_key)['generated_key']
+
+        response = submit_frame(request)
+        self.assertEquals(response.status_code, 201)
+        self.assertEqual(len(Uplink.objects.all()), 3) # uplink table has 1 entry
 
 
     def test_submit_with_non_utc_timestamps(self):

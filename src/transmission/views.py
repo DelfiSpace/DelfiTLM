@@ -173,20 +173,6 @@ def process(request, link):
     return redirect('get_frames_table', link)
 
 
-def process_raw_telemetry_bucket(request, satellite, link):
-    """Trigger telemetry processing in influxdb given satellite and link"""
-    user = request.user
-
-    if user.has_perm("transmission.view_downlink"):
-        processed_frames_count, total_frames_count = process_raw_bucket(satellite, link)
-        message = f"{processed_frames_count}/{total_frames_count}"
-        message += f" {satellite} telemetry frames processed"
-        messages.info(request, message)
-        return JsonResponse({"message": message})
-
-    return PermissionDenied()
-
-
 def paginate_telemetry_table(request, telemetry_filter, table_name):
     """Paginates a telemetry table and renders the filtering form"""
 
@@ -256,10 +242,19 @@ def submit_job(request):
     if request.method == 'POST':
         if form.is_valid():
             form_data = form.cleaned_data
-            if "Submit Job" in request.POST:
-                schedule_job(form_data["sat"], form_data["job_type"], form_data["link"])
-            else:
-                remove_job(form_data["sat"], form_data["job_type"])
+            sat = form_data["sat"]
+            job_type = form_data["job_type"]
+
+            try:
+                if "Remove Job" in request.POST:
+                    remove_job(form_data["sat"], form_data["job_type"])
+                    messages.info(request, f"{sat} {job_type} will be removed from pending jobs list")
+                else:
+                    schedule_job(sat, job_type, form_data["link"])
+                    messages.info(request, f"{sat} {job_type} {form_data['link']} submitted")
+
+            except ValidationError as e:
+                messages.error(request, str(e))
 
             return HttpResponseRedirect(reverse("submit_job"))
 

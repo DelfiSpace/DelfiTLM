@@ -16,6 +16,7 @@ from apscheduler.triggers.date import DateTrigger
 from apscheduler.executors.pool import ThreadPoolExecutor
 from apscheduler.events import EVENT_JOB_ADDED, EVENT_JOB_REMOVED, \
     EVENT_JOB_EXECUTED, EVENT_JOB_SUBMITTED
+from django.forms import ValidationError
 from django_logger import logger
 from transmission.processing.satellites import SATELLITES
 from transmission.processing.process_raw_bucket import process_raw_bucket
@@ -34,6 +35,10 @@ def get_job_id(satellite: str, job_description: str) -> str:
 
 def remove_job(satellite: str, job_type: str):
     """Remove job from schedule"""
+
+    if satellite is None:
+        raise ValidationError("Select a satellite and/or link!")
+
     job_id = get_job_id(satellite, job_type)
     scheduler = Scheduler()
     scheduler.remove_job_from_schedule(job_id)
@@ -44,7 +49,7 @@ def schedule_job(satellite: str, job_type: str, link: str,
     """Schedule job"""
     scheduler = Scheduler()
 
-    if job_type == "scraper":
+    if job_type == "scraper" and satellite in SATELLITES:
         args = [satellite]
         job_id = get_job_id(satellite, job_type)
         scheduler.add_job_to_schedule(scrape, args, job_id, date, interval)
@@ -54,21 +59,23 @@ def schedule_job(satellite: str, job_type: str, link: str,
         job_id = job_type
         scheduler.add_job_to_schedule(process_uplink_and_downlink, args, job_id, date, interval)
 
-    elif job_type == "raw_bucket_processing":
+    elif job_type == "raw_bucket_processing" and satellite in SATELLITES and link in ['uplink', 'downlink']:
         args = [satellite, link]
         job_id = get_job_id(satellite, job_type)
         scheduler.add_job_to_schedule(process_raw_bucket, args, job_id, date, interval)
 
-    elif job_type == "reprocess_entire_raw_bucket":
+    elif job_type == "reprocess_entire_raw_bucket" and satellite in SATELLITES and link in ['uplink', 'downlink']:
         args = [satellite, link, True, False]
         job_id = get_job_id(satellite, job_type)
         scheduler.add_job_to_schedule(process_raw_bucket, args, job_id, date, interval)
 
-    elif job_type == "reprocess_failed_raw_bucket":
+    elif job_type == "reprocess_failed_raw_bucket" and satellite in SATELLITES and link in ['uplink', 'downlink']:
         args = [satellite, link, False, True]
         job_id = get_job_id(satellite, job_type)
         scheduler.add_job_to_schedule(process_raw_bucket, args, job_id, date, interval)
 
+    elif satellite not in SATELLITES or link not in ['uplink', 'downlink']:
+        raise ValidationError("Select a satellite and/or link!")
 
 class Singleton(type):
     """Singleton class"""
@@ -144,7 +151,6 @@ class Scheduler(metaclass=Singleton):
         # - when a scraper task completes that will trigger the raw bucket processing
         if "buffer_processing" in event.job_id:
             for sat in SATELLITES:
-                schedule_job(sat, "raw_bucket_processing", "uplink")
                 schedule_job(sat, "raw_bucket_processing", "downlink")
 
         elif "scraper" in event.job_id:

@@ -4,6 +4,8 @@ from django.test import Client, TestCase, RequestFactory, tag
 from django.contrib.messages.storage.fallback import FallbackStorage
 
 from transmission.models import Downlink, Satellite, Uplink
+from transmission.processing.bookkeep_new_data_time_range import combine_time_ranges
+from transmission.processing.satellites import SATELLITES
 from transmission.processing.save_raw_data import process_uplink_and_downlink, store_frames
 from transmission.views import delete_processed_frames, process
 
@@ -23,6 +25,11 @@ class TestFrameSubmission(TestCase):
         self.user.save()
         Satellite.objects.create(sat='delfipq', norad_id=1).save()
 
+    def tearDown(self) -> None:
+        for sat in SATELLITES:
+            combine_time_ranges(sat, 'uplink')
+            combine_time_ranges(sat, 'downlink')
+
     def testSubmitFramesBatch(self):
         # add 3 valid frames from delfi_pq
         f1 = { "qos": 98.6, "sat": "delfipq", "timestamp": "2021-12-19T02:20:14.959630Z", "frequency": 2455.66,
@@ -35,9 +42,13 @@ class TestFrameSubmission(TestCase):
 
         for f in frame_list:
             f["link"] = "downlink"
-
         store_frames(frame_list, "user")
         self.assertEqual(len(Downlink.objects.all()), 3)
+
+        for f in frame_list:
+            f["link"] = "uplink"
+        store_frames(frame_list, "user")
+        self.assertEqual(len(Uplink.objects.all()), 3)
 
     def testSubmitFrameOneByOne(self):
         # add 3 valid frames from delfi_pq
@@ -80,8 +91,11 @@ class TestFramesProcessing(TestCase):
             store_frames(f, "user")
 
     def tearDown(self):
-        self.client.logout()
+        for sat in SATELLITES:
+            combine_time_ranges(sat, 'uplink')
+            combine_time_ranges(sat, 'downlink')
 
+        self.client.logout()
 
     @patch('transmission.processing.save_raw_data.store_frame_to_influxdb')
     def test_delete_processed_frames(self, mock_store_frame_to_influxdb):

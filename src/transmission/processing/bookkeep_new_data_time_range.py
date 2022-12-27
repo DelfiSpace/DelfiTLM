@@ -1,5 +1,6 @@
 """Methods recording timestamps of newly added data,
 used for more targeted processing."""
+import os
 from datetime import datetime, timedelta
 import json
 from transmission.processing.satellites import TIME_FORMAT
@@ -110,3 +111,23 @@ def update_new_data_timestamps(satellite: str, link: str, new_time_range: tuple,
             json.dump(new_data_time_range, file, indent=4)
 
     return new_data_time_range
+
+
+def combine_time_ranges(satellite: str, link: str) -> None:
+    """Combine time ranges of new data from all processes (buffer processing and scraper)."""
+    scraper_folder = get_new_data_scraper_temp_folder(satellite)
+    buffer_folder = get_new_data_buffer_temp_folder(satellite)
+
+    for folder in [scraper_folder, buffer_folder]:
+
+        for temp_file in os.listdir(folder):
+            if link in temp_file:
+                new_data_time_range = read_time_range_file(folder + temp_file)
+                new_data_overview_file = get_new_data_file_path(satellite, link)
+                include_timestamp_in_time_range(satellite, link,
+                                                new_data_time_range[satellite][link][0],
+                                                input_file=new_data_overview_file)
+                include_timestamp_in_time_range(satellite, link,
+                                                new_data_time_range[satellite][link][1],
+                                                input_file=new_data_overview_file)
+                os.remove(folder + temp_file)
