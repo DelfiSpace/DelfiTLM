@@ -5,9 +5,6 @@ from django.utils import timezone
 from transmission.processing.telemetry_scraper import TIME_FORMAT
 
 
-# pylint: disable=all
-
-
 class Satellite(models.Model):
     """Table containing all satellites managed in this db"""
     sat = models.CharField(null=False, max_length=32, unique=True)
@@ -38,7 +35,7 @@ class Downlink(models.Model):
 
     def to_dictionary(self) -> dict:
         """Convert Downlink object to dict"""
-        frame_dict = dict()
+        frame_dict = {}
         frame_dict["timestamp"] = self.timestamp.strftime(TIME_FORMAT)
         frame_dict["observer"] = self.observer
         frame_dict["application"] = self.application

@@ -77,6 +77,7 @@ def schedule_job(satellite: str, job_type: str, link: str,
     elif satellite not in SATELLITES or link not in ['uplink', 'downlink']:
         raise ValidationError("Select a satellite and/or link!")
 
+
 class Singleton(type):
     """Singleton class"""
     _instances = {}

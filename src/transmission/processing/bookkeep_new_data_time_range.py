@@ -66,8 +66,7 @@ def include_timestamp_in_time_range(satellite: str, link: str, timestamp,
     start_time = (time - timedelta(seconds=1)).strftime(TIME_FORMAT)
     end_time = (time + timedelta(seconds=1)).strftime(TIME_FORMAT)
 
-    return update_new_data_timestamps(satellite, link,
-                                      (start_time, end_time), input_file, existing_range)
+    return update_new_data_timestamps(satellite, link, (start_time, end_time), input_file, existing_range)
 
 
 def update_new_data_timestamps(satellite: str, link: str, new_time_range: tuple,

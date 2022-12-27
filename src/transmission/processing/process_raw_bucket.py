@@ -9,7 +9,7 @@ from transmission.processing.influxdb_api import INFLUX_ORG, commit_frame, \
 write_api, query_api = get_influx_db_read_and_query_api()
 
 
-def store_raw_frame(satellite: str, timestamp, frame: str, observer: str, link: str) -> bool:
+def store_raw_frame(satellite: str, timestamp: str, frame: str, observer: str, link: str) -> bool:
     """Store raw unprocessed frame in influxdb"""
     frame_fields = {
         "frame": frame,
@@ -70,8 +70,7 @@ def parse_and_store_frame(satellite: str, timestamp: str, frame: str, observer: 
             db_fields["fields"] = {}
             db_fields["tags"] = {}
 
-        logger.info("%s: processed frame stored. Frame timestamp: %s, link: %s",
-                    satellite, timestamp, link)
+        logger.info("%s: processed frame stored. Frame timestamp: %s, link: %s", satellite, timestamp, link)
 
 
 def mark_processed_flag(satellite: str, link: str, timestamp: str, value: bool) -> None:
@@ -137,8 +136,7 @@ def process_retrieved_frames(satellite: str, link: str, start_time: str,
                     f"{skipped_frames_count} were skipped, and " + \
                     f"{failed_processing_count} failed."
 
-    logger.info("%s: %s frames processed from %s - %s; %s",
-                satellite, link, start_time, end_time, frames_status)
+    logger.info("%s: %s frames processed from %s - %s; %s", satellite, link, start_time, end_time, frames_status)
 
     if total_frames_count == 0:
         logger.info("%s: no frames to process", satellite)
@@ -173,8 +171,7 @@ def process_raw_bucket(satellite: str, link: str, all_frames: bool = False, fail
 
         start_time = new_data_time_range[satellite][link][0]
         end_time = new_data_time_range[satellite][link][1]
-        processed_frames_count, total_frames_count = \
-            process_retrieved_frames(satellite, link, start_time, end_time)
+        processed_frames_count, total_frames_count = process_retrieved_frames(satellite, link, start_time, end_time)
 
         # don't reset the interval of failed frames, unless reprocessing was successful
         if failed is False or processed_frames_count == total_frames_count:

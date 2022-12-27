@@ -33,7 +33,7 @@ def get_satnogs_params(satellite: str) -> dict:
 
     now = datetime.utcnow().strftime(TIME_FORMAT)
     logger.debug("Now: %s", now)
-    #params = {'app_source':'network', 'end': now, 'format': 'json', 'satellite': '51074'}
+    # params = {'app_source':'network', 'end': now, 'format': 'json', 'satellite': '51074'}
     params = {'end': now, 'format': 'json', 'satellite': SATELLITES[satellite]}
     return params
 
@@ -53,13 +53,13 @@ def strip_tlm(telemetry: dict, fields: list) -> dict:
             stripped_tlm[field] = telemetry[field]
     return stripped_tlm
 
+
 def strip_tlm_list(telemetry: list, fields: list) -> list:
     """Retrieve only a selection of fields from the telemetry dict for a list of tlm dicts."""
     stripped_tlm_list = []
     for tlm in telemetry:
         stripped_tlm_list.append(strip_tlm(tlm, fields))
     return stripped_tlm_list
-
 
 
 def scrape(satellite: str, save_to_db=True, save_to_file=False) -> None:
@@ -92,15 +92,15 @@ def scrape(satellite: str, save_to_db=True, save_to_file=False) -> None:
                 stripped_tlm = strip_tlm_list(telemetry_tmp, fields_to_save)
                 if save_raw_frame_to_influxdb(satellite, "downlink", stripped_tlm):
                     time_range = include_timestamp_in_time_range(satellite, 'downlink',
-                                        first["timestamp"], existing_range=time_range)
+                                                                 first["timestamp"], existing_range=time_range)
                     time_range = include_timestamp_in_time_range(satellite, 'downlink',
-                                        last["timestamp"], existing_range=time_range)
+                                                                 last["timestamp"], existing_range=time_range)
 
                 # if the frame is not stored (due to it being stored in a past scrape) and
                 # the next request retrieves data older than a week -> stop
                 elif (datetime.now() - next_time).days > 7:
                     logger.info("SatNOGS scraper stopped. Done scraping %s telemetry.", satellite)
-                    break # stop scraping
+                    break  # stop scraping
 
         except IndexError:
             logger.info("SatNOGS scraper stopped. Done scraping %s telemetry.", satellite)

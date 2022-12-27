@@ -87,7 +87,7 @@ def build_frame_model_object(frame: dict, username: str, application: str = None
 
 def check_valid_frame(frame: dict) -> None:
     """Check if a given frame has a valid form and a timestamp."""
-    # check if the frame exists and it is a HEX string
+    # check if the frame exists, and it is a HEX string
     non_hex = re.match("^[A-Fa-f0-9]+$", frame["frame"])
     if non_hex is None:
         raise ValidationError("Invalid frame, not an hexadecimal value.")

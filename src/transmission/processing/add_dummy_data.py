@@ -14,7 +14,7 @@ def add_dummy_downlink_frames(input_file="transmission/dummy_downlink.json"):
     """Add dummy frames to Downlink table as admin user."""
 
     # check if admin exists, if not create it
-    if len(Member.objects.filter(username="admin"))==0:
+    if len(Member.objects.filter(username="admin")) == 0:
         call_command('initadmin')
 
     with open(input_file, 'r', encoding="utf-8") as file:
@@ -37,11 +37,11 @@ def add_dummy_tlm_data(satellite, input_file):
         for frame in data:
             try:
                 parse_and_store_frame(satellite,
-                            frame["timestamp"],
-                            frame["frame"],
-                            frame["observer"],
-                            "downlink"
-                            )
+                                      frame["timestamp"],
+                                      frame["frame"],
+                                      frame["observer"],
+                                      "downlink"
+                                      )
             except XTCEParser.XTCEException as _:
                 # ignore
                 pass

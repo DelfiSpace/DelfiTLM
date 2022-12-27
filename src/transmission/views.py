@@ -15,7 +15,6 @@ from rest_framework.decorators import permission_classes
 from django_logger import logger
 from members.models import APIKey
 from transmission.forms.forms import SubmitJob, RemoveJob
-from transmission.processing.process_raw_bucket import process_raw_bucket
 from transmission.processing.add_dummy_data import add_dummy_downlink_frames
 from transmission.scheduler import Scheduler, remove_job, schedule_job
 from .models import Uplink, Downlink, TLE
@@ -99,12 +98,10 @@ def submit_frame(request):  # pylint:disable=R0911
 
             logger.error("%s submitted an invalid frame. Server error: %s",
                          api_key_name, err_message)
-            return JsonResponse({"result": "failure", "message": message_text},
-                                status=HTTPStatus.INTERNAL_SERVER_ERROR)
+            return JsonResponse({"result": "failure", "message": message_text}, status=HTTPStatus.INTERNAL_SERVER_ERROR)
 
     # POST is the only supported method, return error
-    return JsonResponse({"result": "failure", "message": "Method not allowed"},
-                        status=HTTPStatus.METHOD_NOT_ALLOWED)
+    return JsonResponse({"result": "failure", "message": "Method not allowed"}, status=HTTPStatus.METHOD_NOT_ALLOWED)
 
 
 def add_dummy_downlink(request):
@@ -253,8 +250,8 @@ def submit_job(request):
                     schedule_job(sat, job_type, form_data["link"])
                     messages.info(request, f"{sat} {job_type} {form_data['link']} submitted")
 
-            except ValidationError as e:
-                messages.error(request, str(e))
+            except ValidationError as exception:
+                messages.error(request, str(exception))
 
             return HttpResponseRedirect(reverse("submit_job"))
 

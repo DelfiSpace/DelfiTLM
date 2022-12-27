@@ -10,12 +10,11 @@ from django_logger import logger
 INFLUXDB_URL = "http://influxdb:8086"
 INFLUX_ORG = os.environ.get('INFLUXDB_V2_ORG', 'Delfi Space')
 
+
 def get_influxdb_client():
     """Connect to influxdb and return the influxdb client."""
 
-    client = InfluxDBClient(url=INFLUXDB_URL,
-                        token=os.environ.get('INFLUXDB_V2_TOKEN', 'adminpwd'),
-                        org=INFLUX_ORG)
+    client = InfluxDBClient(url=INFLUXDB_URL, token=os.environ.get('INFLUXDB_V2_TOKEN', 'adminpwd'), org=INFLUX_ORG)
 
     return client
 
@@ -50,14 +49,13 @@ def write_frame_to_raw_bucket(write_api, satellite, link, timestamp, frame_field
     bucket = satellite + "_raw_data"
 
     db_fields = {
-    "measurement": satellite + "_" + link + "_raw_data",
-    "time": timestamp,
-    "tags": tags,
-    "fields": frame_fields
+        "measurement": satellite + "_" + link + "_raw_data",
+        "time": timestamp,
+        "tags": tags,
+        "fields": frame_fields
     }
 
-    logger.info("%s: raw frame stored or updated. Frame timestamp: %s, link: %s",
-                satellite, timestamp, link)
+    logger.info("%s: raw frame stored or updated. Frame timestamp: %s, link: %s", satellite, timestamp, link)
 
     write_api.write(bucket, INFLUX_ORG, db_fields)
 
@@ -69,7 +67,6 @@ def commit_frame(write_api, query_api, satellite: str, link: str, tlm: dict) -> 
 
     bucket = satellite + "_raw_data"
     tlm_time = datetime.strptime(tlm['timestamp'], TIME_FORMAT)
-
 
     time_range_lower_bound = (tlm_time - timedelta(seconds=1)).strftime(TIME_FORMAT)
     time_range_upper_bound = (tlm_time + timedelta(seconds=1)).strftime(TIME_FORMAT)
