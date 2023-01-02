@@ -79,8 +79,8 @@ def mark_processed_flag(satellite: str, link: str, timestamp: str, value: bool) 
 
 
 # pylint: disable=R0914
-def process_retrieved_frames(satellite: str, link: str, start_time: str,
-                             end_time: str, skip_processed=True) -> tuple:
+def process_retrieved_frames(satellite: str, link: str, start_time: str, end_time: str,
+                             skip_processed: bool = True) -> tuple:
     """Parse frames, store the parsed form and mark the raw entry as processed.
     Return the total number of frames attempting to process and
     how many frames were successfully processed.
@@ -144,7 +144,19 @@ def process_retrieved_frames(satellite: str, link: str, start_time: str,
     return processed_frames_count, total_frames_count
 
 
-def process_raw_bucket(satellite: str, link: str, all_frames: bool = False, failed: bool = False) -> tuple:
+def process_raw_bucket(satellite: str, link: str = None, all_frames: bool = False, failed: bool = False):
+    """Trigger bucket processing or reprocessing given satellite."""
+    # if link is None process both uplink and downlink, otherwise process only specified link
+
+    if link is None:
+        _process_raw_bucket(satellite, "uplink", all_frames, failed)
+        _process_raw_bucket(satellite, "downlink", all_frames, failed)
+
+    elif link in ["uplink", "downlink"]:
+        _process_raw_bucket(satellite, link, all_frames, failed)
+
+
+def _process_raw_bucket(satellite: str, link: str, all_frames: bool, failed: bool) -> tuple:
     """Trigger bucket processing given satellite and link.
     all_frames=True will process the entire bucket and failed=True will process only failed frames.
     When both flags are True all frames will be processed."""

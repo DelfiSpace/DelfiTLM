@@ -38,10 +38,3 @@ class SubmitJob(forms.Form):
         required=False
     )
     interval = forms.IntegerField(min_value=1, label="Time Interval (minutes)", required=False)
-
-
-class RemoveJob(forms.Form):
-    """Remove Job form"""
-
-    sat = forms.ChoiceField(choices=satellites, widget=forms.Select, label='Satellite')
-    job_type = forms.ChoiceField(choices=jobs, widget=forms.Select, label='Job Type')

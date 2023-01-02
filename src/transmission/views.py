@@ -1,4 +1,5 @@
 """API request handling. Map requests to the corresponding HTMLs."""
+from datetime import datetime, timedelta
 from http import HTTPStatus
 import json
 from json.decoder import JSONDecodeError
@@ -14,9 +15,9 @@ from rest_framework_api_key.permissions import HasAPIKey
 from rest_framework.decorators import permission_classes
 from django_logger import logger
 from members.models import APIKey
-from transmission.forms.forms import SubmitJob, RemoveJob
+from transmission.forms.forms import SubmitJob
 from transmission.processing.add_dummy_data import add_dummy_downlink_frames
-from transmission.scheduler import Scheduler, remove_job, schedule_job
+from transmission.scheduler import Scheduler, schedule_job
 from .models import Uplink, Downlink, TLE
 from .filters import TelemetryDownlinkFilter, TelemetryUplinkFilter, TLEFilter
 from .processing.save_raw_data import process_frames, store_frames
@@ -43,12 +44,12 @@ def submit_frame(request):  # pylint:disable=R0911
             # retrieve the JSON frame just submitted
             frame_to_add = json.loads(request.body)
             # add the frame to the database
-            number_of_saved_frames = store_frames(frame_to_add,
-                                                  username=api_key_name,
-                                                  application=user_agent)
+            number_of_saved_frames = store_frames(frame_to_add, username=api_key_name, application=user_agent)
 
             logger.info("%s made a frame submission: %s frames saved.",
                         api_key_name, number_of_saved_frames)
+
+            schedule_job("buffer_processing", date=datetime.now() + timedelta(seconds=30))
 
             return JsonResponse({"result": "success",
                                  "message": f"Successful, {number_of_saved_frames} frames saved"},
@@ -59,45 +60,39 @@ def submit_frame(request):  # pylint:disable=R0911
             logger.error("API key authentication error during frame submission")
 
             message_text = "Unauthorized request"
-            return JsonResponse({"result": "failure", "message": message_text},
-                                status=HTTPStatus.UNAUTHORIZED)
+            return JsonResponse({"result": "failure", "message": message_text}, status=HTTPStatus.UNAUTHORIZED)
 
         except PermissionDenied as e:  # pylint:disable=C0103, W0612
             # catch submission without right permission
             logger.error("%s was denied permission to submit frame.", api_key_name)
 
             message_text = "Permission denied"
-            return JsonResponse({"result": "failure", "message": message_text},
-                                status=HTTPStatus.FORBIDDEN)
+            return JsonResponse({"result": "failure", "message": message_text}, status=HTTPStatus.FORBIDDEN)
 
         except BadRequest as e:  # pylint:disable=C0103, W0612
             # catch submission without right permission
             logger.error("%s submitted a bad request.", api_key_name)
 
-            return JsonResponse({"result": "failure", "message": str(e)},
-                                status=HTTPStatus.BAD_REQUEST)
+            return JsonResponse({"result": "failure", "message": str(e)}, status=HTTPStatus.BAD_REQUEST)
 
         except JSONDecodeError as e:  # pylint:disable=C0103, W0612
             # catch an error in the JSON request
             logger.error("%s submitted an invalid JSON structure.", api_key_name)
 
             message_text = "Invalid JSON structure"
-            return JsonResponse({"result": "failure", "message": message_text},
-                                status=HTTPStatus.BAD_REQUEST)
+            return JsonResponse({"result": "failure", "message": message_text}, status=HTTPStatus.BAD_REQUEST)
 
         except ValidationError as e:  # pylint:disable=C0103, W0612
             # catch an error in the frame formatting
             logger.error("%s submitted an invalid frame format.", api_key_name)
-            return JsonResponse({"result": "failure", "message": str(e)},
-                                status=HTTPStatus.BAD_REQUEST)
+            return JsonResponse({"result": "failure", "message": str(e)}, status=HTTPStatus.BAD_REQUEST)
 
         except Exception as e:  # pylint:disable=C0103, W0703
             # catch other exceptions
             err_message = str(e)
             message_text = type(e).__qualname__ + ": " + err_message
 
-            logger.error("%s submitted an invalid frame. Server error: %s",
-                         api_key_name, err_message)
+            logger.error("%s submitted an invalid frame. Server error: %s", api_key_name, err_message)
             return JsonResponse({"result": "failure", "message": message_text}, status=HTTPStatus.INTERNAL_SERVER_ERROR)
 
     # POST is the only supported method, return error
@@ -220,21 +215,41 @@ def get_tle_table(request):
 
 
 @login_required(login_url='/login')
+def modify_scheduler(request, command):
+    """Modify scheduler status: start, pause, resume, shutdown."""
+
+    if not request.user.is_superuser:
+        return HttpResponseForbidden()
+
+    scheduler = Scheduler()
+
+    if command == "pause":
+        scheduler.pause_scheduler()
+    elif command == "shutdown":
+        scheduler.stop_scheduler()
+    elif command == "force shutdown":
+        scheduler.force_stop_scheduler()
+    elif command == "start":
+        scheduler.start_scheduler()
+    elif command == "resume":
+        scheduler.resume_scheduler()
+    else:
+        messages.error(request, "Invalid scheduler modification requested!")
+
+    return HttpResponseRedirect(reverse("submit_job"))
+
+
+@login_required(login_url='/login')
 def submit_job(request):
     """Submit a task to be scheduled (scraping or bucket processing)"""
 
     if not request.user.is_superuser:
         return HttpResponseForbidden()
 
-    submit_job_form = SubmitJob()
-    remove_job_form = RemoveJob()
+    form = SubmitJob(request.POST or None)
+    submit_job_form = form
 
-    if "Remove Job" in request.POST:
-        form = RemoveJob(request.POST or None)
-        remove_job_form = form
-    else:
-        form = SubmitJob(request.POST or None)
-        submit_job_form = form
+    scheduler = Scheduler()
 
     if request.method == 'POST':
         if form.is_valid():
@@ -243,26 +258,22 @@ def submit_job(request):
             job_type = form_data["job_type"]
 
             try:
-                if "Remove Job" in request.POST:
-                    remove_job(form_data["sat"], form_data["job_type"])
-                    messages.info(request, f"{sat} {job_type} will be removed from pending jobs list")
-                else:
-                    schedule_job(sat, job_type, form_data["link"])
-                    messages.info(request, f"{sat} {job_type} {form_data['link']} submitted")
+                schedule_job(job_type, sat, form_data["link"])
+                messages.info(request, f"{sat} {job_type} {form_data['link']} submitted")
 
             except ValidationError as exception:
                 messages.error(request, str(exception))
 
             return HttpResponseRedirect(reverse("submit_job"))
 
-    scheduler = Scheduler()
     running_jobs = scheduler.get_running_jobs()
     pending_jobs = scheduler.get_pending_jobs()
+
     return render(request,
                   'transmission/submit_job.html',
                   {'submit_job_form': submit_job_form,
-                   'remove_job_form': remove_job_form,
                    'running_jobs': running_jobs,
                    'pending_jobs': pending_jobs,
+                   'scheduler_status': scheduler.get_state()
                    }
                   )

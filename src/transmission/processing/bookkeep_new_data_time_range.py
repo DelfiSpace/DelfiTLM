@@ -1,5 +1,4 @@
-"""Methods recording timestamps of newly added data,
-used for more targeted processing."""
+"""Methods recording timestamps of newly added data, used for more targeted processing."""
 import os
 from datetime import datetime, timedelta
 import json
@@ -66,14 +65,16 @@ def include_timestamp_in_time_range(satellite: str, link: str, timestamp,
     start_time = (time - timedelta(seconds=1)).strftime(TIME_FORMAT)
     end_time = (time + timedelta(seconds=1)).strftime(TIME_FORMAT)
 
-    return update_new_data_timestamps(satellite, link, (start_time, end_time), input_file, existing_range)
+    time_range = (start_time, end_time)
+
+    return update_new_data_timestamps(satellite, link, time_range, input_file, existing_range)
 
 
 def update_new_data_timestamps(satellite: str, link: str, new_time_range: tuple,
-                               input_file: str = None, existing_range: dict = None) -> None:
+                               input_file: str = None, existing_range: dict = None) -> dict:
     """Bookkeep time range of unprocessed telemetry.
      If an input_file is specified, the timestamps from the file, will be updated and dumped.
-     If the existing_range is specified, if will be updated and returned as a dictionary.
+     If the existing_range is specified, it will be updated and returned as a dictionary.
      If both input_file and existing_range are specified, an exception is raised."""
 
     if input_file is not None and existing_range is not None:
