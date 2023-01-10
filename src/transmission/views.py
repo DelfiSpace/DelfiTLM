@@ -49,7 +49,10 @@ def submit_frame(request):  # pylint:disable=R0911
             logger.info("%s made a frame submission: %s frames saved.",
                         api_key_name, number_of_saved_frames)
 
-            schedule_job("buffer_processing", date=datetime.now() + timedelta(seconds=30))
+            try:
+                schedule_job("buffer_processing", date=datetime.now() + timedelta(seconds=30))
+            except ValidationError as _:
+                pass
 
             return JsonResponse({"result": "success",
                                  "message": f"Successful, {number_of_saved_frames} frames saved"},
@@ -111,6 +114,9 @@ def add_dummy_downlink(request):
 def delete_processed_frames(request, link):
     """Remove the processed frames that are already stored in influxdb"""
     user = request.user
+
+    if request.method != "POST":
+        return HttpResponseBadRequest()
 
     if link not in ['uplink', 'downlink']:
         return HttpResponseBadRequest()
@@ -218,6 +224,9 @@ def get_tle_table(request):
 def modify_scheduler(request, command):
     """Modify scheduler status: start, pause, resume, shutdown."""
 
+    if request.method != 'POST':
+        return HttpResponseBadRequest()
+
     if not request.user.is_superuser:
         return HttpResponseForbidden()
 
@@ -256,9 +265,12 @@ def submit_job(request):
             form_data = form.cleaned_data
             sat = form_data["sat"]
             job_type = form_data["job_type"]
+            link = form_data["link"]
+            datetime = form_data["datetime"]
+            interval = form_data["interval"]
 
             try:
-                schedule_job(job_type, sat, form_data["link"])
+                schedule_job(job_type, sat, link, datetime, interval)
                 messages.info(request, f"{sat} {job_type} {form_data['link']} submitted")
 
             except ValidationError as exception:

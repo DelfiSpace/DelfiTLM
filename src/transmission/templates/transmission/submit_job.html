@@ -34,17 +34,33 @@
 
 <h1>Scheduler Status: {{scheduler_status}}</h1>
 {% if scheduler_status == "paused" %}
-    <a href="{% url 'modify_scheduler' command='resume'%}"><input type="submit" value="Resume Scheduler"></a>
-    <a href="{% url 'modify_scheduler' command='shutdown'%}"><input type="submit" value="Shutdown Scheduler"></a>
-    <a href="{% url 'modify_scheduler' command='force shutdown'%}"><input type="submit" value="Force Shutdown Scheduler"></a>
+    <form action="{% url 'modify_scheduler' command='resume'%}" method="POST">{% csrf_token %}
+        <input type="submit" value="Resume Scheduler">
+    </form>
+    <form action="{% url 'modify_scheduler' command='shutdown'%}" method="POST">{% csrf_token %}
+       <input type="submit" value="Shutdown Scheduler">
+    </form>
+    <form action="{% url 'modify_scheduler' command='force shutdown'%}" method="POST">{% csrf_token %}
+        <input type="submit" value="Force Shutdown Scheduler">
+    </form>
+
 {% endif %}
 {% if scheduler_status == "shutdown" %}
-    <a href="{% url 'modify_scheduler' command='start'%}"><input type="submit" value="Start Scheduler"></a>
+    <form action="{% url 'modify_scheduler' command='start'%}" method="POST">{% csrf_token %}
+        <input type="submit" value="Start Scheduler">
+    </form>
 {% endif %}
+
 {% if scheduler_status == "running" %}
-    <a href="{% url 'modify_scheduler' command='pause'%}"><input type="submit" value="Pause Scheduler"></a>
-    <a href="{% url 'modify_scheduler' command='shutdown'%}"><input type="submit" value="Shutdown Scheduler"></a>
-    <a href="{% url 'modify_scheduler' command='force shutdown'%}"><input type="submit" value="Force Shutdown Scheduler"></a>
+    <form action="{% url 'modify_scheduler' command='pause'%}" method="POST">{% csrf_token %}
+        <input type="submit" value="Pause Scheduler">
+    </form>
+    <form action="{% url 'modify_scheduler' command='shutdown'%}" method="POST">{% csrf_token %}
+       <input type="submit" value="Shutdown Scheduler">
+    </form>
+    <form action="{% url 'modify_scheduler' command='force shutdown'%}" method="POST">{% csrf_token %}
+        <input type="submit" value="Force Shutdown Scheduler">
+    </form>
 {% endif %}
 
 <br>

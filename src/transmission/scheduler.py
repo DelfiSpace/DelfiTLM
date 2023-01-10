@@ -187,7 +187,7 @@ class Scheduler(metaclass=Singleton):
         else:
             trigger = DateTrigger(run_date=date)
 
-        if job_id not in self.running_jobs:
+        if job_id not in self.running_jobs and job_id not in self.pending_jobs:
             self.scheduler.add_job(
                 function,
                 args=args,

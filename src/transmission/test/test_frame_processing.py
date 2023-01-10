@@ -97,6 +97,32 @@ class TestFramesProcessing(TestCase):
 
         self.client.logout()
 
+
+    @patch('transmission.processing.save_raw_data.store_frame_to_influxdb')
+    def test_bad_request(self, mock_store_frame_to_influxdb):
+        mock_store_frame_to_influxdb.return_value = (True, 'delfi_pq')
+
+        self.assertEqual(len(Downlink.objects.all()), 3)
+        self.assertEqual(len(Uplink.objects.all()), 3)
+        # process frames
+        process_uplink_and_downlink()
+
+        self.assertEqual(len(Downlink.objects.all()), 3)
+        self.assertEqual(len(Uplink.objects.all()), 3)
+        # request to delete processed frames
+        request = self.factory.get(path='transmission/delete-processed-frames/', content_type='application/json')
+        setattr(request, 'session', 'session')
+        setattr(request, '_messages', FallbackStorage(request))
+        request.user = self.user
+
+        # bad request
+        res = delete_processed_frames(request, "uplink")
+        self.assertEqual(res.status_code, 400)
+
+        self.assertEqual(len(Downlink.objects.all()), 3)
+        self.assertEqual(len(Uplink.objects.all()), 3)
+
+
     @patch('transmission.processing.save_raw_data.store_frame_to_influxdb')
     def test_delete_processed_frames(self, mock_store_frame_to_influxdb):
         mock_store_frame_to_influxdb.return_value = (True, 'delfi_pq')
