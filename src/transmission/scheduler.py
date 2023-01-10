@@ -128,12 +128,12 @@ class Scheduler(metaclass=Singleton):
             Scheduler.__instance = self
 
     def get_state(self) -> str:
-
+        """Returns the state of the scheduler: running, paused, shutdown."""
         if self.scheduler.state == STATE_STOPPED:
             return "shutdown"
-        elif self.scheduler.state == STATE_PAUSED:
+        if self.scheduler.state == STATE_PAUSED:
             return "paused"
-        elif self.scheduler.state == STATE_RUNNING:
+        if self.scheduler.state == STATE_RUNNING:
             return "running"
 
         return ""

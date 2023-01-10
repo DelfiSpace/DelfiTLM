@@ -1,5 +1,5 @@
 """API request handling. Map requests to the corresponding HTMLs."""
-from datetime import datetime, timedelta
+from datetime import timedelta, datetime
 from http import HTTPStatus
 import json
 from json.decoder import JSONDecodeError
@@ -266,11 +266,11 @@ def submit_job(request):
             sat = form_data["sat"]
             job_type = form_data["job_type"]
             link = form_data["link"]
-            datetime = form_data["datetime"]
+            date = form_data["datetime"]
             interval = form_data["interval"]
 
             try:
-                schedule_job(job_type, sat, link, datetime, interval)
+                schedule_job(job_type, sat, link, date, interval)
                 messages.info(request, f"{sat} {job_type} {form_data['link']} submitted")
 
             except ValidationError as exception:
