@@ -4,7 +4,9 @@ from django.test import Client, TestCase, RequestFactory, tag
 from django.contrib.messages.storage.fallback import FallbackStorage
 
 from transmission.models import Downlink, Satellite, Uplink
-from transmission.processing.save_raw_data import process_uplink_and_downlink, store_frame
+from transmission.processing.bookkeep_new_data_time_range import combine_time_ranges
+from transmission.processing.satellites import SATELLITES
+from transmission.processing.save_raw_data import process_uplink_and_downlink, store_frames
 from transmission.views import delete_processed_frames, process
 
 from members.models import Member
@@ -12,6 +14,57 @@ from members.models import Member
 from unittest.mock import patch
 # pylint: disable=all
 
+
+class TestFrameSubmission(TestCase):
+    def setUp(self):
+        self.factory = RequestFactory()
+        self.client = Client()
+        self.user = Member.objects.create_superuser(username='user', email='user@email.com')
+        self.user.set_password('delfispace4242')
+
+        self.user.save()
+        Satellite.objects.create(sat='delfipq', norad_id=1).save()
+
+    def tearDown(self) -> None:
+        for sat in SATELLITES:
+            combine_time_ranges(sat, 'uplink')
+            combine_time_ranges(sat, 'downlink')
+
+    def testSubmitFramesBatch(self):
+        # add 3 valid frames from delfi_pq
+        f1 = { "qos": 98.6, "sat": "delfipq", "timestamp": "2021-12-19T02:20:14.959630Z", "frequency": 2455.66,
+              "frame": "8EA49EAA9C88E088988C92A0A26103F00008730150020002008100400000002D63007DE95A02FF64FFF1FFFF000F0BC3004411B00F990F8A000E03ECFFB3FFC300000000000000240000000000000EB80014FFFF0021000010CD0FE111560EECFF7CFEE0FF65FF0F00080000001000000FA20146104D012C00100000000500000B0001460B3B"}
+        f2 = { "qos": 98.6, "sat": "delfipq", "timestamp": "2021-12-19T02:20:14.959630Z", "frequency": 2455.66,
+              "frame": "8EA49EAA9C88E088988C92A0A26103F000081B015002000300000000000000000000000000000000000000000000"}
+        f3 = { "qos": 98.6, "sat": "delfipq", "timestamp": "2021-12-19T02:20:14.959630Z", "frequency": 2455.66,
+              "frame": "8EA49EAA9C88E088988C92A0A26103F000082801500200040093000E00000000AB0078993702FFEDFC10250027FFDDFF8D011A000000000000FFB4"}
+        frame_list = [f1, f2, f3]
+
+        for f in frame_list:
+            f["link"] = "downlink"
+        store_frames(frame_list, "user")
+        self.assertEqual(len(Downlink.objects.all()), 3)
+
+        for f in frame_list:
+            f["link"] = "uplink"
+        store_frames(frame_list, "user")
+        self.assertEqual(len(Uplink.objects.all()), 3)
+
+    def testSubmitFrameOneByOne(self):
+        # add 3 valid frames from delfi_pq
+        f1 = { "qos": 98.6, "sat": "delfipq", "timestamp": "2021-12-19T02:20:14.959630Z", "frequency": 2455.66,
+              "frame": "8EA49EAA9C88E088988C92A0A26103F00008730150020002008100400000002D63007DE95A02FF64FFF1FFFF000F0BC3004411B00F990F8A000E03ECFFB3FFC300000000000000240000000000000EB80014FFFF0021000010CD0FE111560EECFF7CFEE0FF65FF0F00080000001000000FA20146104D012C00100000000500000B0001460B3B"}
+        f2 = { "qos": 98.6, "sat": "delfipq", "timestamp": "2021-12-19T02:20:14.959630Z", "frequency": 2455.66,
+              "frame": "8EA49EAA9C88E088988C92A0A26103F000081B015002000300000000000000000000000000000000000000000000"}
+        f3 = { "qos": 98.6, "sat": "delfipq", "timestamp": "2021-12-19T02:20:14.959630Z", "frequency": 2455.66,
+              "frame": "8EA49EAA9C88E088988C92A0A26103F000082801500200040093000E00000000AB0078993702FFEDFC10250027FFDDFF8D011A000000000000FFB4"}
+        frame_list = [f1, f2, f3]
+
+        for f in frame_list:
+            f["link"] = "uplink"
+            store_frames(f, "user")
+
+        self.assertEqual(len(Uplink.objects.all()), 3)
 
 class TestFramesProcessing(TestCase):
     def setUp(self):
@@ -33,12 +86,41 @@ class TestFramesProcessing(TestCase):
 
         for f in [f1, f2, f3]:
             f["link"] = "downlink"
-            store_frame(f, "user")
+            store_frames(f, "user")
             f["link"] = "uplink"
-            store_frame(f, "user")
+            store_frames(f, "user")
 
     def tearDown(self):
+        for sat in SATELLITES:
+            combine_time_ranges(sat, 'uplink')
+            combine_time_ranges(sat, 'downlink')
+
         self.client.logout()
+
+
+    @patch('transmission.processing.save_raw_data.store_frame_to_influxdb')
+    def test_bad_request(self, mock_store_frame_to_influxdb):
+        mock_store_frame_to_influxdb.return_value = (True, 'delfi_pq')
+
+        self.assertEqual(len(Downlink.objects.all()), 3)
+        self.assertEqual(len(Uplink.objects.all()), 3)
+        # process frames
+        process_uplink_and_downlink()
+
+        self.assertEqual(len(Downlink.objects.all()), 3)
+        self.assertEqual(len(Uplink.objects.all()), 3)
+        # request to delete processed frames
+        request = self.factory.get(path='transmission/delete-processed-frames/', content_type='application/json')
+        setattr(request, 'session', 'session')
+        setattr(request, '_messages', FallbackStorage(request))
+        request.user = self.user
+
+        # bad request
+        res = delete_processed_frames(request, "uplink")
+        self.assertEqual(res.status_code, 400)
+
+        self.assertEqual(len(Downlink.objects.all()), 3)
+        self.assertEqual(len(Uplink.objects.all()), 3)
 
 
     @patch('transmission.processing.save_raw_data.store_frame_to_influxdb')
@@ -248,9 +330,9 @@ class TestFramesProcessing(TestCase):
 
         for f in [f1, f2, f3]:
             f["link"] = "downlink"
-            store_frame(f, "user")
+            store_frames(f, "user")
             f["link"] = "uplink"
-            store_frame(f, "user")
+            store_frames(f, "user")
 
         # there are 3 valid and 3 invalid frames
         self.assertEqual(len(Downlink.objects.all().filter(processed=False)), 6)

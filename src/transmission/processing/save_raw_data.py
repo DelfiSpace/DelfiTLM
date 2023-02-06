@@ -3,6 +3,8 @@ import os
 import re
 import copy
 import json
+from typing import Union
+
 from django.forms import ValidationError
 from django.core.exceptions import PermissionDenied
 from django.db import models
@@ -20,7 +22,35 @@ from transmission.processing.influxdb_api import save_raw_frame_to_influxdb
 from transmission.processing.telemetry_scraper import strip_tlm
 
 
-def store_frame(frame: dict, username: str, application:str=None) -> None:
+def store_frames(frames, username: str, application: str = None) -> int:
+    """Store frames in batches if the input is a list.
+    Otherwise, in case of a dict, the frame is parsed and stored."""
+    if isinstance(frames, dict):
+        frame_object = build_frame_model_object(frames, username, application)
+        frame_object.save()
+        return 1
+
+    if isinstance(frames, list):
+        frame_objects_uplink = []
+        frame_objects_downlink = []
+
+        for frame in frames:
+            frame_object = build_frame_model_object(frame, username, application)
+            if isinstance(frame_object, Uplink):
+                frame_objects_uplink.append(frame_object)
+            elif isinstance(frame_object, Downlink):
+                frame_objects_downlink.append(frame_object)
+
+        # batch uplink/downlink frames into 1 database commit
+        Uplink.objects.bulk_create(frame_objects_uplink)
+        Downlink.objects.bulk_create(frame_objects_downlink)
+
+        return len(frame_objects_downlink) + len(frame_objects_uplink)
+
+    raise ValidationError("Invalid frame, not JSON object or array.")
+
+
+def build_frame_model_object(frame: dict, username: str, application: str = None) -> models.Model:
     """Adds one json frame to the uplink/downlink table"""
 
     frame_entry = None
@@ -52,12 +82,12 @@ def store_frame(frame: dict, username: str, application:str=None) -> None:
     # copy fields from frame to frame_entry
     frame_entry = parse_submitted_frame(frame, frame_entry)
 
-    frame_entry.save()
+    return frame_entry
 
 
 def check_valid_frame(frame: dict) -> None:
     """Check if a given frame has a valid form and a timestamp."""
-    # check if the frame exists and it is a HEX string
+    # check if the frame exists, and it is a HEX string
     non_hex = re.match("^[A-Fa-f0-9]+$", frame["frame"])
     if non_hex is None:
         raise ValidationError("Invalid frame, not an hexadecimal value.")
@@ -119,16 +149,16 @@ def process_frames(frames: QuerySet, link: str) -> int:
             processed_frames += 1
             if satellite not in processed_frames_timestamps:
                 processed_frames_timestamps[satellite] = include_timestamp_in_time_range(
-                                                            satellite, link,
-                                                            frame_obj.timestamp,
-                                                            existing_range={}
-                                                            )
+                    satellite, link,
+                    frame_obj.timestamp,
+                    existing_range={}
+                )
             else:
                 processed_frames_timestamps[satellite] = include_timestamp_in_time_range(
-                                            satellite, link,
-                                            frame_obj.timestamp,
-                                            existing_range=processed_frames_timestamps[satellite]
-                                            )
+                    satellite, link,
+                    frame_obj.timestamp,
+                    existing_range=processed_frames_timestamps[satellite]
+                )
     for satellite, time_range in processed_frames_timestamps.items():
         path = get_new_data_buffer_temp_folder(satellite)
         path += satellite + "_" + link + "_" + str(len(os.listdir(path))) + ".json"
@@ -166,7 +196,7 @@ def store_frame_to_influxdb(frame: dict, link: str) -> tuple:
     return stored, satellite
 
 
-def get_satellite_from_frame(frame: str) -> None:
+def get_satellite_from_frame(frame: str) -> Union[str, None]:
     """Find the corresponding satellite by attempting to parse the frame.
     If the parsing is successful, return the satellite name, else None."""
     for sat, parser in SatParsers().parsers.items():

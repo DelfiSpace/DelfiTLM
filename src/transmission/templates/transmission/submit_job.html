@@ -32,18 +32,52 @@
 
 {% block content %}
 
-<h1>Submit job</h1>
+<h1>Scheduler Status: {{scheduler_status}}</h1>
+{% if scheduler_status == "paused" %}
+    <form action="{% url 'modify_scheduler' command='resume'%}" method="POST">{% csrf_token %}
+        <input type="submit" value="Resume Scheduler">
+    </form>
+    <form action="{% url 'modify_scheduler' command='shutdown'%}" method="POST">{% csrf_token %}
+       <input type="submit" value="Shutdown Scheduler">
+    </form>
+    <form action="{% url 'modify_scheduler' command='force shutdown'%}" method="POST">{% csrf_token %}
+        <input type="submit" value="Force Shutdown Scheduler">
+    </form>
+
+{% endif %}
+{% if scheduler_status == "shutdown" %}
+    <form action="{% url 'modify_scheduler' command='start'%}" method="POST">{% csrf_token %}
+        <input type="submit" value="Start Scheduler">
+    </form>
+{% endif %}
+
+{% if scheduler_status == "running" %}
+    <form action="{% url 'modify_scheduler' command='pause'%}" method="POST">{% csrf_token %}
+        <input type="submit" value="Pause Scheduler">
+    </form>
+    <form action="{% url 'modify_scheduler' command='shutdown'%}" method="POST">{% csrf_token %}
+       <input type="submit" value="Shutdown Scheduler">
+    </form>
+    <form action="{% url 'modify_scheduler' command='force shutdown'%}" method="POST">{% csrf_token %}
+        <input type="submit" value="Force Shutdown Scheduler">
+    </form>
+{% endif %}
+
+<br>
+<br>
+
+<h2>Submit job</h2>
 <form class="post-form" method="POST">{% csrf_token %}
     <fieldset class="module aligned wide">
-    {% for field in form %}
+    {% for field in submit_job_form %}
         <div class="form-row">
             {{ field.errors }}
             {{ field.label_tag }}
             {{ field }}
         </div>
     {% endfor %}
-    <input type="submit" value="Submit">
-</fieldset>
+    <input type="submit" value="Submit Job">
+    </fieldset>
 </form>
 
 <p>[1]: Satellite will only be considered for scraping and bucket processing jobs.</p>
@@ -70,5 +104,9 @@
     {% endfor %}
 </ul>
 {% endif %}
+
+<br>
+<br>
+
 
 {% endblock %}
