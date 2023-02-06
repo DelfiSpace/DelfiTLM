@@ -1,92 +1,91 @@
 from py4j.java_gateway import launch_gateway
 from py4j.java_gateway import JavaGateway
 from py4j.protocol import Py4JJavaError
+
+
 # pylint: disable=all
 class XTCEParser:
+    gateway_started = 0
 
-  gateway_started = 0
+    def __init__(self, XTCEfile, stream):
 
-  def __init__(self, XTCEfile, stream):
+        if XTCEParser.gateway_started == 0:
+            launch_gateway(classpath='transmission/processing/xtcetools-1.1.5.jar',
+                           port=25333,
+                           die_on_exit=True)
+            XTCEParser.gateway_started = 1
 
-    if XTCEParser.gateway_started == 0:
-      launch_gateway(classpath='transmission/processing/xtcetools-1.1.5.jar',
-			   port=25333,
-			   die_on_exit=True)
-      XTCEParser.gateway_started = 1
+        gateway = JavaGateway()
 
-    gateway = JavaGateway()
+        XTCEContainerContentModel = gateway.jvm.org.xtce.toolkit.XTCEContainerContentModel
+        XTCEContainerEntryValue = gateway.jvm.org.xtce.toolkit.XTCEContainerEntryValue
+        XTCEDatabase = gateway.jvm.org.xtce.toolkit.XTCEDatabase
+        XTCEDatabaseException = gateway.jvm.org.xtce.toolkit.XTCEDatabaseException
+        XTCEParameter = gateway.jvm.org.xtce.toolkit.XTCEParameter
+        XTCETMStream = gateway.jvm.org.xtce.toolkit.XTCETMStream
+        XTCEValidRange = gateway.jvm.org.xtce.toolkit.XTCEValidRange
+        XTCEContainer = gateway.jvm.org.xtce.toolkit.XTCETMContainer
+        XTCEEngineeringType = gateway.jvm.org.xtce.toolkit.XTCETypedObject.EngineeringType
+        File = gateway.jvm.java.io.File
 
-    XTCEContainerContentModel = gateway.jvm.org.xtce.toolkit.XTCEContainerContentModel
-    XTCEContainerEntryValue = gateway.jvm.org.xtce.toolkit.XTCEContainerEntryValue
-    XTCEDatabase = gateway.jvm.org.xtce.toolkit.XTCEDatabase
-    XTCEDatabaseException = gateway.jvm.org.xtce.toolkit.XTCEDatabaseException
-    XTCEParameter = gateway.jvm.org.xtce.toolkit.XTCEParameter
-    XTCETMStream = gateway.jvm.org.xtce.toolkit.XTCETMStream
-    XTCEValidRange = gateway.jvm.org.xtce.toolkit.XTCEValidRange
-    XTCEContainer = gateway.jvm.org.xtce.toolkit.XTCETMContainer
-    XTCEEngineeringType = gateway.jvm.org.xtce.toolkit.XTCETypedObject.EngineeringType
-    File = gateway.jvm.java.io.File
+        self.db_ = XTCEDatabase(File(XTCEfile), True, False, True)
+        self.stream_ = self.db_.getStream(stream)
 
-    self.db_ = XTCEDatabase(File(XTCEfile), True, False, True)
-    self.stream_ = self.db_.getStream(stream)
+    def processTMFrame(self, data):
+        try:
+            model = self.stream_.processStream(data)
+            entries = model.getContentList()
+            telemetry = {"frame": model.getName()}
 
+            for entry in entries:
+                val = entry.getValue()
+                name = entry.getName()
 
-  def processTMFrame(self, data):
-     try:
-        model = self.stream_.processStream(data)
-        entries = model.getContentList()
-        telemetry = {"frame": model.getName()}
+                if val:
+                    telemetry[name] = {"value": val.getCalibratedValue(), "status": self.isFieldValid(entry)}
 
-        for entry in entries:
-            val = entry.getValue()
-            name = entry.getName()
+            return telemetry
+        except Py4JJavaError as ex:
+            raise XTCEException(ex.java_exception)
 
-            if val:
-                telemetry[name] = {"value": val.getCalibratedValue(), "status": self.isFieldValid(entry)}
+    def isFieldValid(self, entry):
+        param = entry.getParameter()
 
-        return telemetry
-     except Py4JJavaError as ex:
-        raise XTCEException(ex.java_exception)
+        if not param:
+            return "Valid"
 
+        rang = param.getValidRange()
 
-  def isFieldValid(self, entry):
-    param = entry.getParameter()
-
-    if not param:
-        return "Valid"
-
-    rang = param.getValidRange()
-
-    if not rang.isValidRangeApplied():
-        return "Valid"
-    else:
-
-        if rang.isLowValueCalibrated():
-            valLow = entry.getValue().getCalibratedValue()
+        if not rang.isValidRangeApplied():
+            return "Valid"
         else:
-            valLow = entry.getValue().getUncalibratedValue()
 
-        if rang.isLowValueInclusive():
-            if float(valLow) < float(rang.getLowValue()):
-                return "Too Low"
-        else:
-            if float(valLow) <= float(rang.getLowValue()):
-                return "Too Low"
+            if rang.isLowValueCalibrated():
+                valLow = entry.getValue().getCalibratedValue()
+            else:
+                valLow = entry.getValue().getUncalibratedValue()
 
-        if rang.isHighValueCalibrated():
-            valHigh = entry.getValue().getCalibratedValue()
-        else:
-            valHigh = entry.getValue().getUncalibratedValue()
+            if rang.isLowValueInclusive():
+                if float(valLow) < float(rang.getLowValue()):
+                    return "Too Low"
+            else:
+                if float(valLow) <= float(rang.getLowValue()):
+                    return "Too Low"
 
-        if rang.isHighValueInclusive():
-            if float(valHigh) > float(rang.getHighValue()):
-                return "Too High"
-        else:
-            if float(valHigh) >= float(rang.getHighValue()):
-                return "Too High"
+            if rang.isHighValueCalibrated():
+                valHigh = entry.getValue().getCalibratedValue()
+            else:
+                valHigh = entry.getValue().getUncalibratedValue()
 
-        # the valid range is not recognized but the value is anyway valid
-        return "Valid"
+            if rang.isHighValueInclusive():
+                if float(valHigh) > float(rang.getHighValue()):
+                    return "Too High"
+            else:
+                if float(valHigh) >= float(rang.getHighValue()):
+                    return "Too High"
+
+            # the valid range is not recognized but the value is anyway valid
+            return "Valid"
 
 
 class XTCEException(Exception):
@@ -100,10 +99,10 @@ class XTCEException(Exception):
         self.message = message
         super().__init__(self.message)
 
+
 class SatParsers:
 
     def __init__(self):
-        
         self.parsers = {
             "delfi_pq": XTCEParser("delfipq/Delfi-PQ.xml", "Radio"),
             "delfi_next": None,

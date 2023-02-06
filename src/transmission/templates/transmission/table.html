@@ -47,20 +47,20 @@
         {% endif %} -->
 
         {% if table_name == 'Downlink' and perms.transmission.delete_downlink %}
-            <a href="{% url 'delete_processed_frames' link='downlink'%}"><input type="submit" value="Delete Processed Frames"></input></a>
+
+            <form action="{% url 'delete_processed_frames' link='downlink'%}" method="POST">{% csrf_token %}
+                <input type="submit" value="Delete Processed Frames">
+            </form>
+
         {%  elif table_name == 'Uplink' and perms.transmission.delete_uplink %}
-            <a href="{% url 'delete_processed_frames' link='uplink'%}"><input type="submit" value="Delete Processed Frames"></input></a>
+            <form action="{% url 'delete_processed_frames' link='uplink'%}" method="POST">{% csrf_token %}
+                <input type="submit" value="Delete Processed Frames">
+            </form>
         {% endif %}
         <br>
         <br>
         <form method="get">
         {{telemetry_filter.form}}
-
-        <script>
-            $( function() {
-                $( "#datepicker" ).datepicker();
-            } );
-        </script>
 
         <input type="submit" value="Search"></input>
         </form>
