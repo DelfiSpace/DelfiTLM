@@ -15,6 +15,8 @@ crossorigin="anonymous">
    integrity="sha512-XQoYMqMTK8LvdxXYG3nZ448hOEQiglfqkJs1NOQV44cWnUrBc8PkAOcXy20w0vlaXaVUearIOBhiXZ5V3ynxwA=="
    crossorigin=""></script>
 
+<script src=" https://unpkg.com/@joergdietrich/leaflet.terminator@1.0.0/L.Terminator.js"></script>
+
 {{ form.media }}
 {% endblock %}
 
@@ -120,51 +122,31 @@ justify-content: center;">
             <iframe src="http://localhost:3000/grafana/d-solo/sknvMScVz/latest-reception-times?orgId=1&panelId=5" width="450" height="200" frameborder="0"></iframe>
         </div>
 
+<div id="map" style="height: 500px; width: 70%"></div>
+
 </div>
-
-<div id="map" style="height: 500px; width: 100%"></div>
-
-    <!-- Details about ISS -->
-    <div id="details">
-      <!-- Time -->
-      <div>
-        Time:
-        <span class="time"></span>
-      </div>
-       <!-- Latitude -->
-       <div>
-        Latitude:
-        <span class="latitude"></span>
-      </div>
-       <!-- Longitude -->
-       <div>
-        Longitude:
-        <span class="longitude"></span>
-      </div>
-        <!-- Altitude -->
-       <div>
-        Sunlit:
-        <span class="sunlit"></span>
-      </div>
-    </div>
 
 <script>
 
-    let latitudeText = document.querySelector('.latitude');
-    let longitudeText = document.querySelector('.longitude');
-    let sunlitText = document.querySelector('.sunlit');
-    let timeText = document.querySelector('.time');
-
-
     let zoomLevel = 2;
-    let latitude = {{ latitude|safe }};
-    let longitude = {{ longitude|safe }};
+    let latitude = 52.0116;
+    let longitude = 4.3571;
+
+    // refresh rate in seconds
+    const refreshRate = 2;
 
     var map = L.map('map').setView([latitude, longitude], zoomLevel);
 
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
     }).addTo(map);
+
+    var t = L.terminator();
+    t.addTo(map);
+    setInterval(function(){updateTerminator(t)}, refreshRate * 1000);
+    function updateTerminator(t) {
+      t.setTime();
+    }
 
     const marker = L.marker([latitude, longitude]).addTo(map).bindPopup("Delfi-PQ").openPopup();
 
@@ -187,20 +169,12 @@ justify-content: center;">
 function updateSat(lat, long, sunlit, timestamp) {
   // updates Marker's lat and long on map
   marker.setLatLng([lat, long]);
+  marker.bindPopup("Delfi-PQ Lat: " + lat + " Long: " + long);
   // updates map view according to Marker's new position
-  map.setView([lat, long]);
-  // updates other element's value
-  latitudeText.innerText = lat;
-  longitudeText.innerText = long;
-
-  if(sunlit == 0)
-    sunlitText.innerText = "Satellite is in eclipse";
-  else
-    sunlitText.innerText = "Satellite is in sunlight";
-
-  timeText.innerText = timestamp;
+  // map.setView([lat, long]);
 }
 
-    setInterval(findSat, 2000);
+    setInterval(findSat, refreshRate * 1000);
 </script>
 {% endblock %}
+

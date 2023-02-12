@@ -70,9 +70,7 @@ def get_satellite_location_now_api(request, norad_id):
 def home(request):
     """Render index.html page"""
 
-    res = get_satellite_location_now(SATELLITES["delfi_pq"])
-
-    return render(request, "home/index.html", res)
+    return render(request, "home/index.html")
 
 
 def ban_view(request):
