@@ -122,13 +122,13 @@ justify-content: center;">
             <iframe src="http://localhost:3000/grafana/d-solo/sknvMScVz/latest-reception-times?orgId=1&panelId=5" width="450" height="200" frameborder="0"></iframe>
         </div>
 
-<div id="map" style="height: 500px; width: 70%"></div>
+<div id="map" style="height: 700px; width: 70%"></div>
 
 </div>
 
 <script>
 
-    let zoomLevel = 2;
+    let zoomLevel = 3;
     let latitude = 52.0116;
     let longitude = 4.3571;
 
@@ -148,28 +148,43 @@ justify-content: center;">
       t.setTime();
     }
 
-    const marker = L.marker([latitude, longitude]).addTo(map).bindPopup("Delfi-PQ").openPopup();
+    {% comment %} const marker = L.marker([latitude, longitude]).addTo(map).bindPopup("Delfi-PQ").openPopup(); {% endcomment %}
+    let markers = {}
 
   function findSat(noradID) {
-    fetch("http://localhost:8000/location/51074/")
+    fetch("/location/all/")
     .then(response => response.json())
     .then(data => {
-      lat = data.latitude.toFixed(2);
-      long = data.longitude.toFixed(2);
-      sunlit = data.sunlit;
-      const timestamp = new Date().toGMTString();
+      satellite_list = data.satellites;
 
-      // call updateISS() function to update things
-      updateSat(lat, long, sunlit, timestamp);
+      for (let i = 0; i<satellite_list.length; i++){
+        console.log(satellite_list)
+        sat = satellite_list[i].satellite
+        lat = satellite_list[i].latitude.toFixed(2);
+        long = satellite_list[i].longitude.toFixed(2);
+        sunlit = satellite_list[i].sunlit;
+
+        // call updateISS() function to update things
+        updateSat(sat, lat, long, sunlit);
+
+      }
+
     })
     .catch(e => console.log(e));
   }
 
-  // updateSat() function definition
-function updateSat(lat, long, sunlit, timestamp) {
-  // updates Marker's lat and long on map
-  marker.setLatLng([lat, long]);
-  marker.bindPopup("Delfi-PQ Lat: " + lat + " Long: " + long);
+
+function updateSat(sat, lat, long, sunlit) {
+
+  if (markers.hasOwnProperty(sat)){
+    markers[sat].setLatLng([lat, long]);
+    markers[sat].bindPopup(sat + " Lat: " + lat + " Long: " + long);
+  }
+  else{
+    var marker = L.marker([lat, long]).addTo(map).bindPopup(sat + " Lat: " + lat + " Long: " + long).openPopup();
+    markers[sat] = marker
+  }
+
   // updates map view according to Marker's new position
   // map.setView([lat, long]);
 }

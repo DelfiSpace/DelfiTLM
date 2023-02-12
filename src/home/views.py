@@ -58,11 +58,20 @@ def get_satellite_location_now(norad_id: str) -> dict:
     eph = load('de421.bsp')
     sunlit = satellite.at(time).is_sunlit(eph)
 
-    return {"latitude": lat_deg, "longitude": lon_deg, "sunlit": int(sunlit)}
+    return {"satellite": str(tle[0]), "latitude": lat_deg, "longitude": lon_deg, "sunlit": int(sunlit)}
 
 
 def get_satellite_location_now_api(request, norad_id):
     """API exposed method to find satellite location."""
+
+    if norad_id == "all":
+        sat_list = []
+        for sat in ["delfi_pq", "delfi_c3"]:
+            sat_list.append(get_satellite_location_now(SATELLITES[sat]))
+
+        res = {"satellites": sat_list}
+        return JsonResponse(res)
+
     location = get_satellite_location_now(norad_id)
     return JsonResponse(location)
 
