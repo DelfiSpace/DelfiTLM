@@ -1,7 +1,9 @@
 {% extends "admin/base.html" %}
 {% block title %}DelfiSpace - Home{% endblock %}
 {% load i18n static %}
-{% block extrastyle %}{{ block.super }}<link rel="stylesheet" type="text/css" href="{% static "admin/css/login.css" %}">
+{% block extrastyle %}{{ block.super }}
+<link rel="stylesheet" type="text/css" href="{% static "admin/css/login.css" %}">
+
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0/dist/css/bootstrap.min.css"
 rel="stylesheet"
 integrity="sha384-wEmeIV1mKuiNpC+IOBjI7aAzPcEZeedi5yW5f2yOq55WWLwNGmvvx4Um1vskeMj0"
@@ -11,11 +13,6 @@ crossorigin="anonymous">
    integrity="sha512-xodZBNTC5n17Xt2atTPuE1HxjVMSvLVW9ocqUKLsCC5CXdbqCmblAshOMAS6/keqq/sMZMZ19scR4PsZChSR7A=="
    crossorigin=""/>
 
-<script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"
-   integrity="sha512-XQoYMqMTK8LvdxXYG3nZ448hOEQiglfqkJs1NOQV44cWnUrBc8PkAOcXy20w0vlaXaVUearIOBhiXZ5V3ynxwA=="
-   crossorigin=""></script>
-
-<script src=" https://unpkg.com/@joergdietrich/leaflet.terminator@1.0.0/L.Terminator.js"></script>
 
 {{ form.media }}
 {% endblock %}
@@ -122,74 +119,14 @@ justify-content: center;">
             <iframe src="http://localhost:3000/grafana/d-solo/sknvMScVz/latest-reception-times?orgId=1&panelId=5" width="450" height="200" frameborder="0"></iframe>
         </div>
 
-<div id="map" style="height: 700px; width: 70%"></div>
+    <div id="map" style="height: 700px; width: 70%"></div>
 
 </div>
 
-<script>
+<script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"
+   integrity="sha512-XQoYMqMTK8LvdxXYG3nZ448hOEQiglfqkJs1NOQV44cWnUrBc8PkAOcXy20w0vlaXaVUearIOBhiXZ5V3ynxwA=="
+   crossorigin=""></script>
+<script src=" https://unpkg.com/@joergdietrich/leaflet.terminator@1.0.0/L.Terminator.js"></script>
+<script src="{% static "map.js" %}"></script>
 
-    let zoomLevel = 3;
-    let latitude = 52.0116;
-    let longitude = 4.3571;
-
-    // refresh rate in seconds
-    const refreshRate = 2;
-
-    var map = L.map('map').setView([latitude, longitude], zoomLevel);
-
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-    }).addTo(map);
-
-    var t = L.terminator();
-    t.addTo(map);
-    setInterval(function(){updateTerminator(t)}, refreshRate * 1000);
-    function updateTerminator(t) {
-      t.setTime();
-    }
-
-    {% comment %} const marker = L.marker([latitude, longitude]).addTo(map).bindPopup("Delfi-PQ").openPopup(); {% endcomment %}
-    let markers = {}
-
-  function findSat(noradID) {
-    fetch("/location/all/")
-    .then(response => response.json())
-    .then(data => {
-      satellite_list = data.satellites;
-
-      for (let i = 0; i<satellite_list.length; i++){
-        console.log(satellite_list)
-        sat = satellite_list[i].satellite
-        lat = satellite_list[i].latitude.toFixed(2);
-        long = satellite_list[i].longitude.toFixed(2);
-        sunlit = satellite_list[i].sunlit;
-
-        // call updateISS() function to update things
-        updateSat(sat, lat, long, sunlit);
-
-      }
-
-    })
-    .catch(e => console.log(e));
-  }
-
-
-function updateSat(sat, lat, long, sunlit) {
-
-  if (markers.hasOwnProperty(sat)){
-    markers[sat].setLatLng([lat, long]);
-    markers[sat].bindPopup(sat + " Lat: " + lat + " Long: " + long);
-  }
-  else{
-    var marker = L.marker([lat, long]).addTo(map).bindPopup(sat + " Lat: " + lat + " Long: " + long).openPopup();
-    markers[sat] = marker
-  }
-
-  // updates map view according to Marker's new position
-  // map.setView([lat, long]);
-}
-
-    setInterval(findSat, refreshRate * 1000);
-</script>
 {% endblock %}
-
