@@ -6,6 +6,15 @@
 rel="stylesheet"
 integrity="sha384-wEmeIV1mKuiNpC+IOBjI7aAzPcEZeedi5yW5f2yOq55WWLwNGmvvx4Um1vskeMj0"
 crossorigin="anonymous">
+
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css"
+   integrity="sha512-xodZBNTC5n17Xt2atTPuE1HxjVMSvLVW9ocqUKLsCC5CXdbqCmblAshOMAS6/keqq/sMZMZ19scR4PsZChSR7A=="
+   crossorigin=""/>
+
+<script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"
+   integrity="sha512-XQoYMqMTK8LvdxXYG3nZ448hOEQiglfqkJs1NOQV44cWnUrBc8PkAOcXy20w0vlaXaVUearIOBhiXZ5V3ynxwA=="
+   crossorigin=""></script>
+
 {{ form.media }}
 {% endblock %}
 
@@ -113,4 +122,85 @@ justify-content: center;">
 
 </div>
 
+<div id="map" style="height: 500px; width: 100%"></div>
+
+    <!-- Details about ISS -->
+    <div id="details">
+      <!-- Time -->
+      <div>
+        Time:
+        <span class="time"></span>
+      </div>
+       <!-- Latitude -->
+       <div>
+        Latitude:
+        <span class="latitude"></span>
+      </div>
+       <!-- Longitude -->
+       <div>
+        Longitude:
+        <span class="longitude"></span>
+      </div>
+        <!-- Altitude -->
+       <div>
+        Sunlit:
+        <span class="sunlit"></span>
+      </div>
+    </div>
+
+<script>
+
+    let latitudeText = document.querySelector('.latitude');
+    let longitudeText = document.querySelector('.longitude');
+    let sunlitText = document.querySelector('.sunlit');
+    let timeText = document.querySelector('.time');
+
+
+    let zoomLevel = 2;
+    let latitude = {{ latitude|safe }};
+    let longitude = {{ longitude|safe }};
+
+    var map = L.map('map').setView([latitude, longitude], zoomLevel);
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+    }).addTo(map);
+
+    const marker = L.marker([latitude, longitude]).addTo(map).bindPopup("Delfi-PQ").openPopup();
+
+  function findSat(noradID) {
+    fetch("http://localhost:8000/location/51074/")
+    .then(response => response.json())
+    .then(data => {
+      lat = data.latitude.toFixed(2);
+      long = data.longitude.toFixed(2);
+      sunlit = data.sunlit;
+      const timestamp = new Date().toGMTString();
+
+      // call updateISS() function to update things
+      updateSat(lat, long, sunlit, timestamp);
+    })
+    .catch(e => console.log(e));
+  }
+
+  // updateSat() function definition
+function updateSat(lat, long, sunlit, timestamp) {
+  // updates Marker's lat and long on map
+  marker.setLatLng([lat, long]);
+  // updates map view according to Marker's new position
+  map.setView([lat, long]);
+  // updates other element's value
+  latitudeText.innerText = lat;
+  longitudeText.innerText = long;
+
+  if(sunlit == 0)
+    sunlitText.innerText = "Satellite is in eclipse";
+  else
+    sunlitText.innerText = "Satellite is in sunlight";
+
+  timeText.innerText = timestamp;
+}
+
+    setInterval(findSat, 2000);
+</script>
 {% endblock %}

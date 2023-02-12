@@ -49,6 +49,7 @@ pytz==2021.3
 pytz-deprecation-shim==0.1.0.post0
 requests==2.28.1
 Rx==3.2.0
+satellitetle==0.14.0
 service-identity==21.1.0
 sgp4==2.21
 six==1.16.0
