@@ -22,20 +22,20 @@ function updateTerminator(t) {
 
 let markers = {}
 
-function findSat(noradID) {
-    fetch("/location/" + noradID + "/")
+function findSat() {
+    fetch("/location/all/")
     .then(response => response.json())
     .then(data => {
-    satellite_list = data.satellites;
+      satellite_list = data.satellites;
 
-    for (let i = 0; i<satellite_list.length; i++){
+      for (let i = 0; i<satellite_list.length; i++){
         sat = satellite_list[i].satellite
         lat = satellite_list[i].latitude.toFixed(2);
         long = satellite_list[i].longitude.toFixed(2);
         sunlit = satellite_list[i].sunlit;
 
         updateSatMarker(sat, lat, long);
-        }
+      }
     }).catch(e => console.log(e));
 }
 
@@ -55,4 +55,4 @@ function updateSatMarker(sat, lat, long) {
 // map.setView([lat, long]);
 }
 
-setInterval(findSat("all"), refreshRate * 1000);
+setInterval(findSat, refreshRate * 1000);
