@@ -1,5 +1,6 @@
 """API request handling. Map requests to the corresponding HTMLs."""
-from datetime import datetime
+import math
+from datetime import datetime, timedelta
 import json
 import os
 from django.core.exceptions import PermissionDenied
@@ -7,7 +8,7 @@ from django.core.serializers.json import DjangoJSONEncoder
 from django.http.response import JsonResponse
 from django.shortcuts import render
 from pycrowdsec.client import StreamClient
-from skyfield.api import load, EarthSatellite, wgs84
+from skyfield.api import load, EarthSatellite, wgs84, Topos
 from satellite_tle import fetch_tle_from_celestrak
 from transmission.processing.satellites import SATELLITES, TIME_FORMAT
 
@@ -59,6 +60,28 @@ def get_satellite_location_now(norad_id: str) -> dict:
     sunlit = satellite.at(time).is_sunlit(eph)
 
     return {"satellite": str(tle[0]), "latitude": lat_deg, "longitude": lon_deg, "sunlit": int(sunlit)}
+
+
+def get_next_pass_over_delft(request, norad_id: str):
+    """Calculate next passes over Delft in the following 24 hours."""
+    tle = get_tle(norad_id)
+    time_scale = load.timescale()
+    satellite = EarthSatellite(tle[1], tle[2], tle[0], time_scale)
+
+    # Location of Delft (EWI)
+    delft = Topos("52.0022 N", "4.3736 E")
+
+    # Calculate the next pass over Delft within the next 24 hours
+    timestamps, events = satellite.find_events(delft, time_scale.now(), time_scale.now() + timedelta(hours=24))
+
+    pass_events = []
+    for i in range(math.ceil(len(events)/3)):
+        rise_time = timestamps[events == 0][i].utc_datetime().strftime(TIME_FORMAT)
+        peak_time = timestamps[events == 1][i].utc_datetime().strftime(TIME_FORMAT)
+        set_time = timestamps[events == 2][i].utc_datetime().strftime(TIME_FORMAT)
+        pass_events.append({"rise_time": rise_time, "peak_time": peak_time, "set_time": set_time})
+
+    return JsonResponse({"satellite": str(tle[0]), "passes": pass_events})
 
 
 def get_satellite_location_now_api(request, norad_id):

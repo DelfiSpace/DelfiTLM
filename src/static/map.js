@@ -1,6 +1,10 @@
 let zoomLevel = 3;
 let latitude = 52.0116;
 let longitude = 4.3571;
+let SATELLITES = {
+    "DELFI-PQ": '51074',
+    "DELFI-C3 (DO-64)": '32789',
+}
 
 // refresh rate in seconds
 const refreshRate = 2;
@@ -22,7 +26,7 @@ function updateTerminator(t) {
 
 let markers = {}
 
-function findSat() {
+async function findSat() {
     fetch("/location/all/")
     .then(response => response.json())
     .then(data => {
@@ -33,23 +37,41 @@ function findSat() {
         lat = satellite_list[i].latitude.toFixed(2);
         long = satellite_list[i].longitude.toFixed(2);
         sunlit = satellite_list[i].sunlit;
-
         updateSatMarker(sat, lat, long);
       }
     }).catch(e => console.log(e));
 }
 
 
-function updateSatMarker(sat, lat, long) {
+
+function updateSatMarker(sat, lat, long,) {
+
+
+    fetch("/next_pass/"+ SATELLITES[sat]+"/")
+    .then(response => response.json())
+    .then(data => {
+      pass_events = data.passes;
+
+    //   for (let i = 0; i<pass_events.length; i++){
+        riseTime = pass_events[0].rise_time;
+        peakTime = pass_events[0].peak_time;
+        setTime = pass_events[0].set_time;
+        next_pass = 'Next pass over Delft (UTC) ' + '<br> Rise Time: ' + riseTime +
+                                                         '<br> Peak Time: '+ peakTime +
+                                                         '<br> Set Time: ' + setTime;
+    //   }
 
     if (markers.hasOwnProperty(sat)){
         markers[sat].setLatLng([lat, long]);
-        markers[sat].bindPopup(sat + " Lat: " + lat + " Long: " + long);
+        markers[sat].bindPopup(sat + " Lat: " + lat + " Long: " + long +"<br>"+ next_pass);
     }
     else{
-        let marker = L.marker([lat, long]).addTo(map).bindPopup(sat + " Lat: " + lat + " Long: " + long).openPopup();
+        let marker = L.marker([lat, long]).addTo(map).bindPopup(sat + " Lat: " + lat + " Long: " + long +"<br>"+ next_pass).openPopup();
         markers[sat] = marker
     }
+
+
+    }).catch(e => console.log(e));
 
 // updates map view according to Marker's new position
 // map.setView([lat, long]);
