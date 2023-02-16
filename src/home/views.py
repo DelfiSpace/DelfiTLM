@@ -4,14 +4,17 @@ from django.core.exceptions import PermissionDenied
 from django.shortcuts import render
 from pycrowdsec.client import StreamClient
 
+
 def home(request):
     """Render index.html page"""
     ren = render(request, "home/index.html")
     return ren
 
+
 def ban_view(request):
     """Ban request"""
     raise PermissionDenied
+
 
 def test_view(request):
     """Test connection to crowdsec"""
