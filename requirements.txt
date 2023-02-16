@@ -13,7 +13,7 @@ constantly==15.1.0
 coverage==6.4.2
 cryptography==38.0.3
 daphne==3.0.2
-Django==3.2.17
+Django==3.2.18
 django-filter==21.1
 django-pandas==0.6.6
 django-revproxy==0.10.0
