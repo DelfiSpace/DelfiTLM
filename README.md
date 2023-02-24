@@ -1,5 +1,8 @@
 # DelfiTLM
 
+[![Django CI](https://github.com/iiacoban42/DelfiTLM/actions/workflows/django.yml/badge.svg?branch=main)](https://github.com/iiacoban42/DelfiTLM/actions/workflows/django.yml)
+[![Pylint](https://github.com/iiacoban42/DelfiTLM/actions/workflows/pylint.yml/badge.svg?branch=main)](https://github.com/iiacoban42/DelfiTLM/actions/workflows/pylint.yml)
+
 ## Requirements
 
 - Python3 and Java 8 or higher
