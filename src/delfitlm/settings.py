@@ -28,28 +28,28 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # gets the key from the runtime environment (docker-compose-deploy)
 # change_me is default if a value is not specified
 SECRET_KEY = os.environ.get('SECRET_KEY', 'change_me')
-POSTGRES_DB         = os.environ.get('POSTGRES_DB', 'delfitlm')
-POSTGRES_USER       = os.environ.get('POSTGRES_USER', 'postgres')
-POSTGRES_PASSWORD   = os.environ.get('POSTGRES_PASSWORD', 'postgres')
-POSTGRES_HOST       = os.environ.get('POSTGRES_HOST', 'localhost')
-POSTGRES_PORT       = int(os.environ.get('POSTGRES_PORT', 5432))
+POSTGRES_DB = os.environ.get('POSTGRES_DB', 'delfitlm')
+POSTGRES_USER = os.environ.get('POSTGRES_USER', 'postgres')
+POSTGRES_PASSWORD = os.environ.get('POSTGRES_PASSWORD', 'postgres')
+POSTGRES_HOST = os.environ.get('POSTGRES_HOST', 'localhost')
+POSTGRES_PORT = int(os.environ.get('POSTGRES_PORT', 5432))
 
 # configure the email backend to relay email
-EMAIL_BACKEND           = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST              = os.environ.get('SMTP_HOST', '')
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = os.environ.get('SMTP_HOST', '')
 
 if os.environ.get('SMTP_PORT') in ['', None]:
-    EMAIL_PORT          = 25
+    EMAIL_PORT = 25
 else:
-    EMAIL_PORT          = int(os.environ.get('SMTP_PORT'))
+    EMAIL_PORT = int(os.environ.get('SMTP_PORT'))
 
-EMAIL_HOST_USER         = os.environ.get('SMTP_USER', '')
-EMAIL_HOST_PASSWORD     = os.environ.get('SMTP_PASSWORD', '')
-EMAIL_USE_TLS           = False
-DEFAULT_FROM_EMAIL      = os.environ.get('FROM_EMAIL', 'webmaster@localhost')
+EMAIL_HOST_USER = os.environ.get('SMTP_USER', '')
+EMAIL_HOST_PASSWORD = os.environ.get('SMTP_PASSWORD', '')
+EMAIL_USE_TLS = False
+DEFAULT_FROM_EMAIL = os.environ.get('FROM_EMAIL', 'webmaster@localhost')
 
 if EMAIL_HOST == '':
-    EMAIL_BACKEND       = 'django.core.mail.backends.console.EmailBackend'
+    EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = bool(int(os.environ.get('DEBUG', 1)))
@@ -90,7 +90,6 @@ INSTALLED_APPS = [
 # }
 
 API_KEY_CUSTOM_HEADER = "HTTP_AUTHORIZATION"
-
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -133,7 +132,6 @@ ASGI_APPLICATION = 'delfitlm.asgi.application'
 
 WSGI_APPLICATION = 'delfitlm.wsgi.application'
 
-
 # Crowdsec bouncer: https://github.com/crowdsecurity/pycrowdsec
 
 PYCROWDSEC_LAPI_KEY = os.environ.get('CROWDSEC_LAPI')
@@ -146,7 +144,6 @@ PYCROWDSEC_ACTIONS = {
 PYCROWDSEC_EXCLUDE_VIEWS = {"ban_view"}
 
 PYCROWDSEC_POLL_INTERVAL = 10
-
 
 # Database
 # https://docs.djangoproject.com/en/3.2/ref/settings/#databases
@@ -164,7 +161,6 @@ DATABASES = {
 
 if 'test' in sys.argv or 'test_coverage' in sys.argv:  # Covers regular testing and django-coverage
     DATABASES['default']['ENGINE'] = 'django.db.backends.sqlite3'
-
 
 # Password validation
 # https://docs.djangoproject.com/en/3.2/ref/settings/#auth-password-validators
@@ -195,7 +191,6 @@ REST_FRAMEWORK = {
     ]
 }
 
-
 # Internationalization
 # https://docs.djangoproject.com/en/3.2/topics/i18n/
 
@@ -208,7 +203,6 @@ USE_I18N = True
 USE_L10N = True
 
 USE_TZ = True
-
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/3.2/howto/static-files/
@@ -236,7 +230,7 @@ if DEBUG and os.environ.get('RUN_MAIN', None) != 'true':
 
 LOGGING = {
     'version': 1,
-    'disable_existing_loggers' : False,
+    'disable_existing_loggers': False,
     'loggers': {
         'django_logger': {
             'handlers': ['docker_logger', 'debug', 'info', 'warning', 'error', 'mail_admin'],
@@ -267,7 +261,7 @@ LOGGING = {
             'level': 'DEBUG',
             'formatter': 'default',
             'backupCount': 2,
-            'maxBytes': 5*1024*1024, #bytes (5MB)
+            'maxBytes': 5 * 1024 * 1024,  # bytes (5MB)
             'filters': ['require_debug_true'],
 
         },
@@ -277,7 +271,7 @@ LOGGING = {
             'level': 'INFO',
             'formatter': 'default',
             'backupCount': 2,
-            'maxBytes': 5*1024*1024,
+            'maxBytes': 5 * 1024 * 1024,
         },
         'warning': {
             'class': 'logging.handlers.RotatingFileHandler',
@@ -285,7 +279,7 @@ LOGGING = {
             'level': 'WARNING',
             'formatter': 'default',
             'backupCount': 2,
-            'maxBytes': 5*1024*1024,
+            'maxBytes': 5 * 1024 * 1024,
         },
         'error': {
             'class': 'logging.handlers.RotatingFileHandler',
@@ -293,7 +287,7 @@ LOGGING = {
             'level': 'ERROR',
             'formatter': 'error',
             'backupCount': 2,
-            'maxBytes': 5*1024*1024,
+            'maxBytes': 5 * 1024 * 1024,
         },
         'mail_admin': {
             'level': 'ERROR',
