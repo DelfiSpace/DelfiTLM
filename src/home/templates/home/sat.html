@@ -1,0 +1,979 @@
+
+<!DOCTYPE html>
+<html>
+ <head>
+ <meta content="text/html; charset=UTF-8" http-equiv="content-type">
+<style>
+body {
+    margin: 0;
+    text-align: center;
+}
+#n2yo_satmap1{
+width:600px;
+height:360px;
+border: 1px solid #999999";
+z-index: 0;
+}
+#n2yo_timezone{
+width:600px;
+font: bold 11px Arial;
+text-align:right;
+color:#000
+}
+#mySelect{
+    font-size: 11px;
+}
+#n2yo_passes{
+font: normal 14px Arial;
+background-color:#dadada;
+text-align:center;
+}
+table.passes{
+border-collapse:collapse;
+border:1px solid #999999;
+width:100%;
+}
+
+table.passes td, table.passes th{
+border:1px solid #999999;
+font: 12px arial;
+background-color: #0000b7;
+color: #f2f2f2;
+text-align:center;
+vertical-align:middle;
+padding:5px;
+}
+
+</style>
+<script type="text/javascript" src="https://www.n2yo.com/js/jquery.js"></script>
+<script src="/js/leaflet/leaflet.js" type="text/javascript"></script>
+<script src="/js/leaflet/L.Terminator.js" type="text/javascript"></script>
+<script src="/js/satellite-js/dist/satellite.min.js"></script>
+<link rel="stylesheet" href="/js/leaflet/leaflet.css" />
+
+ <script>
+ /*
+ window.onerror = function (errorMsg, url, lineNumber) {
+	var url = 'https://www.n2yo.com/sat/locationjson.php';
+	jQuery.getJSON(url, function(data) {
+	if(data!=null)
+		{
+		 myip = data.ip;
+		}
+	var msg = Date()+ ' ' + myip + ' Error: ' + errorMsg + ' Script: ' + url + ' Line: ' + lineNumber + '\n';
+	$.get("/logerror.php?msg="+msg);
+   });
+}
+*/
+// google.maps.event.addDomListener(window, 'load', initialize);
+window.onload = initialize;
+var isCentered = false;
+ var norad;
+ var sel;
+ var noradstring = '25544';
+ var minelevation = '5';
+ if(!isNaN(noradstring))
+ {
+	norad = noradstring;
+ }
+ else
+ {
+	sel = document.createElement("select");
+	sel.id = "mySelect";
+	var ss = noradstring.split(",");
+	for (var i=0; i < ss.length; i++)
+	{
+    var option = document.createElement("option");
+	var sss = ss[i].split("|");
+    option.value = sss[0];
+    option.text = sss[1];
+    option.label = sss[1];
+	sel.appendChild(option);
+	if(i==0) norad = sss[0];
+	}
+ }
+
+ var allpasses = '1';
+ var showFootprint = '0';
+ var size = 'small';
+ var map1;
+ var sunOverlay;
+ var drawingOverlay;
+ var drawingOverlayArray = [];
+ var dayNightOverlay;
+ var counter=0;
+ var mrk1;  var mrk2; var mrk3;
+ var step;
+ var data;
+ var satname;
+ var dArray = new Array();
+ var tleArray = new Array();
+ var altitude;
+ var intervalObject;
+ var viewer;
+ var myip = '';
+ var myLat = '';
+ var myLng = '';
+ var footPrint;
+
+ var months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+
+ function initialize() {
+	$("#n2yo_list_label").hide();
+	if(sel != null)
+	 {
+		$("#n2yo_list").append(sel);
+		$("#n2yo_list_label").show();
+		$("#mySelect").change(function(event) {
+			 norad = this.value;
+			setSatellite(norad);
+		} );
+	 }
+	if(size=='thumbnail')
+	 {
+		$("#n2yo_satmap1").width(290).height(340);
+		$("#n2yo_timezone").width(290);
+		$("#n2yo_passes").width(290).height(100);
+		$("#n2yo_passes").hide();
+
+	 }
+
+	if(size=='small')
+	 {
+		$("#n2yo_satmap1").width(400).height(300);
+		$("#n2yo_timezone").width(400);
+		$("#n2yo_passes").width(400).height(100);
+
+	 }
+	if(size=='medium')
+	 {
+		$("#n2yo_satmap1").width(600).height(360);
+		$("#n2yo_timezone").width(600);
+		$("#n2yo_passes").width(600).height(100);
+	 }
+	if(size=="large")
+	 {
+		$("#n2yo_satmap1").width(800).height(580);
+		$("#n2yo_timezone").width(800);
+		$("#n2yo_passes").width(800).height(100);
+	 }
+
+	var wd = $("#n2yo_satmap1").width();
+	wd = wd-120;
+//  <div id="n2yo_overmap" style="position:absolute;top:10px;left:40px;z-index:99;font:10px arial;"></div>
+	$("#n2yo_overmap").css({ 'position': 'absolute', 'top': '10px', 'left': +wd+'px', 'z-index': '9999', 'font': '12px Arial'});
+
+
+map1 = L.map('n2yo_satmap1').setView([0, 100], 1);
+map1.setZoom(2);
+
+var mapStyle1 = L.tileLayer('https://{s}.tile.openstreetmap.se/hydda/full/{z}/{x}/{y}.png', {
+	attribution: 'Tiles courtesy of <a href="http://openstreetmap.se/" target="_blank">OpenStreetMap Sweden</a> &mdash; Map data &copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+});
+
+var mapStyle2 = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/NatGeo_World_Map/MapServer/tile/{z}/{y}/{x}', {
+	attribution: '',
+	maxZoom: 13
+});
+
+
+var mapStyle3 = L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {
+    attribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
+});
+
+var mapStyle4 = L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', {
+	maxZoom: 17,
+	attribution: 'Map data: &copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>, <a href="http://viewfinderpanoramas.org">SRTM</a> | Map style: &copy; <a href="https://opentopomap.org">OpenTopoMap</a> (<a href="https://creativecommons.org/licenses/by-sa/3.0/">CC-BY-SA</a>)'
+});
+
+var mapStyle5 = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}', {
+	attribution: 'Esri'
+});
+
+
+ mapStyle2.addTo(map1);
+
+
+
+
+ var t = L.terminator();
+ t.addTo(map1);
+ setInterval(function(){updateTerminator(t)}, 500);
+
+
+
+  dayNightSun();
+
+	var url = 'https://www.n2yo.com/sat/locationjson.php';
+	jQuery.getJSON(url, function(data) {
+	if(data!=null)
+		{
+		 myip = data.ip;
+		 myLat = data.lat;
+		 myLng = data.lng;
+		}
+	mrk3 = createHomeMarker();
+             });
+
+	var dtmp = new Date();
+    var tzmin = -dtmp.getTimezoneOffset();
+	var tzh = tzmin/60;
+	//alert(tzh);
+	sign='';
+	if(tzh>=0) sign="+";
+	//else sign = "-";
+	document.getElementById("tz").innerHTML = "Local Time: GMT"+sign+tzh;
+
+  //setInterval ("dayNightSun()", 60*1000); //every minute refresh the terminator+Sun
+  loadData(norad, start);
+
+  //setInterval ("animateSat()", 1*1000); //every second move the satellite
+
+  }
+
+	function updateTerminator(t) {
+	  var t2 = L.terminator();
+	  t.setLatLngs(t2.getLatLngs());
+	  t.redraw();
+	}
+
+function start(sid)
+{
+	counter = 0;
+	intervalObject = setInterval (function() {animateSat(sid);}, 1*1000); //every second move the satellite
+
+    //setInterval ("loadData(start)", 5*1000); //every 30 minutes retrieve LEO orbital data
+}
+function loadData(sid, callback)
+{
+
+	var url = 'https://www.n2yo.com/sat/widget-tracking.php?s='+sid+'&rk='+eval(Math.random()*Date.parse(new Date()))+'&callback=?';
+	mrk1 = createSatelliteMarker(sid);
+	//mrk2 = createSatelliteMarker(sid);
+
+ 	//mrk1.setVisible(false);
+ 	//mrk2.setVisible(false);
+
+	mrk1.addTo(map1);
+	$(mrk1._icon).hide();
+	$('#n2yo_overmap').html("Loading...");
+
+	jQuery.getJSON(url, function(data) {
+	var startPosition = parseInt(data.start);
+	console.log(startPosition);
+	step = parseInt(data.step);
+	satname = data.name;
+	var currentTime = new Date()
+	var dd=currentTime.toGMTString();
+//	var cUTCTime=Date.parse(dd)/1000;
+	var cUTCTime=1676232151;
+	var txtArray = new Array();
+
+
+	for (var i=0;i<data.pos.length;i++)
+		txtArray.push(data.pos[i].d);
+
+					//alert(txtArray);
+
+	console.log(startPosition);
+	dArray = new Array();
+
+	for (var i=startPosition;i<txtArray.length;i++)
+	{
+		var coord = txtArray[i].split("|");
+		dArray[i-startPosition] = new ObjectPosition(sid, L.latLng(coord[0],coord[1]),parseFloat(coord[2]),parseFloat(coord[4]), parseFloat(coord[5]));
+	}
+
+	var g1Array = [];
+	g1Array[0] = [];
+
+	k=0;
+	j=0;
+	var coordtmp = txtArray[0].split("|");
+	var oldlng = coordtmp[0];
+	for (var i=1;i<txtArray.length;i++)
+	{
+
+		var coord = txtArray[i].split("|");
+		newlng = coord[1];
+		if(Math.abs(newlng-oldlng)>90)
+		{
+			k = k+1;
+			g1Array[k] = [];
+			j=0;
+		}
+		g1Array[k][j] = new L.latLng(coord[0],coord[1]);
+		oldlng = newlng;
+		j++;
+
+	}
+
+	if(drawingOverlayArray.length >= 0)
+		{
+			$.each(drawingOverlayArray , function(i, val) {
+			  map1.removeLayer(drawingOverlayArray[i]);
+			});
+
+		}
+	var col = '#ffff66';
+
+
+	for (var i=0;i<g1Array.length;i++)
+	{
+		drawingOverlayArray.push(L.polyline(g1Array[i], {color: 'red', weight: 2, opacity: 0.5}).addTo(map1));
+	}
+
+	var urlp = '';
+	if(allpasses=='1') urlp = 'https://www.n2yo.com/sat/allpassesjson.php?s='+sid+'&me='+minelevation;
+	else urlp = 'https://www.n2yo.com/sat/passesjson.php?s='+sid;
+
+
+
+	jQuery.getJSON(urlp, function(data) {
+	if(data!=null)
+	{
+		showPasses(data);
+	}
+	else
+	{
+		$("#n2yo_passes").html("No visible upcoming passes");
+	}
+   });
+
+	var urls = 'https://www.n2yo.com/sat/gettle.php?s='+sid;
+	jQuery.getJSON(urls, function(data) {
+	if(data!=null)
+	{
+		tleArray = data;
+	}
+  });
+});
+callback(sid);
+}
+
+function setSatellite(sid)
+{
+
+	clearInterval(intervalObject);
+	//counter = 0;
+	document.getElementById("n2yo_passes").innerHTML='';
+
+	if(drawingOverlayArray.length >= 0)
+		{
+			$.each(drawingOverlayArray , function(i, val) {
+			  map1.removeLayer(drawingOverlayArray[i]);
+			});
+
+		}
+
+	if(mrk1 != null) map1.removeLayer(mrk1);
+	//if(mrk2 != null) map1.removeLayer(mrk2);
+	//dArray = null;
+	//document.getElementById("n2yo_satinfo").style.visibility="hidden";
+	loadData(sid, start);
+
+
+
+}
+function animateSat(sid)
+{
+
+	var d = new Date();
+	var cPos = getCurrentPosition(d, sid);
+
+
+	var currPos = new ObjectPosition(sid, new L.latLng(cPos.latitude, cPos.longitude), cPos.altitude, cPos.speed);
+
+	if(currPos != null)
+	{
+		//mrk1.setVisible(true);
+		//mrk2.setVisible(true);
+		if (counter==0)
+		{
+			map1.setView(currPos.latlng);
+		}
+		$(mrk1._icon).show();
+		mrk1.setLatLng(currPos.latlng);
+		/*
+		mrk2.setLatLng(currPos.latlng);
+		if(!isCentered){
+			map1.panTo(mrk1.getLatLng());
+			isCentered = true;
+		}
+		*/
+		var footPrintOld;
+		if (footPrint != null)
+		{
+			footPrintOld = footPrint;
+			map1.removeLayer(footPrintOld);
+		}
+		var vz = currPos.alt;
+		var tangent = Math.sqrt(vz*(vz+2*6375));
+		var centerAngle = Math.asin(tangent/(6375+vz));
+		var footPrintRadius=6375*centerAngle; //km
+
+		if(showFootprint =='1') {
+			footPrint = L.circle(currPos.latlng, {
+							  color: '#A80000',
+							  fillColor: '#FFA6A6',
+							  fillOpacity: 0.4,
+							  opacity: 0.7,
+							  weight: 1,
+							  radius: footPrintRadius*1000
+			}).addTo(map1);
+		}
+
+		if (currPos != null)
+		{
+			var clat = (currPos.latlng).lat;
+			var clng = (currPos.latlng).lng;
+			var calt = currPos.alt;
+			var dir = "";
+			if (calt>altitude) dir = "&uarr;";
+			else dir = "&darr;";
+			altitude = calt;
+			var csp = currPos.sp;
+			$('#n2yo_overmap').html(satname+"<br>LAT: "+round(clat)+"<br>LNG: "+round(clng)+"<br>ALT: "+round(calt)+" "+dir+"<br>SPD: "+round(csp));
+			//$('#n2yo_info').html(" LAT: "+round(clat)+"&deg; LNG: "+round(clng)+"&deg; ALT: "+round(calt)+" km "+dir+" SPD: "+round(csp)+ " km/s");
+
+
+		}
+
+		counter++;
+	}
+	if(counter%60==0) dayNightSun();
+
+}
+
+function getCurrentPosition(now, s)
+{
+
+// NOTE: while Javascript Date returns months in range 0-11, all satellite.js methods require
+// months in range 1-12.
+
+var x1 = tleArray[0];
+var x2 = tleArray[1];
+var satrec = satellite.twoline2satrec(x1, x2);
+var positionAndVelocity = satellite.propagate(
+    satrec,
+    now.getUTCFullYear(),
+    now.getUTCMonth() + 1, // Note, this function requires months in range 1-12.
+    now.getUTCDate(),
+    now.getUTCHours(),
+    now.getUTCMinutes(),
+    now.getUTCSeconds()
+);
+
+// The position_velocity result is a key-value pair of ECI coordinates.
+// These are the base results from which all other coordinates are derived.
+var positionEci = positionAndVelocity.position,
+    velocityEci = positionAndVelocity.velocity;
+
+
+var gmst = satellite.gstimeFromDate(
+    now.getUTCFullYear(),
+    now.getUTCMonth() + 1, // Note, this function requires months in range 1-12.
+    now.getUTCDate(),
+    now.getUTCHours(),
+    now.getUTCMinutes(),
+    now.getUTCSeconds()
+);
+
+var deg2rad = Math.PI/180;
+var observerGd = {
+	longitude: myLat * deg2rad,
+	latitude: myLng * deg2rad,
+	height: 0
+	};
+
+// You can get ECF, Geodetic, Look Angles, and Doppler Factor.
+var positionEcf   = satellite.eciToEcf(positionEci, gmst),
+    positionGd    = satellite.eciToGeodetic(positionEci, gmst),
+    dopplerFactor = 0;
+var lookAngles    = satellite.ecfToLookAngles(observerGd, positionEcf);
+var dopplerFactor = 0;
+var azimuth1   = lookAngles.azimuth;
+var elevation1 = lookAngles.elevation;
+var azimuth =  azimuth1*180/Math.PI;
+var elevation =  elevation1*180/Math.PI;
+
+var satelliteX = positionEci.x,
+    satelliteY = positionEci.y,
+    satelliteZ = positionEci.z;
+
+// Geodetic coords are accessed via `longitude`, `latitude`, `height`.
+var longitude = positionGd.longitude,
+    latitude  = positionGd.latitude,
+    height    = positionGd.height;
+
+//  Convert the RADIANS to DEGREES for pretty printing (appends "N", "S", "E", "W". etc).
+var longitudeStr = satellite.degreesLong(longitude),
+    latitudeStr  = satellite.degreesLat(latitude);
+
+var velocity = Math.sqrt(398600.8 / (height + 6378.135));
+	//console.log(longitudeStr + ' ' + latitudeStr);
+
+	return {longitude:longitudeStr, latitude:latitudeStr, altitude: height, speed: velocity, azimuth: azimuth, elevation: elevation};
+
+}
+
+
+function getSpeed(x1, dx, dy, h)
+{
+		// calculate speed, as it is not computed correctly on the server
+		var dlat=dx*Math.PI/180;
+		var dlon=dy*Math.PI/180;
+		var lat1=x1*Math.PI/180;
+		var lat2=(x1+dx)*Math.PI/180;
+		var a = Math.sin(dlat/2) * Math.sin(dlat/2) + Math.cos(lat1) * Math.cos(lat2) * Math.sin(dlon/2) * Math.sin(dlon/2);
+		var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+		var speed = (h + 6378.135) * c;
+		speed = Math.sqrt(398600.8 / (h + 6378.135));
+		return speed;
+}
+
+
+function createSatelliteMarker(id)
+{
+	var centerWorld = L.latLng(0,0);
+/*
+	var icon = new google.maps.MarkerImage('https://www.n2yo.com/inc/saticon.php?t=0&s='+id,
+			new google.maps.Size(30,30),
+			new google.maps.Point(0,0),
+			new google.maps.Point(15,15));
+*/
+	var icon = L.icon({
+		iconUrl: 'https://www.n2yo.com/inc/saticon.php?t=0&s='+id,
+		//shadowUrl: 'https://www.n2yo.com/inc/saticon.php?t=1&s='+id,
+		iconSize:     [30, 30], // size of the icon
+	});
+/*
+	var iconShadow = new google.maps.MarkerImage('https://www.n2yo.com/inc/saticon.php?t=1&s='+id,
+			new google.maps.Size(49,32),
+			new google.maps.Point(0,0),
+			new google.maps.Point(15,15));
+*/
+
+/*
+var sMarker1 = new google.maps.Marker({
+		position: centerWorld,
+		map: map1,
+		shadow: iconShadow,
+		icon: icon
+		});
+	sMarker1.setShadow(iconShadow);
+*/
+	sMarker1 = L.marker(centerWorld, {icon: icon});
+	//sMarker1.addTo(map1);
+	return sMarker1;
+}
+
+function createHomeMarker()
+{
+	var home = L.latLng(myLat,myLng);
+	/*
+	var icon = new google.maps.MarkerImage('https://www.n2yo.com/img/dot.gif',
+			new google.maps.Size(7,7),
+			new google.maps.Point(0,0),
+			new google.maps.Point(3,3));
+	*/
+	var icon = L.icon({
+		iconUrl: 'https://www.n2yo.com/img/dot.gif',
+		iconSize:     [7, 7], // size of the icon
+	});
+/*
+var sMarker1 = new google.maps.Marker({
+		position: home,
+		map: map1,
+		icon: icon
+		});
+*/
+var sMarker1 = L.marker(home, {icon: icon});
+	sMarker1.addTo(map1);
+
+/*
+  google.maps.event.addListener(sMarker1, 'click', function() {
+	var info = "IP address: "+myip+"<br/>Latitude: "+myLat+"<br/>Longitude: "+myLng;
+	var name = 'YOUR LOCATION';
+
+	$('#n2yo_info_title').html(name);
+	$('#n2yo_satinfo').css("visibility", "visible");
+
+	  });
+*/
+	return sMarker1;
+}
+
+
+function dayNightSun()
+{
+	if (sunOverlay != null)
+	{
+		map1.removeLayer(sunOverlay);
+	}
+	sunOverlay = getSunOverlay();
+	sunOverlay.addTo(map1);
+}
+
+function getSunOverlay()
+{
+
+	var j = jd();
+	var dec = sunDecRA(1,j);
+	var dt = new Date();
+	var LT = dt.getUTCHours() + dt.getUTCMinutes()/60;
+	DY = dayofyear(dt);
+	g = (360/365.25)*(DY + LT/24);
+	TC = 0.004297+0.107029*Math.cos(g*Math.PI/180)-1.837877*Math.sin(g*Math.PI/180)-0.837378*Math.cos(2*g*Math.PI/180)-2.340475*Math.sin(2*g*Math.PI/180);
+	SHA = (LT-12)*15 + TC;
+	var icon = L.icon({
+		iconUrl: 'https://www.n2yo.com/img/sun.gif',
+		iconSize:     [16, 16], // size of the icon
+		iconAnchor:   [3, 3], // point of the icon which will correspond to marker's location
+	});
+
+	var sunMarker = L.marker([dec, -SHA], {icon: icon});
+	return sunMarker;
+}
+
+function dayofyear(d) {   // d is a Date object
+var yn = d.getFullYear();
+var mn = d.getMonth();
+var dn = d.getDate();
+var d1 = new Date(yn,0,1,12,0,0); // noon on Jan. 1
+var d2 = new Date(yn,mn,dn,12,0,0); // noon on input date
+var ddiff = Math.round((d2-d1)/864e5);
+return ddiff+1; }
+
+function sunDecRA (what, jd) {
+		var PI2 = 2.0*Math.PI;
+		var cos_eps = 0.917482;
+		var sin_eps = 0.397778;
+		var M, DL, L, SL, X, Y, Z, R;
+		var T, dec, ra;
+		T = (jd - 2451545.0) / 36525.0;	// number of Julian centuries since Jan 1, 2000, 0 GMT
+		M = PI2*frac(0.993133 + 99.997361*T);
+		DL = 6893.0*Math.sin(M) + 72.0*Math.sin(2.0*M);
+		L = PI2*frac(0.7859453 + M/PI2 + (6191.2*T+DL)/1296000);
+		SL = Math.sin(L);
+		X = Math.cos(L);
+		Y = cos_eps*SL;
+		Z = sin_eps*SL;
+		R = Math.sqrt(1.0-Z*Z);
+		dec = (360.0/PI2)*Math.atan(Z/R);
+		ra = (48.0/PI2)*Math.atan(Y/(X+R));
+		if (ra<0) ra = ra + 24.0;
+		if (what==1) return dec; else return ra;
+}
+
+function frac(X) {
+ X = X - Math.floor(X);
+ if (X<0) X = X + 1.0;
+ return X;
+}
+
+function round(num)
+{
+	var prefix = "";
+	var suffix = "";
+	if ( num < 0 )
+	{
+		prefix = "-";
+		suffix = "";
+		num = - num;
+	}
+	var temp = Math.round( num * 100.0 ); // convert to pennies!
+	if ( temp < 10 ) return prefix + "0.0" + temp + suffix;
+	if ( temp < 100 ) return prefix + "0." + temp + suffix;
+	temp = prefix + temp; // convert to string!
+	return temp.substring(0,temp.length-2) + "." + temp.substring(temp.length-2) + suffix;
+}
+
+function jd() {
+	var dt = new Date();
+    MM=dt.getMonth() + 1;
+    DD=dt.getDate();
+    YY=dt.getFullYear();
+    HR=dt.getUTCHours();
+    MN= dt.getUTCMinutes();
+    SC=0;
+    with (Math) {
+      HR = HR + (MN / 60) + (SC/3600);
+      GGG = 1;
+      if (YY <= 1585) GGG = 0;
+      JD = -1 * floor(7 * (floor((MM + 9) / 12) + YY) / 4);
+      S = 1;
+      if ((MM - 9)<0) S=-1;
+      A = abs(MM - 9);
+      J1 = floor(YY + S * floor(A / 7));
+      J1 = -1 * floor((floor(J1 / 100) + 1) * 3 / 4);
+      JD = JD + floor(275 * MM / 9) + DD + (GGG * J1);
+      JD = JD + 1721027 + 2 * GGG + 367 * YY - 0.5;
+      JD = JD + (HR / 24);
+    }
+    return JD;
+}
+function ObjectPosition(a,b,c,d)
+{
+	this.id=a;
+	this.latlng=b;
+	this.alt=c; // km
+	this.sp=d; // m/s
+}
+
+function getAzCompass(deg)
+{
+	var a=0;
+	if((deg>=a)&&(deg<a+15))
+		return 'N';
+	a=a+15;
+	if((deg>=a)&&(deg<a+15))
+		return 'NNE';
+	a=a+15;
+	if((deg>=a)&&(deg<a+15))
+		return 'NE';
+	a=a+15;
+	if((deg>=a)&&(deg<a+15))
+		return 'NE';
+	a=a+15;
+	if((deg>=a)&&(deg<a+15))
+		return 'ENE';
+	a=a+15;
+	if((deg>=a)&&(deg<a+15))
+		return 'E';
+	a=a+15;
+	if((deg>=a)&&(deg<a+15))
+		return 'E';
+	a=a+15;
+	if((deg>=a)&&(deg<a+15))
+		return 'ESE';
+	a=a+15;
+	if((deg>=a)&&(deg<a+15))
+		return 'SE';
+	a=a+15;
+	if((deg>=a)&&(deg<a+15))
+		return 'SE';
+	a=a+15;
+	if((deg>=a)&&(deg<a+15))
+		return 'SSE';
+	a=a+15;
+	if((deg>=a)&&(deg<a+15))
+		return 'S';
+	a=a+15;
+	if((deg>=a)&&(deg<a+15))
+		return 'S';
+	a=a+15;
+	if((deg>=a)&&(deg<a+15))
+		return 'SSW';
+	a=a+15;
+	if((deg>=a)&&(deg<a+15))
+		return 'SW';
+	a=a+15;
+	if((deg>=a)&&(deg<a+15))
+		return 'SW';
+	a=a+15;
+	if((deg>=a)&&(deg<a+15))
+		return 'WSW';
+	a=a+15;
+	if((deg>=a)&&(deg<a+15))
+		return 'W';
+	a=a+15;
+	if((deg>=a)&&(deg<a+15))
+		return 'W';
+	a=a+15;
+	if((deg>=a)&&(deg<a+15))
+		return 'WNW';
+	a=a+15;
+	if((deg>=a)&&(deg<a+15))
+		return 'NW';
+	a=a+15;
+	if((deg>=a)&&(deg<a+15))
+		return 'NW';
+	a=a+15;
+	if((deg>=a)&&(deg<a+15))
+		return 'NNW';
+	a=a+15;
+	if((deg>=a)&&(deg<a+15))
+		return 'N';
+	a=a+15;
+}
+function showPasses(data)
+{
+//
+  var tbl     = document.createElement("table");
+  var tblBody = document.createElement("tbody");
+
+    var row = document.createElement("tr");
+    var cell = document.createElement("th");
+    var cellText = '';
+    if (allpasses=='1') cellText = document.createTextNode("NEXT PASS OF "+satname+" OVER YOUR CURRENT LOCATION ");
+    else cellText = document.createTextNode("UPCOMING VISIBLE PASSES OF "+satname+" OVER YOUR CURRENT LOCATION ");
+
+    cell.appendChild(cellText);
+	cell.colSpan=8;
+    row.appendChild(cell);
+    tblBody.appendChild(row);
+
+    var row = document.createElement("tr");
+    var cell = document.createElement("th");
+    var cellText = document.createTextNode("START AZIMUTH");
+    cell.appendChild(cellText);
+	cell.colSpan=2;
+    row.appendChild(cell);
+    var cell = document.createElement("th");
+    var cellText = document.createTextNode("MAX ELEVATION");
+    cell.appendChild(cellText);
+	cell.colSpan=2;
+    row.appendChild(cell);
+    var cell = document.createElement("th");
+    var cellText = document.createTextNode("END AZIMUTH");
+    cell.appendChild(cellText);
+	cell.colSpan=2;
+    row.appendChild(cell);
+    var cell = document.createElement("th");
+    var cellText = document.createTextNode("TOTAL DURATION");
+    cell.appendChild(cellText);
+	cell.colSpan=1;
+    row.appendChild(cell);
+    tblBody.appendChild(row);
+
+  for (var i = 0; i < data.length; i++) {
+	  if(i>=1) break;
+	var startUTC = data[i].startUTC;
+	startUTC = startUTC.trim();
+	var endUTC = data[i].endUTC;
+	endUTC = endUTC.trim();
+	var maxUTC = data[i].maxUTC;
+	maxUTC = maxUTC.trim();
+	var maxEl = Math.round(data[i].maxEl);
+	var startAz = Math.round(data[i].startAz);
+	var startAzCompass = getAzCompass(startAz);
+	var endAz = Math.round(data[i].endAz);
+	var endAzCompass = getAzCompass(endAz);
+	var duration = data[i].duration;  // in seconds
+	var magnitude = data[i].mag;  // in seconds
+	if(magnitude==100000) magnitude = '-';
+
+
+
+    var row = document.createElement("tr");
+      var cell = document.createElement("td");
+      var cellText = document.createTextNode("");
+	  cell.innerHTML = getLocalDate(startUTC)+'<br\>'+getLocalTime(startUTC);
+      cell.appendChild(cellText);
+      row.appendChild(cell);
+      var cell = document.createElement("td");
+      var cellText = document.createTextNode("");
+	  cell.innerHTML = startAz+"&deg;<br\>"+startAzCompass;
+      cell.appendChild(cellText);
+      row.appendChild(cell);
+      var cell = document.createElement("td");
+      var cellText = document.createTextNode(getLocalTime(maxUTC));
+      cell.appendChild(cellText);
+      row.appendChild(cell);
+      var cell = document.createElement("td");
+      var cellText = document.createTextNode("");
+	  cell.innerHTML = maxEl+"&deg;";
+      cell.appendChild(cellText);
+      row.appendChild(cell);
+
+      var cell = document.createElement("td");
+      var cellText = document.createTextNode("");
+	  cell.innerHTML = getLocalTime(endUTC);
+      cell.appendChild(cellText);
+      row.appendChild(cell);
+      var cell = document.createElement("td");
+      var cellText = document.createTextNode("");
+	  cell.innerHTML = endAz+"&deg;<br\>"+endAzCompass;
+      row.appendChild(cell);
+
+      var cell = document.createElement("td");
+      var cellText = document.createTextNode(getDuration(duration));
+      cell.appendChild(cellText);
+      row.appendChild(cell);
+
+    // add the row to the end of the table body
+    tblBody.appendChild(row);
+  }
+  tbl.appendChild(tblBody);
+  // appends <table> into <body>
+  ps = document.getElementById("n2yo_passes");
+  ps.appendChild(tbl);
+  // sets the border attribute of tbl to 2;
+  tbl.setAttribute("border", "2");
+  tbl.className = 'passes';
+  tbl.id = 'passes';
+}
+function getLocalTime(t)
+{
+  var dtmp = new Date();
+  var tz = 60*1000*dtmp.getTimezoneOffset();
+  var d = new Date(t*1000-tz);
+  h = d.getUTCHours();
+  m = d.getUTCMinutes();
+  d = d.getUTCDate();
+  if (h<10) h="0"+h;
+  if (m<10) m="0"+m;
+  hm = h+':'+m;
+  return hm;
+}
+function getLocalDate(t)
+{
+  var dtmp = new Date();
+  var tz = 60*1000*dtmp.getTimezoneOffset();
+  var d = new Date(t*1000-tz);
+  dt = d.getUTCDate();
+//  m = dtmp.getUTCMonth();
+  m = d.getUTCMonth();
+  mo = months[m];
+  md = mo+' '+dt;
+  return md;
+}
+function getDuration(d)
+{
+  var dtmp = new Date(d*1000);
+  m = dtmp.getMinutes();
+  s = dtmp.getSeconds();
+  if (m<10) m="0"+m;
+  if (s<10) s="0"+s;
+  ms = m+'m '+s+'s';
+  return ms;
+}
+ </script>
+ </head>
+
+ <body>
+
+  <div id="n2yo_satmap1">
+  </div>
+      <div id="n2yo_overmap"></div>
+  <div id="n2yo_timezone"><span style="float:left"><a href="http://www.n2yo.com/" target="_parent">Powered by N2YO.com</a>
+  </span>
+  <span id="n2yo_list_label">Select: </span><span id="n2yo_list"></span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+  <span style="float:right" id="tz"></span></div>
+  <div id="n2yo_passes"></div>
+  <span id="n2yo_info_title"></span>
+
+ </body>
+  <script>
+var app = "webtracker-beta-leaflet";
+var site = (window.location != window.parent.location)
+            ? document.referrer
+            : document.location;
+
+	jQuery.getJSON('https://www.n2yo.com/sat/locationjson.php', function(data) {
+	if(data!=null)
+		{
+		 myip = data.ip;
+		}
+
+		var url = "https://www.n2yo.com/sat/logusage.php?app="+app+"&ip="+myip+"&site="+site;
+
+		jQuery.getJSON(url, function(data) {
+	});
+
+   });
+  </script>
+</html>
+
