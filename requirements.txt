@@ -61,7 +61,7 @@ txaio==22.2.1
 typing-extensions==3.10.0.2
 tzdata==2022.1
 tzlocal==4.2
-urllib3==1.26.10
+urllib3==1.26.17
 uWSGI==2.0.22
 wrapt==1.12.1
 zope.interface==5.4.0
