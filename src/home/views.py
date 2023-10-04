@@ -1,5 +1,4 @@
 """API request handling. Map requests to the corresponding HTMLs."""
-import math
 from datetime import datetime, timedelta
 import json
 import os
