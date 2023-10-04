@@ -75,7 +75,9 @@ def get_next_pass_over_delft(request, norad_id: str):
     timestamps, events = satellite.find_events(delft, time_scale.now(), time_scale.now() + timedelta(hours=24))
 
     pass_events = []
-    for i in range(math.ceil(len(events)/3)):
+    min_events = min(len(timestamps[events == 0]), len(timestamps[events == 1]), len(timestamps[events == 2]))
+
+    for i in range(min_events):
         rise_time = timestamps[events == 0][i].utc_datetime().strftime(TIME_FORMAT)
         peak_time = timestamps[events == 1][i].utc_datetime().strftime(TIME_FORMAT)
         set_time = timestamps[events == 2][i].utc_datetime().strftime(TIME_FORMAT)
