@@ -36,30 +36,38 @@
 {% block nav-sidebar %}{% endblock %}
 
 {% block content %}
-{% if user.is_authenticated %}
-    <h1>Hello {{ user.username }}!</h1>
-{% endif %}
+
+<h1> 🧑‍💻 {{ user.username }}</h1>
+<h1> ✉️ {{ user.email }}
+{% comment %} <br> {% endcomment %}
+    {% comment %} <br> {% endcomment %}
+<a href="{% url 'change_email' %}"><input type="submit" value="Update Email"></input></a> </h1>
+
+
 
 {% if user.is_superuser %}
 {% comment %} <div class="text-center"> {% endcomment %}
-<a href="/admin/" >{% translate 'Django Admin' %}</a> /
-<a href="/dbmanager/" >{% translate 'pgAdmin' %}</a> /
-<a href="http://localhost:8086/" >{% translate 'InfluxDB' %}</a> /
-<a href="/grafana/" >{% translate 'Grafana' %}</a> /
-<a href="https://app.crowdsec.net/login" >{% translate 'Crowdsec' %}</a> /
+
+    <h2>Go to:</h2>
+    <ul>
+        <li><a href="/admin/" >{% translate 'Django Admin' %}</a></li>
+        <li><a href="/dbmanager/" >{% translate 'pgAdmin' %}</a></li>
+        <li><a href="http://localhost:8086/" >{% translate 'InfluxDB' %}</a></li>
+        <li><a href="/grafana/" >{% translate 'Grafana' %}</a></li>
+        <li><a href="https://app.crowdsec.net/login" >{% translate 'Crowdsec' %}</a></li>
+    </ul>
+
 {% comment %} </div> {% endcomment %}
 {% endif %}
 
 <br>
 <br>
 
-<p> Account email: {{ user.email }}
-<br>
-<br>
 
-<a href="{% url 'change_email' %}"><input type="submit" value="Update Email"></input></a>
-<a href="{% url 'change_password' %}"><input type="submit" value="Change Password"></input></a>
 <a href="{% url 'get_new_key' %}"><input type="submit" value="Create an API key"></input></a>
+<br>
+<br>
+<a href="{% url 'change_password' %}"><input type="submit" value="Change Password"></input></a>
 <br>
 <br>
 
@@ -73,6 +81,7 @@
 
 <br>
 
-<a href="{% url 'delete_account' %}"><input type="submit" value="Delete Account"></input></a>
-
+<h2><a href="{% url 'delete_account' %}">
+    <input type="submit" value="Delete Account" style="background-color: #C41E3A; color: white; border: none; padding: 10px 20px; cursor: pointer;">
+</a>
 {% endblock %}

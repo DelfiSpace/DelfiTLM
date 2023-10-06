@@ -2,8 +2,9 @@ let zoomLevel = 3;
 let latitude = 52.0116;
 let longitude = 4.3571;
 let SATELLITES = {
-    "DELFI-PQ": '51074',
     "DELFI-C3 (DO-64)": '32789',
+    "DELFI-PQ": '51074',
+
 }
 
 // refresh rate in seconds
