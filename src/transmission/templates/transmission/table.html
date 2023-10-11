@@ -1,44 +1,20 @@
-{% extends "admin/base.html" %}
-{% block title %}DelfiSpace - Frames{% endblock %}
-{% load i18n static %}
-{% block breadcrumbs %}
-<div class="breadcrumbs">
-    <a href="{% url 'homepage' %}">{% translate 'Home' %}</a>
-    &rsaquo;  {{table_name}}
-</div>
-{% endblock %}
-
-{% block nav-sidebar %}{% endblock %}
-
-{% block usertools %}
-    {% if perms.transmission.view_downlink %}
-    <a href="{% url 'get_frames_table' link='downlink'%}" >{% translate 'Downlink Transmission' %}</a>
-    {% endif %}
-
-    {% if perms.transmission.view_uplink %}
-        <a href="{% url 'get_frames_table' link='uplink' %}" >{% translate 'Uplink Transmission' %}</a>
-    {% endif %}
-
-    {% if perms.transmission.view_uplink and perms.transmission.view_downlink %}
-        <a href="{% url 'submit_job' %}" >{% translate 'Processing' %}</a>
-    {% endif %}
-
-        <a href="{% url 'account' %}">{% translate 'Account' %}</a>
-
-{% endblock %}
-
-
+{% load  static %}
+<!DOCTYPE html>
+  <head>
+  <title>{% block title %}DelfiSpace - Frames{% endblock %}</title>
+  <link rel="shortcut icon" href="{%  static 'favicon.ico' %}">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+</head>
+{% include 'home/navbar.html' %}
+{% include 'home/messages.html' %}
+<body>
 {% block content %}
-    <head>
-        <title>{{table_name}} frames</title>
-        <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
-        <script src="https://code.jquery.com/jquery-1.12.4.js"></script>
-        <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
-        <link rel="stylesheet" href="//code.jquery.com/ui/1.13.1/themes/base/jquery-ui.css">
-        <link rel="stylesheet" href="/resources/demos/style.css">
-    </head>
-    <body>
-        <h1>{{table_name}} Frames</h1>
+
+        <br>
+        <h2>{{table_name}} Frames</h2>
+        <br>
+        <br>
         <div>
         <!-- {% if table_name == 'Downlink' and perms.transmission.view_downlink %}
             <a href="{% url 'process' link='downlink'%}"><input type="submit" value="Process Frames"></input></a>
@@ -49,12 +25,12 @@
         {% if table_name == 'Downlink' and perms.transmission.delete_downlink %}
 
             <form action="{% url 'delete_processed_frames' link='downlink'%}" method="POST">{% csrf_token %}
-                <input type="submit" value="Delete Processed Frames">
+                <button type="submit" class="btn btn-danger">Delete Processed Frames</button>
             </form>
 
         {%  elif table_name == 'Uplink' and perms.transmission.delete_uplink %}
             <form action="{% url 'delete_processed_frames' link='uplink'%}" method="POST">{% csrf_token %}
-                <input type="submit" value="Delete Processed Frames">
+                <button type="submit" class="btn btn-danger">Delete Processed Frames</button>
             </form>
         {% endif %}
         <br>
@@ -62,7 +38,7 @@
         <form method="get">
         {{telemetry_filter.form}}
 
-        <input type="submit" value="Search"></input>
+        <button class="btn btn-custom-primary">Search</button>
         </form>
         </div>
         <div>
@@ -125,3 +101,6 @@
         </div>
 
 {% endblock %}
+
+</body>
+</html>

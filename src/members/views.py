@@ -274,7 +274,7 @@ def delete_account_request(request):
             request.user.has_perm('transmission.view_uplink') or \
             request.user.role == "operator":
         status = HTTPStatus.BAD_REQUEST
-        messages.error(request, "Your account could not be deleted!")
+        messages.error(request, "Your account cannot be deleted!")
 
     elif request.method == "POST":
         if form.is_valid():
