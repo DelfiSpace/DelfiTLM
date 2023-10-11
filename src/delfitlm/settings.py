@@ -81,6 +81,7 @@ INSTALLED_APPS = [
     'transmission',
     'members',
     'home',
+    'bootstrap5',
 ]
 
 # REST_FRAMEWORK = {
