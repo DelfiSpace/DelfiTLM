@@ -14,6 +14,23 @@
 {%block content%}
 
 <div class="container my-5">
+
+  <div class="cookie-bar bg-dark text-white text-center p-2 fixed-bottom">
+    By using our site you agree to our use of cookies to give you the best experience on our website.
+    <button class="btn btn-custom-primary btn-sm ms-2" id="accept-cookies">Got it!</button>
+  </div>
+
+  <script>
+    // JavaScript to handle cookie acceptance
+    document.getElementById("accept-cookies").addEventListener("click", function() {
+      // Set a cookie to track the user's acceptance
+      document.cookie = "cookies_accepted=true; expires=Fri, 31 Dec 9999 23:59:59 GMT; path=/";
+      // Hide the cookie bar
+      document.querySelector(".cookie-bar").style.display = "none";
+    });
+  </script>
+
+
   <h1 class="text-center mb-4">Delfi Space - TU Delft SpaceOps</h1>
 
 
@@ -98,4 +115,4 @@ justify-content: center;">
 </body>
 </html>
 
-<script src="{% static "cookieBar.min.js" %}"></script>
+{% comment %} <script src="{% static "cookieBar.min.js" %}"></script> {% endcomment %}
