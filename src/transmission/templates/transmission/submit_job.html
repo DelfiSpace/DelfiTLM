@@ -9,12 +9,14 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
 </head>
+
 {% include 'home/navbar.html' %}
 {% include 'home/messages.html' %}
 
 <body>
 
-    <div class="container mt-5">
+    <div class="container my-5">
+        <h1 class="text-center mb-4">TLM Processing Scheduler</h1>
         <h2>Scheduler Status: {{ scheduler_status }}</h2>
         <br>
 
@@ -91,12 +93,12 @@
         <p>[2]: Link will only be considered for bucket processing jobs.</p>
 
         <div class="job-list mt-4">
-            <p>Running jobs:</p>
+            <h4>Running jobs:</h4>
             {% for job in running_jobs %}
                 <p> - {{ job }} </p>
             {% endfor %}
 
-            <p>Pending jobs:</p>
+            <h4>Pending jobs:</h4>
             {% for job in pending_jobs %}
                 <p> - {{ job }} </p>
             {% endfor %}

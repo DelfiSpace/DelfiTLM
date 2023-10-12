@@ -12,6 +12,11 @@
 <body>
 
 {%block content%}
+
+<div class="container my-5">
+  <h1 class="text-center mb-4">Delfi Space - TU Delft SpaceOps</h1>
+
+
 <div style="display: flex; flex-direction: row; flex-wrap: wrap;
 justify-content: center;">
 
@@ -85,6 +90,7 @@ justify-content: center;">
             <iframe src="/grafana/d-solo/sknvMScVz/latest-reception-times?orgId=1&panelId=5" width="450" height="200" frameborder="0"></iframe>
         </div>
     {% include 'home/map.html' %}
+</div>
 </div>
 {% endblock %}
 {% include 'home/footer.html' %}
