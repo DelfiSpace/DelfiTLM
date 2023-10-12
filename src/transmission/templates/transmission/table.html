@@ -5,47 +5,41 @@
   <link rel="shortcut icon" href="{%  static 'favicon.ico' %}">
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+
+</style>
 </head>
 {% include 'home/navbar.html' %}
 {% include 'home/messages.html' %}
 <body>
 {% block content %}
+<h1 class="text-center mb-4">{{ table_name }} Frames</h1>
 
-        <br>
-        <h2>{{table_name}} Frames</h2>
-        <br>
-        <br>
-        <div>
-        <!-- {% if table_name == 'Downlink' and perms.transmission.view_downlink %}
-            <a href="{% url 'process' link='downlink'%}"><input type="submit" value="Process Frames"></input></a>
-        {% elif table_name == 'Uplink' and perms.transmission.view_uplink %}
-            <a href="{% url 'process' link='uplink'%}"><input type="submit" value="Process Frames"></input></a>
-        {% endif %} -->
-
-        {% if table_name == 'Downlink' and perms.transmission.delete_downlink %}
-
-            <form action="{% url 'delete_processed_frames' link='downlink'%}" method="POST">{% csrf_token %}
-                <button type="submit" class="btn btn-danger">Delete Processed Frames</button>
-            </form>
-
-        {%  elif table_name == 'Uplink' and perms.transmission.delete_uplink %}
-            <form action="{% url 'delete_processed_frames' link='uplink'%}" method="POST">{% csrf_token %}
-                <button type="submit" class="btn btn-danger">Delete Processed Frames</button>
-            </form>
-        {% endif %}
-        <br>
-        <br>
-        <form method="get">
-        {{telemetry_filter.form}}
-
-        <button class="btn btn-custom-primary">Search</button>
-        </form>
+    {% if table_name == 'Downlink' and perms.transmission.delete_downlink %}
+    <form action="{% url 'delete_processed_frames' link='downlink' %}" method="POST">
+        {% csrf_token %}
+        <div class="text-center mb-3">
+            <button type="submit" class="btn btn-danger">Delete Processed Frames</button>
         </div>
-        <div>
-            <table border="1" class="dataframe">
-                <thead>
-                <tr style="text-align: left;">
+    </form>
+    {% elif table_name == 'Uplink' and perms.transmission.delete_uplink %}
+    <form action="{% url 'delete_processed_frames' link='uplink' %}" method="POST">
+        {% csrf_token %}
+        <div class="text-center mb-3">
+            <button type="submit" class="btn btn-danger">Delete Processed Frames</button>
+        </div>
+    </form>
+    {% endif %}
 
+    <form class="text-center" method="get">
+        {{ telemetry_filter.form }}
+        <button class="btn btn-custom-primary mb-3">Filter</button>
+    </form>
+
+    <div class="table-responsive">
+        <table class="table table-bordered table-hover">
+            <thead>
+                <tr>
                     <th>id</th>
                     <th>timestamp</th>
                     <th>radio_amateur</th>
@@ -53,54 +47,48 @@
                     <th>invalid</th>
                     <th>app</th>
                     <th>frequency</th>
-                    <th style=" max-width: 1000px; word-wrap: break-word;">frame</th>
+                    <th style="max-width: 1000px; word-wrap: break-word;">frame</th>
                 </tr>
-                </thead>
-                <tbody>
+            </thead>
+            <tbody>
                 {% for frame in page_obj %}
                 <tr>
                     <td>{{ frame.id }}</td>
-                    <td>{{ frame.timestamp}}</td>
-                    <!-- <td>{{ frame.timestamp|upper}}</td> USE |upper to view the timestamp in full-->
-                    {% if  table_name == "Downlink" %}
-                        <td>{{ frame.observer}}</td>
+                    <td>{{ frame.timestamp }}</td>
+                    {% if table_name == "Downlink" %}
+                    <td>{{ frame.observer }}</td>
                     {% endif %}
-
                     {% if table_name == "Uplink" %}
-                        <td>{{ frame.operator}}</td>
+                    <td>{{ frame.operator }}</td>
                     {% endif %}
-
-                    <td>{{ frame.processed}}</td>
-                    <td>{{ frame.invalid}}</td>
-                    <td>{{ frame.application}}</td>
-                    <td>{{ frame.frequency}}</td>
-                    <td  style=" max-width: 1000px; word-wrap: break-word;">{{ frame.frame}}</td>
+                    <td>{{ frame.processed }}</td>
+                    <td>{{ frame.invalid }}</td>
+                    <td>{{ frame.application }}</td>
+                    <td>{{ frame.frequency }}</td>
+                    <td style="max-width: 1000px; word-wrap: break-word; font-size: 12px;">{{ frame.frame }}</td>
                 </tr>
-                    {% endfor %}
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
 
-                </tbody>
-            </table>
-        </div>
-        <div class="pagination">
-            {% load tags %}
-            <span class="step-links">
-                {% if page_obj.has_previous %}
-                    <a href="?{% url_replace request 'page' 1 %}">&laquo; first</a>
-                    <a href="?{% url_replace request 'page' page_obj.previous_page_number %}">previous</a>
-                {% endif %}
-
-                <span class="current">
-                    Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}.
-                </span>
-
-                {% if page_obj.has_next %}
-                    <a href="?{% url_replace request 'page' page_obj.next_page_number %}">next</a>
-                    <a href="?{% url_replace request 'page' page_obj.paginator.num_pages %}">last &raquo;</a>
-                {% endif %}
+    <div class="pagination mt-4 d-flex justify-content-center">
+        {% load tags %}
+        <span class="step-links">
+            {% if page_obj.has_previous %}
+            <a href="?{% url_replace request 'page' 1 %}" class="btn btn-secondary">&laquo; first</a>
+            <a href="?{% url_replace request 'page' page_obj.previous_page_number %}" class="btn btn-secondary">previous</a>
+            {% endif %}
+            <span class="current">
+                Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}.
             </span>
-        </div>
-
-{% endblock %}
-
+            {% if page_obj.has_next %}
+            <a href="?{% url_replace request 'page' page_obj.next_page_number %}" class="btn btn-secondary">next</a>
+            <a href="?{% url_replace request 'page' page_obj.paginator.num_pages %}" class="btn btn-secondary">last &raquo;</a>
+            {% endif %}
+        </span>
+    </div>
+    {% endblock %}
+    {% include 'home/footer.html' %}
 </body>
 </html>

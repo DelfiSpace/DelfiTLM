@@ -15,6 +15,17 @@
 <div style="display: flex; flex-direction: row; flex-wrap: wrap;
 justify-content: center;">
 
+  <div class="card" style="width: 18rem; margin: 10px">
+    <img src="https://pbs.twimg.com/media/EY5TTgeWoAEittJ?format=jpg&name=large" class="card-img-top"
+    style = "max-width: 100%; max-height: 46.4%;">
+    <div class="card-body">
+        <h5 class="card-title" style="color:Gray">Delfi Space</h5>
+        <p class="card-text"> Status: Ongoing Project</p>
+        <a class="btn btn-custom-primary" href="https://www.tudelft.nl/lr/delfi-space" target="_blank">About</a>
+        <a class="btn btn-custom-primary" href="/grafana/d/sknvMScVz/latest-reception-times?orgId=1" target="_blank">Latest Receptions</a>
+    </div>
+  </div>
+
       <div class="card" style="width: 18rem; margin: 10px">
         <img src="https://d2k0ddhflgrk1i.cloudfront.net/_processed_/0/8/csm_Delfi-C3_0c2c5a8cde.webp" class="card-img-top"
         style = "max-width: 100%; max-height: 46.4%;" >
@@ -66,17 +77,6 @@ justify-content: center;">
         </div>
       </div>
 
-    <div class="card" style="width: 18rem; margin: 10px">
-        <img src="https://pbs.twimg.com/media/EY5TTgeWoAEittJ?format=jpg&name=large" class="card-img-top"
-        style = "max-width: 100%; max-height: 46.4%;">
-        <div class="card-body">
-            <h5 class="card-title" style="color:Gray">More Info</h5>
-            <br>
-            <a class="btn btn-custom-primary" href="https://twitter.com/DelfiSpace" target="_blank">Twitter</a>
-            <a class="btn btn-custom-primary" href="/grafana/d/sknvMScVz/latest-reception-times?orgId=1" target="_blank">Latest Receptions</a>
-        </div>
-      </div>
-
         <div class="card" style="width: 450; margin: 10px">
             <iframe src="/grafana/d-solo/sknvMScVz/latest-reception-times?orgId=1&panelId=2" width="450" height="200" frameborder="0"></iframe>
         </div>
@@ -84,12 +84,10 @@ justify-content: center;">
         <div class="card" style="width: 450; margin: 10px">
             <iframe src="/grafana/d-solo/sknvMScVz/latest-reception-times?orgId=1&panelId=5" width="450" height="200" frameborder="0"></iframe>
         </div>
-
-    {% comment %} <div id="map" style="height: 700px; width: 70%"></div> {% endcomment %}
     {% include 'home/map.html' %}
-
 </div>
 {% endblock %}
+{% include 'home/footer.html' %}
 
 </body>
 </html>
