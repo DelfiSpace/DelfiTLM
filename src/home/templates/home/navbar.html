@@ -55,25 +55,42 @@
       border-color: #0088A8; /* Slightly darker shade on hover */
   }
 
+  /* Hide the tabs based on permissions */
+  {% if not user.is_authenticated or not perms.transmission.view_uplink %}
+  .nav-item-uplink {
+    visibility: hidden;
+  }
+  {% endif %}
+  {% if not user.is_authenticated or not perms.transmission.view_downlink %}
+  .nav-item-downlink {
+    visibility: hidden;
+  }
+  {% endif %}
+  {% if not user.is_authenticated or not user.is_superuser %}
+  .nav-item-superuser {
+    visibility: hidden;
+  }
+  {% endif %}
+
 </style>
 
 <nav class="navbar navbar-expand-lg">
     <div class="container-fluid">
-        <a class="navbar-brand" href="{% url 'homepage' %}">Delfi Space - TU Delft SpaceOps</a>
+         <a class="navbar-brand" href="{% url 'homepage' %}">Delfi Space - TU Delft SpaceOps</a>
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
             aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
             <span class="navbar-toggler-icon"></span>
         </button>
         <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
-            {% if user.is_authenticated %}
                 <ul class="navbar-nav">
-                    <li class="nav-item {% if request.path == '/transmission/uplink/'%} active{% endif %}">
+                    {% if user.is_authenticated %}
+                    <li class="nav-item {% if request.path == '/transmission/uplink/'%} active{% endif %} nav-item-uplink">
                         <a class="nav-link" href="{% url 'get_frames_table' link='uplink' %}">Transmission Uplink</a>
                     </li>
-                    <li class="nav-item {% if request.path == '/transmission/downlink/' %}active{% endif %}">
+                    <li class="nav-item {% if request.path == '/transmission/downlink/' %}active{% endif %} nav-item-downlink">
                         <a class="nav-link" href="{% url 'get_frames_table' link='downlink' %}">Transmission Downlink</a>
                     </li>
-                    <li class="nav-item {% if request.path == '/schedule-job/' %}active{% endif %}">
+                    <li class="nav-item {% if request.path == '/schedule-job/' %}active{% endif %} nav-item-superuser">
                         <a class="nav-link" href="{% url 'submit_job' %}">TLM Processing</a>
                     </li>
                     <li class="nav-item dropdown">
