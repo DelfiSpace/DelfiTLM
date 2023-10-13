@@ -145,7 +145,7 @@ class TestSchedulerStateChange(TestCase):
         self.assertEqual(scheduler_satus, "running")
 
         # force shutdown
-        response = self.client.post(reverse('modify_scheduler', args=["force shutdown"]), follow=True)
+        response = self.client.post(reverse('modify_scheduler', args=["force_shutdown"]), follow=True)
 
         self.assertTemplateUsed(response, 'transmission/submit_job.html')
         self.assertEqual(response.status_code, 200)
