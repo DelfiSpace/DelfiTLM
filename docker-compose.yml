@@ -25,10 +25,10 @@ services:
     environment:
         - ALLOWED_HOSTS=${ALLOWED_HOSTS:-localhost,127.0.0.1}
         - POSTGRES_DB=${POSTGRES_DB:-delfitlm}
-        - POSTGRES_USER=${POSTGRES_DB:-postgres}
-        - POSTGRES_PASSWORD=${POSTGRES_DB:-postgres}
-        - POSTGRES_HOST=${POSTGRES_DB:-db}
-        - POSTGRES_PORT=${POSTGRES_DB:-5432}
+        - POSTGRES_USER=${POSTGRES_USER:-postgres}
+        - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-postgres}
+        - POSTGRES_HOST=${POSTGRES_HOST:-db}
+        - POSTGRES_PORT=${POSTGRES_PORT:-5432}
         - INFLUXDB_V2_ORG=${INFLUXDB_V2_ORG:-Delfi Space}
         - INFLUXDB_V2_TOKEN=${INFLUXDB_V2_TOKEN:-adminpwd}
     restart: always
