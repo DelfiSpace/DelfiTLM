@@ -71,6 +71,8 @@ To reset the containers and remove the volumes run the `./reset_docker.sh` scrip
 4. Run the database migration to create the tables (only required the first time):
 `python manage.py migrate`
 
+5. Configure the `.env`` file with the preferred settings and add the website hostname.
+
 Note: remove `--build` to skip building the container, will use the cached one (last build)
 
 ## Testing
