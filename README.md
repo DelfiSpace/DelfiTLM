@@ -5,7 +5,7 @@
 
 ## Requirements
 
-- Python3 and Java 8 or higher
+- Python3 and Java 11 or higher
 - For local running/development: The postgres client library (For apt users: `apt install libpq-dev`)
 - Docker and docker-compose if running the system or the database from a container
 - For running without docker: Set up a Postgres instance on port 5432

@@ -1,112 +1,110 @@
-{% extends "admin/base.html" %}
-{% block title %}DelfiSpace - Frame Processing{% endblock %}
-{% load i18n static %}
-{% block extrastyle %}{{ block.super }}<link rel="stylesheet" type="text/css" href="{% static "admin/css/forms.css" %}">{% endblock %}
-{% block breadcrumbs %}
-<div class="breadcrumbs">
-    <a href="{% url 'homepage' %}">{% translate 'Home' %}</a>
-    &rsaquo; {% translate 'Processing' %}
-</div>
-{% endblock %}
+{% load static %}
 
-{% block nav-sidebar %}{% endblock %}
+<!DOCTYPE html>
+<html lang="en">
 
-{% block usertools %}
-    {% if perms.transmission.view_downlink %}
-    <a href="{% url 'get_frames_table' link='downlink'%}" >{% translate 'Downlink Transmission' %}</a>
-    {% endif %}
+<head>
+    <title>{% block title %}DelfiSpace - Frame Processing{% endblock %}</title>
+    <link rel="shortcut icon" href="{% static 'favicon.ico' %}">
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+</head>
 
-    {% if perms.transmission.view_uplink %}
-        <a href="{% url 'get_frames_table' link='uplink' %}" >{% translate 'Uplink Transmission' %}</a>
-    {% endif %}
+{% include 'home/navbar.html' %}
+{% include 'home/messages.html' %}
 
-    {% if perms.transmission.view_uplink and perms.transmission.view_downlink %}
-        <a href="{% url 'submit_job' %}" >{% translate 'Processing' %}</a>
-    {% endif %}
+<body>
 
+    <div class="container my-5">
+        <h1 class="text-center mb-4">TLM Processing Scheduler</h1>
+        <h2>Scheduler Status: {{ scheduler_status }}</h2>
+        <br>
 
-    <a href="{% url 'account' %}">{% translate 'Account' %}</a>
-
-{% endblock %}
-
-
-{% block content %}
-
-<h1>Scheduler Status: {{scheduler_status}}</h1>
-{% if scheduler_status == "paused" %}
-    <form action="{% url 'modify_scheduler' command='resume'%}" method="POST">{% csrf_token %}
-        <input type="submit" value="Resume Scheduler">
-    </form>
-    <form action="{% url 'modify_scheduler' command='shutdown'%}" method="POST">{% csrf_token %}
-       <input type="submit" value="Shutdown Scheduler">
-    </form>
-    <form action="{% url 'modify_scheduler' command='force shutdown'%}" method="POST">{% csrf_token %}
-        <input type="submit" value="Force Shutdown Scheduler">
-    </form>
-
-{% endif %}
-{% if scheduler_status == "shutdown" %}
-    <form action="{% url 'modify_scheduler' command='start'%}" method="POST">{% csrf_token %}
-        <input type="submit" value="Start Scheduler">
-    </form>
-{% endif %}
-
-{% if scheduler_status == "running" %}
-    <form action="{% url 'modify_scheduler' command='pause'%}" method="POST">{% csrf_token %}
-        <input type="submit" value="Pause Scheduler">
-    </form>
-    <form action="{% url 'modify_scheduler' command='shutdown'%}" method="POST">{% csrf_token %}
-       <input type="submit" value="Shutdown Scheduler">
-    </form>
-    <form action="{% url 'modify_scheduler' command='force shutdown'%}" method="POST">{% csrf_token %}
-        <input type="submit" value="Force Shutdown Scheduler">
-    </form>
-{% endif %}
-
-<br>
-<br>
-
-<h2>Submit job</h2>
-<form class="post-form" method="POST">{% csrf_token %}
-    <fieldset class="module aligned wide">
-    {% for field in submit_job_form %}
-        <div class="form-row">
-            {{ field.errors }}
-            {{ field.label_tag }}
-            {{ field }}
+        <div class="row mb-3">
+            {% if scheduler_status == "paused" %}
+            <div class="col-md-4">
+                <form action="{% url 'modify_scheduler' command='resume'%}" method="POST">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-primary btn-block">Resume Scheduler</button>
+                </form>
+            </div>
+            <div class="col-md-4">
+                <form action="{% url 'modify_scheduler' command='shutdown'%}" method="POST">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger btn-block">Shutdown Scheduler</button>
+                </form>
+            </div>
+            <div class="col-md-4">
+                <form action="{% url 'modify_scheduler' command='force_shutdown'%}" method="POST">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger btn-block">Force Shutdown Scheduler</button>
+                </form>
+            </div>
+            {% elif scheduler_status == "shutdown" %}
+            <div class="col-md-12">
+                <form action="{% url 'modify_scheduler' command='start'%}" method="POST">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-success btn-block">Start Scheduler</button>
+                </form>
+            </div>
+            {% elif scheduler_status == "running" %}
+            <div class="col-md-4">
+                <form action="{% url 'modify_scheduler' command='pause'%}" method="POST">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-warning btn-block">Pause Scheduler</button>
+                </form>
+            </div>
+            <div class="col-md-4">
+                <form action="{% url 'modify_scheduler' command='shutdown'%}" method="POST">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger btn-block">Shutdown Scheduler</button>
+                </form>
+            </div>
+            <div class="col-md-4">
+                <form action="{% url 'modify_scheduler' command='force_shutdown'%}" method="POST">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger btn-block">Force Shutdown Scheduler</button>
+                </form>
+            </div>
+            {% endif %}
         </div>
-    {% endfor %}
-    <input type="submit" value="Submit Job">
-    </fieldset>
-</form>
 
-<p>[1]: Satellite will only be considered for scraping and bucket processing jobs.</p>
-<br>
-<p>[2]: Link will only be considered for bucket processing jobs.</p>
-<br>
-<br>
-<p> Running jobs:</p>
-    {% for job in running_jobs %}
-        <p> - {{ job }} </p>
         <br>
-    {% endfor %}
 
-<p> Pending jobs:</p>
-    {% for job in pending_jobs %}
-        <p> - {{ job }} </p>
+        <form class="post-form" method="POST">
+            {% csrf_token %}
+            <div class="mb-3 row">
+                {% for field in submit_job_form %}
+                    <label for="{{ field.id_for_label }}" class="col-md-3 col-form-label">{{ field.label }}</label>
+                    <div class="col-md-9">
+                        {{ field }}
+                        {% if field.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ field.errors|join:", " }}
+                            </div>
+                        {% endif %}
+                    </div>
+                {% endfor %}
+            </div>
+            <button type="submit" class="btn btn-custom-primary btn-block">Submit Job</button>
+        </form>
         <br>
-    {% endfor %}
+        <p>[1]: Satellite will only be considered for scraping and bucket processing jobs.</p>
+        <p>[2]: Link will only be considered for bucket processing jobs.</p>
 
-{% if messages %}
-<ul class="messages">
-    {% for message in messages %}
-    <li {% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
-    {% endfor %}
-</ul>
-{% endif %}
+        <div class="job-list mt-4">
+            <h4>Running jobs:</h4>
+            {% for job in running_jobs %}
+                <p> - {{ job }} </p>
+            {% endfor %}
 
-<br>
-<br>
+            <h4>Pending jobs:</h4>
+            {% for job in pending_jobs %}
+                <p> - {{ job }} </p>
+            {% endfor %}
+        </div>
+    </div>
+    {% include 'home/footer.html' %}
+</body>
 
-
-{% endblock %}
+</html>

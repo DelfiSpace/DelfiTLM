@@ -47,7 +47,7 @@ class LoginForm(forms.Form):
 class ChangeEmailForm(forms.Form):
     """Change email form"""
     email = forms.EmailField(label="New email address", required=True)
-    email_confirm = forms.EmailField(label="Confirm the ew email address", required=True)
+    email_confirm = forms.EmailField(label="Confirm the new email address", required=True)
 
 
 class ChangePasswordForm(PasswordChangeForm):

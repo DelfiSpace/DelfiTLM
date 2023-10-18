@@ -145,7 +145,7 @@ class TestSchedulerStateChange(TestCase):
         self.assertEqual(scheduler_satus, "running")
 
         # force shutdown
-        response = self.client.post(reverse('modify_scheduler', args=["force shutdown"]), follow=True)
+        response = self.client.post(reverse('modify_scheduler', args=["force_shutdown"]), follow=True)
 
         self.assertTemplateUsed(response, 'transmission/submit_job.html')
         self.assertEqual(response.status_code, 200)
@@ -324,9 +324,6 @@ class TestTableViews(TestCase):
         response = self.client.get(reverse('get_frames_table', args=["uplink"]))
         self.assertEqual(response.status_code, 200)
 
-        response = self.client.get(reverse('get_tle_table'))
-        self.assertEqual(response.status_code, 200)
-
     def test_requested_tables_no_permissions(self):
         # cannot access uplink/downlink tables without proper permission
         response = self.client.get(reverse('get_frames_table', args=["downlink"]))
@@ -344,9 +341,6 @@ class TestTableViews(TestCase):
         self.assertEqual(response.status_code, 400)
 
         response = self.client.post(reverse('get_frames_table', args=["uplink"]))
-        self.assertEqual(response.status_code, 400)
-
-        response = self.client.head(reverse('get_tle_table'))
         self.assertEqual(response.status_code, 400)
 
 

@@ -1,87 +1,51 @@
-{% extends "admin/base.html" %}
-{% block title %}DelfiSpace - Account Settings{% endblock %}
-{% load i18n static %}
+{% load  static %}
 
-{% block extrastyle %}{{ block.super }}<link rel="stylesheet" type="text/css" href="{% static "admin/css/login.css" %}">
-{{ form.media }}
-{% endblock %}
+<!DOCTYPE html>
+<html lang="en">
 
-{% block usertools %}
-  {% if perms.transmission.view_downlink %}
-  <a href="{% url 'get_frames_table' link='downlink'%}" >{% translate 'Downlink Transmission' %}</a>
-  {% endif %}
-
-  {% if perms.transmission.view_uplink %}
-      <a href="{% url 'get_frames_table' link='uplink' %}" >{% translate 'Uplink Transmission' %}</a>
-  {% endif %}
-
-  {% if perms.transmission.view_uplink and perms.transmission.view_downlink %}
-      <a href="{% url 'submit_job' %}" >{% translate 'Processing' %}</a>
-  {% endif %}
-
-    {% if user.is_authenticated %}
-        <a href="{% url 'account' %}">{% translate 'Account' %}</a>
-        {% else %}
-        <a href="{% url 'login' %}">{% translate 'Login' %}</a>
-    {% endif %}
-{% endblock %}
-
-{% block breadcrumbs %}
-<div class="breadcrumbs">
-    <a href="{% url 'homepage' %}">{% translate 'Home' %}</a>
-    &rsaquo; {% translate 'Account' %}
-</div>
-{% endblock %}
-
-{% block nav-sidebar %}{% endblock %}
-
-{% block content %}
-
-<h1> 🧑‍💻 {{ user.username }}</h1>
-<h1> ✉️ {{ user.email }}
-{% comment %} <br> {% endcomment %}
-    {% comment %} <br> {% endcomment %}
-<a href="{% url 'change_email' %}"><input type="submit" value="Update Email"></input></a> </h1>
+<head>
+    <title>{% block title %}DelfiSpace - Account Settings{% endblock %}</title>
+    <link rel="shortcut icon" href="{%  static 'favicon.ico' %}">
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+</head>
+{% include 'home/navbar.html' %}
+{% include 'home/messages.html' %}
+<body>
 
 
+    <div class="container my-5">
+        <h1 class="text-center mb-4">Account Settings</h1>
 
-{% if user.is_superuser %}
-{% comment %} <div class="text-center"> {% endcomment %}
+        <h1>🧑‍💻 {{ user.username }}</h1>
+        <h2>✉️ {{ user.email }}</h2>
 
-    <h2>Go to:</h2>
-    <ul>
-        <li><a href="/admin/" >{% translate 'Django Admin' %}</a></li>
-        <li><a href="/dbmanager/" >{% translate 'pgAdmin' %}</a></li>
-        <li><a href="http://localhost:8086/" >{% translate 'InfluxDB' %}</a></li>
-        <li><a href="/grafana/" >{% translate 'Grafana' %}</a></li>
-        <li><a href="https://app.crowdsec.net/login" >{% translate 'Crowdsec' %}</a></li>
-    </ul>
+        <a class="btn btn-custom-primary mb-3" href="{% url 'change_email' %}">Update Email</a>
 
-{% comment %} </div> {% endcomment %}
-{% endif %}
+        {% if user.is_superuser %}
+        <h2>Go to:</h2>
+        <ul>
+            <li><a href="/admin/">Django Admin</a></li>
+            <li><a href="/dbmanager/">pgAdmin</a></li>
+            <li><a href="http://localhost:8086/">InfluxDB</a></li>
+            <li><a href="/grafana/">Grafana</a></li>
+            <li><a href="https://app.crowdsec.net/login">Crowdsec</a></li>
+        </ul>
+        {% endif %}
 
-<br>
-<br>
+        <a class="btn btn-custom-primary mb-3" href="{% url 'get_new_key' %}">Generate an API key</a>
 
+        <a class="btn btn-custom-primary mb-3" href="{% url 'change_password' %}">Change Password</a>
 
-<a href="{% url 'get_new_key' %}"><input type="submit" value="Create an API key"></input></a>
-<br>
-<br>
-<a href="{% url 'change_password' %}"><input type="submit" value="Change Password"></input></a>
-<br>
-<br>
+        {% if key %}
+        <p>API KEY:</p>
+        <pre>{{ key }}</pre>
+        <p class="mb-4">Please save this key in a secure place. If lost, a new key needs to be generated.</p>
+        {% endif %}
 
+        <a class="btn btn-danger{% if not key %} mb-3{% endif %}" href="{% url 'delete_account' %}">Delete Account</a>
+    </div>
+    {% include 'home/footer.html' %}
+</body>
 
-{% if key is not null %}
-    <p>API KEY: <br><br> {{ key }}</p>
-    <br>
-    <p>Please save this key in a secure place, it will not be displayed on this page in the future.</p>
-    <p>If lost, a new key needs to be generated.</p>
-{% endif %}
-
-<br>
-
-<h2><a href="{% url 'delete_account' %}">
-    <input type="submit" value="Delete Account" style="background-color: #C41E3A; color: white; border: none; padding: 10px 20px; cursor: pointer;">
-</a>
-{% endblock %}
+</html>

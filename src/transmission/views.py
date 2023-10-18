@@ -236,7 +236,7 @@ def modify_scheduler(request, command):
         scheduler.pause_scheduler()
     elif command == "shutdown":
         scheduler.stop_scheduler()
-    elif command == "force shutdown":
+    elif command == "force_shutdown":
         scheduler.force_stop_scheduler()
     elif command == "start":
         scheduler.start_scheduler()
