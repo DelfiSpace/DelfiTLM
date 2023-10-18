@@ -9,7 +9,8 @@ server {
 
 # HTTPS configuration
 server {
-    listen 8443 ssl http2;
+    listen 8443 ssl;
+    http2 on;
 
     server_name ${MY_HOST};
 
@@ -69,7 +70,8 @@ server {
 
 # forwarded influxdb-cli HTTPS configuration
 server {
-    listen 8081 ssl http2;
+    listen 8081 ssl;
+    http2 on;
 
     server_name ${MY_HOST};
 
@@ -100,7 +102,8 @@ server {
 
 # forwarded pgadmin HTTPS configuration
 server {
-    listen 8082 ssl http2;
+    listen 8082 ssl;
+    http2 on;
 
     server_name ${MY_HOST};
 
