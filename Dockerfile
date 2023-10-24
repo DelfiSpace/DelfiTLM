@@ -35,8 +35,10 @@ RUN adduser user
 RUN chown -R user:user /vol
 RUN chmod -R 755 /vol/web
 
-RUN chmod -R 777 /app/logs
-RUN chmod -R 777 /app/transmission/processing/temp
+RUN chmod -R 755 /app/logs
+RUN chmod -R 666 /app/transmission/processing/temp
+RUN chmod -R 666 /app/home/temp
+RUN chmod -R 666 /app/de421.bsp
 # switch to unprivileged user
 USER user
 
