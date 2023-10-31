@@ -9,8 +9,8 @@ services:
       - db_data:/var/lib/postgresql/data
     environment:
       - POSTGRES_DB=${POSTGRES_DB:-delfitlm}
-      - POSTGRES_USER=${POSTGRES_DB:-postgres}
-      - POSTGRES_PASSWORD=${POSTGRES_DB:-postgres}
+      - POSTGRES_USER=${POSTGRES_USER:-postgres}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-postgres}
     restart: always
 
     logging:
