@@ -1,6 +1,6 @@
 APScheduler==3.9.1
 asgiref==3.4.1
-astroid==2.8.0
+astroid==3.0.1
 attrs==21.4.0
 autobahn==23.1.2
 Automat==20.2.0
@@ -23,7 +23,7 @@ djangorestframework==3.13.1
 djangorestframework-api-key==2.1.0
 hyperlink==21.0.0
 idna==3.3
-incremental==21.3.0
+incremental==22.10.0
 influxdb==5.3.1
 influxdb-client==1.30.0
 isort==5.9.3
@@ -41,9 +41,9 @@ pyasn1-modules==0.2.8
 pycodestyle==2.8.0
 pycparser==2.21
 pycrowdsec==0.0.4
-pylint==2.11.1
-pylint-django==2.4.4
-pylint-plugin-utils==0.6
+pylint==3.0.2
+pylint-django==2.5.5
+pylint-plugin-utils==0.8
 pyOpenSSL==23.2.0
 python-dateutil==2.8.2
 pytz==2021.3
@@ -57,9 +57,9 @@ six==1.16.0
 skyfield==1.41
 sqlparse==0.4.4
 toml==0.10.2
-Twisted==22.10.0
+Twisted==23.10.0
 txaio==22.2.1
-typing-extensions==3.10.0.2
+typing-extensions==4.2.0
 tzdata==2022.1
 tzlocal==4.2
 urllib3==1.26.18
