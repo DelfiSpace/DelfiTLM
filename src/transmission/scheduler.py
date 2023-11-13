@@ -52,8 +52,8 @@ def schedule_job(job_type: str, satellite: str = None, link: str = None,
         scheduler.add_job_to_schedule(process_uplink_and_downlink, args, job_id, date, interval)
 
     elif job_type == "raw_bucket_processing" and satellite in SATELLITES:
-        job_id = get_job_id(satellite, job_type)
         args = [satellite, link]
+        job_id = get_job_id(satellite, job_type)
         scheduler.add_job_to_schedule(process_raw_bucket, args, job_id, date, interval)
 
     elif job_type == "reprocess_entire_raw_bucket" and satellite in SATELLITES:

@@ -148,12 +148,12 @@ def process_raw_bucket(satellite: str, link: str = None, all_frames: bool = Fals
     """Trigger bucket processing or reprocessing given satellite."""
     # if link is None process both uplink and downlink, otherwise process only specified link
 
-    if link is None:
+    if link in ["uplink", "downlink"]:
+        _process_raw_bucket(satellite, link, all_frames, failed)
+    else:
         _process_raw_bucket(satellite, "uplink", all_frames, failed)
         _process_raw_bucket(satellite, "downlink", all_frames, failed)
 
-    elif link in ["uplink", "downlink"]:
-        _process_raw_bucket(satellite, link, all_frames, failed)
 
 
 def _process_raw_bucket(satellite: str, link: str, all_frames: bool, failed: bool) -> tuple:
