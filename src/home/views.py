@@ -16,8 +16,8 @@ def get_tle(norad_id: str):
     """Retrieve satellite TLE by noradID and store it in a json.
      If the stored TLE is older than 6 hours a fresh one is requested from CelesTrak."""
 
-    if os.path.exists(os.getcwd() + "/home/tle.json"):
-        with open(os.getcwd() + "/home/tle.json", "r", encoding="utf8") as file:
+    if os.path.exists(os.getcwd() + "/home/temp/tle.json"):
+        with open(os.getcwd() + "/home/temp/tle.json", "r", encoding="utf8") as file:
             tles = json.load(file)
     else:
         tles = {}
@@ -34,7 +34,7 @@ def get_tle(norad_id: str):
     tles[norad_id]["tle"] = fresh_tle
     tles[norad_id]["timestamp"] = now.strftime(TIME_FORMAT)
 
-    with open(os.getcwd() + "/home/tle.json", "w", encoding="utf8") as file:
+    with open(os.getcwd() + "/home/temp/tle.json", "w", encoding="utf8") as file:
         file.write(json.dumps(tles, indent=4, cls=DjangoJSONEncoder))
 
     return tles[norad_id]['tle']

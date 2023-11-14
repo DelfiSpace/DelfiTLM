@@ -61,18 +61,42 @@ To reset the containers and remove the volumes run the `./reset_docker.sh` scrip
 1. In case SSL certificates are used, create a volume named delfitlm\_certificates [example](https://github.com/moby/moby/issues/25245#issuecomment-365980572) and copy inside _server.pem_ and _server.key_. Ensure they are owned by root and that permissions are 644 before copying them.
 
 2. Set up the firewall bouncer for CrowdSec, instructions in `crowdsec/README.md`.
+3. Configure the `.env`` file with the preferred settings and add the website hostname.
+   Example .env:
+```
+SECRET_KEY=
+MY_HOST=localhost
 
-3. Build and run Docker deployment script (runs on port 80 - default web port):
+POSTGRES_PORT=5432
+POSTGRES_HOST=db
+POSTGRES_USER=postgres
+POSTGRES_PASSWORD=postgres
+POSTGRES_DB=delfitlm
+
+INFLUX_USERNAME=admin
+INFLUX_PASSWORD=adminpwd
+
+INFLUX_BUCKET=default
+INFLUXDB_V2_TOKEN=adminpwd
+INFLUXDB_V2_ORG=Delfi Space
+
+GRAFANA_ADMIN_USER=admin
+GRAFANA_ADMIN_USER_PWD=adminpwd
+GF_SERVER_DOMAIN=localhost
+GF_INFLUXDB_V2_TOKEN=adminpwd
+
+SATNOGS_TOKEN=
+CROWDSEC_LAPI=
+```
+
+4. Build and run Docker deployment script (runs on port 80 - default web port):
 `docker-compose -f docker-compose.yml -f docker-compose-deploy.yml up --build`
 
-3. Access the container to initialize Django (only required the first time):
+5. Access the container to initialize Django (only required the first time):
 `docker exec -it delfitlm_app_1 /bin/bash`
 
-4. Run the database migration to create the tables (only required the first time):
-`python manage.py migrate`
-
-5. Configure the `.env`` file with the preferred settings and add the website hostname.
-
+6. Run the database migration to create the tables (only required the first time): `python manage.py migrate`
+   
 Note: remove `--build` to skip building the container, will use the cached one (last build)
 
 ## Testing

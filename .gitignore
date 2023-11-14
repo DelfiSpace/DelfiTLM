@@ -147,4 +147,4 @@ tokens/
 # bsp files
 *.bsp
 
-src/home/tle.json
+src/home/temp/tle.json
