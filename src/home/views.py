@@ -90,7 +90,7 @@ def get_satellite_location_now_api(request, norad_id):
 
     if norad_id == "all":
         sat_list = []
-        for sat in ["delfi_pq", "delfi_c3"]:
+        for sat in ["delfi_pq"]:
             sat_list.append(get_satellite_location_now(SATELLITES[sat]))
 
         res = {"satellites": sat_list}
