@@ -1,6 +1,7 @@
 from py4j.java_gateway import launch_gateway
 from py4j.java_gateway import JavaGateway
 from py4j.protocol import Py4JJavaError
+from django_logger import logger
 
 
 # pylint: disable=all
@@ -37,13 +38,18 @@ class XTCEParser:
             entries = model.getContentList()
             telemetry = {"frame": model.getName()}
 
+            logger.debug("TMFrame entries: %s", entries)
+
             for entry in entries:
                 val = entry.getValue()
                 name = entry.getName()
+                logger.debug("TMFrame val: %s", val)
+                logger.debug("TMFrame name: %s", name)
 
                 if val:
                     telemetry[name] = {"value": val.getCalibratedValue(), "status": self.isFieldValid(entry)}
 
+            logger.debug("TMFrame TLM: %s", telemetry)
             return telemetry
         except Py4JJavaError as ex:
             raise XTCEException(ex.java_exception)

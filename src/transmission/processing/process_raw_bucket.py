@@ -30,6 +30,7 @@ def parse_and_store_frame(satellite: str, timestamp: str, frame: str, observer: 
 
     parser = xtce_parser.SatParsers().parsers[satellite]
     telemetry = parser.processTMFrame(bytes.fromhex(frame))
+    bucket = satellite + "_" + link
 
     if "frame" in telemetry:
         tlm_frame_type = telemetry["frame"]
@@ -65,12 +66,12 @@ def parse_and_store_frame(satellite: str, timestamp: str, frame: str, observer: 
             db_fields["fields"][field] = value
             db_fields["tags"]["status"] = status
 
-            write_api.write(satellite + "_" + link, INFLUX_ORG, db_fields)
+            write_api.write(bucket, INFLUX_ORG, db_fields)
             # print(db_fields)
             db_fields["fields"] = {}
             db_fields["tags"] = {}
 
-        logger.info("%s: processed frame stored. Frame timestamp: %s, link: %s", satellite, timestamp, link)
+        logger.info("%s: processed frame stored. Frame timestamp: %s, link: %s, bucket: %s", satellite, timestamp, link, bucket)
 
 
 def mark_processed_flag(satellite: str, link: str, timestamp: str, value: bool) -> None:
@@ -111,6 +112,7 @@ def process_retrieved_frames(satellite: str, link: str, start_time: str, end_tim
         total_frames_count += 1
         try:
             if row["processed"] and skip_processed:  # skip frame if it's processed
+                logger.info("%s: frame skipped (already processed): %s ", satellite, row["frame"])
                 continue
             # store processed frame
             parse_and_store_frame(satellite, row["_time"], row["frame"], row[radio_amateur], link)
