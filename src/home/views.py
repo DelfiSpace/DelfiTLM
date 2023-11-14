@@ -16,22 +16,23 @@ def get_tle(norad_id: str):
     """Retrieve satellite TLE by noradID and store it in a json.
      If the stored TLE is older than 6 hours a fresh one is requested from CelesTrak."""
 
-    with open(os.getcwd() + "/home/temp/tle.json", "r", encoding="utf8") as file:
-        tles = json.load(file)
-
-    if norad_id not in tles:
-        return None
+    if os.path.exists(os.getcwd() + "/home/temp/tle.json"):
+        with open(os.getcwd() + "/home/temp/tle.json", "r", encoding="utf8") as file:
+            tles = json.load(file)
+    else:
+        tles = {}
 
     now = datetime.utcnow()
 
-    if "timestamp" in tles[norad_id]:
+    if norad_id in tles and "timestamp" in tles[norad_id]:
         last_timestamp = datetime.strptime(tles[norad_id]["timestamp"], TIME_FORMAT)
         if (now - last_timestamp).seconds < 6 * 3600:  # update every 6 hours
             return tles[norad_id]['tle']
 
     fresh_tle = fetch_tle_from_celestrak(norad_id)
-    tles[norad_id]["timestamp"] = now.strftime(TIME_FORMAT)
+    tles[norad_id] = {}
     tles[norad_id]["tle"] = fresh_tle
+    tles[norad_id]["timestamp"] = now.strftime(TIME_FORMAT)
 
     with open(os.getcwd() + "/home/temp/tle.json", "w", encoding="utf8") as file:
         file.write(json.dumps(tles, indent=4, cls=DjangoJSONEncoder))
@@ -90,7 +91,7 @@ def get_satellite_location_now_api(request, norad_id):
 
     if norad_id == "all":
         sat_list = []
-        for sat in ["delfi_pq", "delfi_c3"]:
+        for sat in ["delfi_pq"]:
             sat_list.append(get_satellite_location_now(SATELLITES[sat]))
 
         res = {"satellites": sat_list}
