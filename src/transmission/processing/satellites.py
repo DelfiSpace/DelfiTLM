@@ -3,8 +3,20 @@
 TIME_FORMAT = '%Y-%m-%dT%H:%M:%SZ'
 
 SATELLITES = {
-    "delfi_pq": '51074',
-    "delfi_next": '39428',
-    "delfi_c3": '32789',
-    "da_vinci": None  #update id
+    "delfi_pq": {
+        "norad_id": '51074',
+        "status": "Operational",
+    },
+    "delfi_next": {
+        "norad_id": '39428',
+        "status": "Inactive",
+    },
+    "delfi_c3": {
+        "norad_id": '32789',
+        "status": "Inactive",
+        },
+    "da_vinci": {
+       "norad_id": None,  #update id
+       "status": "Under Development"
+    }
 }
