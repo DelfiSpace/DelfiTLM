@@ -73,7 +73,8 @@ def scrape(satellite: str, save_to_db=True, save_to_file=False) -> None:
         response = requests.get(
             SATNOGS_PATH,
             params=get_satnogs_params(satellite),
-            headers=get_satnogs_headers()
+            headers=get_satnogs_headers(),
+            timeout=10 # seconds
         )
         telemetry_tmp = response.json()
         try:
