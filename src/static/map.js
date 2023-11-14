@@ -29,13 +29,13 @@ async function findSat() {
     fetch("/location/all/")
     .then(response => response.json())
     .then(data => {
-      satellite_list = data.satellites;
+      let satellite_list = data.satellites;
 
-      for (let i = 0; i<satellite_list.length; i++){
-        sat = satellite_list[i].satellite
-        lat = satellite_list[i].latitude.toFixed(2);
-        long = satellite_list[i].longitude.toFixed(2);
-        sunlit = satellite_list[i].sunlit;
+      for (const element of satellite_list){
+        let sat = element.satellite
+        let lat = element.latitude.toFixed(2);
+        let long = element.longitude.toFixed(2);
+        // let sunlit = element.sunlit;
         updateSatMarker(sat, lat, long);
       }
     }).catch(e => console.log(e));
@@ -49,13 +49,13 @@ function updateSatMarker(sat, lat, long,) {
     fetch("/next_pass/"+ SATELLITES[sat]+"/")
     .then(response => response.json())
     .then(data => {
-      pass_events = data.passes;
+      let pass_events = data.passes;
 
     //   for (let i = 0; i<pass_events.length; i++){
-        riseTime = pass_events[0].rise_time;
-        peakTime = pass_events[0].peak_time;
-        setTime = pass_events[0].set_time;
-        next_pass = 'Next pass over Delft (UTC) ' + '<br> Rise Time: ' + riseTime +
+        let riseTime = pass_events[0].rise_time;
+        let  peakTime = pass_events[0].peak_time;
+        let setTime = pass_events[0].set_time;
+        let next_pass = 'Next pass over Delft (UTC) ' + '<br> Rise Time: ' + riseTime +
                                                          '<br> Peak Time: '+ peakTime +
                                                          '<br> Set Time: ' + setTime;
     //   }
