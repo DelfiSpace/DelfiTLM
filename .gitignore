@@ -143,3 +143,8 @@ tokens/
 
 # xml files
 *.xml
+
+# bsp files
+*.bsp
+
+src/home/tle.json
