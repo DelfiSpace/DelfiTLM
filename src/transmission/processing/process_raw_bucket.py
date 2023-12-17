@@ -29,6 +29,7 @@ def parse_and_store_frame(satellite: str, timestamp: str, frame: str, observer: 
     """Store parsed frame in influxdb"""
 
     parser = xtce_parser.SatParsers().parsers[satellite]
+    logger.debug("%s: frame: %s", satellite, frame)
     telemetry = parser.processTMFrame(bytes.fromhex(frame))
     bucket = satellite + "_" + link
 
