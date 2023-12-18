@@ -42,7 +42,6 @@ def get_tle(norad_id: str):
 
 def get_satellite_location_now(norad_id: str) -> dict:
     """Return latitude and longitude of the satellite at the present time based on TLE. """
-
     tle = get_tle(norad_id)
     time_scale = load.timescale()
     time = time_scale.now()
@@ -88,11 +87,11 @@ def get_next_pass_over_delft(request, norad_id: str):
 
 def get_satellite_location_now_api(request, norad_id):
     """API exposed method to find satellite location."""
-
     if norad_id == "all":
         sat_list = []
-        for sat in ["delfi_pq"]:
-            sat_list.append(get_satellite_location_now(SATELLITES[sat]))
+        for _, info in SATELLITES.items():
+            if info["status"] == "Operational":
+                sat_list.append(get_satellite_location_now(info["norad_id"]))
 
         res = {"satellites": sat_list}
         return JsonResponse(res)
@@ -101,10 +100,25 @@ def get_satellite_location_now_api(request, norad_id):
     return JsonResponse(location)
 
 
+def _get_satellites_status():
+    """Method to find satellite status."""
+    sats_status = {}
+    for sat, info in SATELLITES.items():
+        sats_status[str(sat + "_status")] = info["status"]
+
+    return sats_status
+
+
+def get_satellites_status(request):
+    """API exposed method to find satellite status."""
+    sats_status = _get_satellites_status()
+    return JsonResponse(sats_status)
+
+
 def home(request):
     """Render index.html page"""
-
-    return render(request, "home/index.html")
+    context = _get_satellites_status()
+    return render(request, "home/index.html", context)
 
 
 def ban_view(request):

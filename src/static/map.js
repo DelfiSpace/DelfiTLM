@@ -2,8 +2,8 @@ let zoomLevel = 3;
 let latitude = 52.0116;
 let longitude = 4.3571;
 let SATELLITES = {
-    "DELFI-C3 (DO-64)": '32789',
     "DELFI-PQ": '51074',
+    "DELFI-N3XT": '39428',
 
 }
 
@@ -27,13 +27,15 @@ function updateTerminator(t) {
 
 let markers = {}
 
-async function findSat() {
+function findSat() {
     fetch("/location/all/")
     .then(response => response.json())
     .then(data => {
       let satellite_list = data.satellites;
+      console.log(satellite_list);
 
       for (const element of satellite_list){
+        console.log(element);
         let sat = element.satellite
         let lat = element.latitude.toFixed(2);
         let long = element.longitude.toFixed(2);
@@ -48,7 +50,7 @@ async function findSat() {
 function updateSatMarker(sat, lat, long,) {
 
 
-    fetch("/next_pass/"+ SATELLITES[sat]+"/")
+    fetch("/next-pass/"+ SATELLITES[sat]+"/")
     .then(response => response.json())
     .then(data => {
       let pass_events = data.passes;

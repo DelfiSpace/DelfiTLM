@@ -49,8 +49,7 @@ After this, you can access the application on http://127.0.0.1:8000/ and a pgAdm
 
 InfluxDB can accessed at http://localhost:8086/, username:admin, password:adminpwd.
 
-Grafana runs on http://localhost:3000/, username:admin, password:adminpwd with the following InfluxDB datasource config:
-![image](https://user-images.githubusercontent.com/43474282/179267387-554aeb2e-b789-408f-ad24-74f1afd281e2.png)
+Grafana runs on http://localhost:3000/, username:admin, password:adminpwd.
 
 The datasource and dashboards confing for Grafana can be changed from `grafana/provisioning/grafana-datasources.yml` and `grafana/dashboards/grafana-dashboard.yml` respectively. New dashboards can also be created in Grafana and exported as json, then added to `grafana/dashboards`, to be loaded when the container restarts.
 
@@ -119,3 +118,13 @@ For this project: `docker exec -t delfitlm_db_1 pg_dumpall -c -U postgres > dump
 To restore the database run: `cat dump.sql | docker exec -i your-db-container psql -U your-db-user -d your-db-name`
 
 For this project: `cat dump.sql | docker exec -i delfitlm_db_1 psql -U postgres -d delfitlm`
+
+## Info about website administration
+
+### Django admin
+
+The django admin page can be used to elevate user permissions, assign roles or block accounts. The admin account can be used to manage the user roles and permissions.
+
+### Satellites status
+
+The file `src/transmission/processing/satellites.py` maintains the satellites we are operating. It contains the NoradID and activity status used for map tracking and other monitoring purposes. When new satellites are launched or decommissioned, the status in this file should be updated accordingly. `Status: Operational` means the location of the satellite will be tracked, while the other statuses are simply displayed on the front page.
