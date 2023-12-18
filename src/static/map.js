@@ -40,7 +40,9 @@ function findSat() {
         let lat = element.latitude.toFixed(2);
         let long = element.longitude.toFixed(2);
         // let sunlit = element.sunlit;
-        updateSatMarker(sat, lat, long);
+        if (sat != null){
+          updateSatMarker(sat, lat, long);
+        }
       }
     }).catch(e => console.log(e));
 }
