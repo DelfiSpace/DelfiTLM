@@ -4,7 +4,7 @@ version: '3.7'
 
 services:
   db:
-    image: postgres:14.0
+    image: postgres:latest
     volumes:
       - db_data:/var/lib/postgresql/data
     environment:
