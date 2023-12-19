@@ -66,6 +66,10 @@ To reset the containers and remove the volumes run the `./reset_docker.sh` scrip
 SECRET_KEY=
 MY_HOST=localhost
 
+SMTP_HOST=
+SMTP_PORT=25
+FROM_EMAIL=delfi@tudelft.nl
+
 POSTGRES_PORT=5432
 POSTGRES_HOST=db
 POSTGRES_USER=postgres
@@ -95,7 +99,11 @@ CROWDSEC_LAPI=
 `docker exec -it delfitlm_app_1 /bin/bash`
 
 6. Run the database migration to create the tables (only required the first time): `python manage.py migrate`
-   
+
+7. Create a superuser (admin user) (only required the first time): `python manage.py createsuperuser`
+
+8. Generate a django keys with `python manage.py djecrety` and copy it to the .env file.
+
 Note: remove `--build` to skip building the container, will use the cached one (last build)
 
 ## Testing
@@ -105,19 +113,47 @@ Note: remove `--build` to skip building the container, will use the cached one (
 2. To compile the coverage report run the `./run_coverage.sh` script and the report will appear in `src/htmlcov/index.html`
 
 
-## Backup and restore Postgres database
+## Database management
 
-### Backup
+### Postgres
+
+#### Backup
 
 To backup the database run: `docker exec -t your-db-container pg_dumpall -c -U your-db-user > dump.sql`
 
 For this project: `docker exec -t delfitlm_db_1 pg_dumpall -c -U postgres > dump.sql`
 
-### Restore
+#### Restore
 
 To restore the database run: `cat dump.sql | docker exec -i your-db-container psql -U your-db-user -d your-db-name`
 
 For this project: `cat dump.sql | docker exec -i delfitlm_db_1 psql -U postgres -d delfitlm`
+
+#### Changing the password
+
+To change the password of the postgres user:
+1. Update `reset_postgres_password.sql` with the new password.
+2. Run: `cat reset_postgres_password.sql | docker exec -i delfitlm_db_1 psql -U postgres`
+
+
+### InfluxDB
+
+#### Changing the admin password
+
+1. Enter the container exec `docker exec -it delfitlm_influxdb_1 /bin/bash`
+2. Change the password using: `influx user password -n admin -t INFLUXDB_V2_TOKEN`
+
+##### Updating the INFLUXDB_TOKEN
+
+1. Find the tokenID using: `influx auth find -t OLD_INFLUXDB_V2_TOKEN`
+2. Create new token with: `influx auth create --org 'Delfi Space' --all-access -t OLD_INFLUXDB_V2_TOKEN`
+3. Delete the old token: `influx auth delete --id OLD_INFLUXDB_V2_TOKEN_ID --t NEW_INFLUXDB_V2_TOKEN`
+
+### Grafana
+
+#### Changing the admin password
+
+To change the admin password: `docker exec -it delfitlm_grafana_1 grafana-cli admin reset-admin-password newpassword`
 
 ## Info about website administration
 

@@ -92,6 +92,8 @@ INSTALLED_APPS = [
     'members',
     'home',
     'bootstrap5',
+    'djecrety',
+
 ]
 
 # REST_FRAMEWORK = {
