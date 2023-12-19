@@ -113,7 +113,7 @@ Note: remove `--build` to skip building the container, will use the cached one (
 2. To compile the coverage report run the `./run_coverage.sh` script and the report will appear in `src/htmlcov/index.html`
 
 
-## Backup and restore Postgres database
+## Postgres database
 
 ### Backup
 
@@ -126,6 +126,13 @@ For this project: `docker exec -t delfitlm_db_1 pg_dumpall -c -U postgres > dump
 To restore the database run: `cat dump.sql | docker exec -i your-db-container psql -U your-db-user -d your-db-name`
 
 For this project: `cat dump.sql | docker exec -i delfitlm_db_1 psql -U postgres -d delfitlm`
+
+### Changing the password
+
+To change the password of the postgres user:
+1. Update `reset_postgres_password.sql` with the new password.
+2. Run: `cat reset_postgres_password.sql | docker exec -i yourContainerID psql -U postgres`
+
 
 ## Info about website administration
 
