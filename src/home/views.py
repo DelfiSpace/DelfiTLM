@@ -11,7 +11,7 @@ from skyfield.api import load, EarthSatellite, wgs84, Topos
 from satellite_tle import fetch_tle_from_celestrak
 from transmission.processing.satellites import SATELLITES, TIME_FORMAT
 
-
+#pylint: disable=W0718
 def get_tle(norad_id: str):
     """Retrieve satellite TLE by noradID and store it in a json.
      If the stored TLE is older than 6 hours a fresh one is requested from CelesTrak."""
@@ -29,20 +29,29 @@ def get_tle(norad_id: str):
         if (now - last_timestamp).seconds < 6 * 3600:  # update every 6 hours
             return tles[norad_id]['tle']
 
-    fresh_tle = fetch_tle_from_celestrak(norad_id)
-    tles[norad_id] = {}
-    tles[norad_id]["tle"] = fresh_tle
-    tles[norad_id]["timestamp"] = now.strftime(TIME_FORMAT)
+    try:
+        fresh_tle = fetch_tle_from_celestrak(norad_id)
+        tles[norad_id] = {}
+        tles[norad_id]["tle"] = fresh_tle
+        tles[norad_id]["timestamp"] = now.strftime(TIME_FORMAT)
 
-    with open(os.getcwd() + "/home/temp/tle.json", "w", encoding="utf8") as file:
-        file.write(json.dumps(tles, indent=4, cls=DjangoJSONEncoder))
+        with open(os.getcwd() + "/home/temp/tle.json", "w", encoding="utf8") as file:
+            file.write(json.dumps(tles, indent=4, cls=DjangoJSONEncoder))
+            return tles[norad_id]['tle']
 
-    return tles[norad_id]['tle']
+    except Exception as _:
+        pass
+
+    return None
 
 
 def get_satellite_location_now(norad_id: str) -> dict:
     """Return latitude and longitude of the satellite at the present time based on TLE. """
     tle = get_tle(norad_id)
+
+    if tle is None:
+        return {"satellite": None, "latitude": None, "longitude": None, "sunlit": None}
+
     time_scale = load.timescale()
     time = time_scale.now()
 
