@@ -34,13 +34,12 @@ def parse_and_store_frame(satellite: str, timestamp: str, frame: str, observer: 
     bucket = satellite + "_" + link
 
     if "frame" in telemetry:
-        tlm_frame_type = telemetry["frame"]
         sat_name_pascal_case = string.capwords(satellite.replace("_", " ")).replace(" ", "")
         tags = {}
 
         db_fields = {
 
-            "measurement": sat_name_pascal_case + tlm_frame_type,
+            "measurement": sat_name_pascal_case + telemetry["frame"],
             "time": timestamp,
             "tags": tags,
             "fields": {
@@ -72,7 +71,8 @@ def parse_and_store_frame(satellite: str, timestamp: str, frame: str, observer: 
             db_fields["fields"] = {}
             db_fields["tags"] = {}
 
-        logger.info("%s: processed frame stored. Frame timestamp: %s, link: %s, bucket: %s", satellite, timestamp, link, bucket)
+        logger.info("%s: processed frame stored. Frame timestamp: %s, link: %s, bucket: %s",
+                    satellite, timestamp, link, bucket)
 
 
 def mark_processed_flag(satellite: str, link: str, timestamp: str, value: bool) -> None:

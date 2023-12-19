@@ -55,7 +55,8 @@ def write_frame_to_raw_bucket(write_api, satellite, link, timestamp, frame_field
         "fields": frame_fields
     }
 
-    logger.info("%s: raw frame stored or updated. Frame timestamp: %s, link: %s, bucket: %s", satellite, timestamp, link, bucket)
+    logger.info("%s: raw frame stored or updated. Frame timestamp: %s, link: %s, bucket: %s",
+                satellite, timestamp, link, bucket)
 
     write_api.write(bucket, INFLUX_ORG, db_fields)
 
