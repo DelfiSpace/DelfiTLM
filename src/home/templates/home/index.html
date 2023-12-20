@@ -34,7 +34,7 @@
       // the cookie settins expire in 3 months
       now.setMonth( now.getMonth() + 3 );
       // Set a cookie to track the user's acceptance
-      document.cookie = acceptanceCookie + "=true; expires=" + now.toUTCString() + "; path=/";
+      document.cookie = acceptanceCookie + "=true; expires=" + now.toUTCString() + "; path=/; SameSite=Lax;";
       // Hide the cookie bar
       document.querySelector(".cookie-bar").style.display = "none";
     });
