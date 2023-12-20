@@ -16,18 +16,32 @@
 <div class="container my-5">
 
   <div class="cookie-bar bg-dark text-white text-center p-2 fixed-bottom">
-    By using our site you agree to our use of cookies to give you the best experience on our website.
+	  By using our site you agree to our use of cookies to give you the best experience on our website.<br>We only use cookies necessary for security and no tracking is performed.
     <button class="btn btn-custom-primary btn-sm ms-2" id="accept-cookies">Got it!</button>
   </div>
 
   <script>
+    // check if the cookie acceptance message has already been accepted
+    var acceptanceCookie = "cookies_accepted";
+    if (readCookie(acceptanceCookie))
+    {
+       // Hide the cookie bar
+       document.querySelector(".cookie-bar").style.display = "none";
+    }
     // JavaScript to handle cookie acceptance
     document.getElementById("accept-cookies").addEventListener("click", function() {
+      var now = new Date();
+      // the cookie settins expire in 3 months
+      now.setMonth( now.getMonth() + 3 );
       // Set a cookie to track the user's acceptance
-      document.cookie = "cookies_accepted=true; expires=Fri, 31 Dec 9999 23:59:59 GMT; path=/";
+      document.cookie = acceptanceCookie + "=true; expires=" + now.toUTCString() + "; path=/";
       // Hide the cookie bar
       document.querySelector(".cookie-bar").style.display = "none";
     });
+    function readCookie(name) 
+    {
+        return (name = new RegExp('(?:^|;\\s*)' + ('' + name).replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&') + '=([^;]*)').exec(document.cookie)) && name[1];
+    }
   </script>
 
 
