@@ -9,11 +9,11 @@ SATELLITES = {
     },
     "delfi_next": {
         "norad_id": '39428',
-        "status": "Operational",
+        "status": "Non Operational",
     },
     "delfi_c3": {
         "norad_id": '32789',
-        "status": "Inactive",
+        "status": "Decayed",
         },
     "da_vinci": {
        "norad_id": None,  #update id

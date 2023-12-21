@@ -16,18 +16,32 @@
 <div class="container my-5">
 
   <div class="cookie-bar bg-dark text-white text-center p-2 fixed-bottom">
-    By using our site you agree to our use of cookies to give you the best experience on our website.
+	  By using our site you agree to our use of cookies to give you the best experience on our website.<br>We only use cookies necessary for security and no tracking is performed.
     <button class="btn btn-custom-primary btn-sm ms-2" id="accept-cookies">Got it!</button>
   </div>
 
   <script>
+    // check if the cookie acceptance message has already been accepted
+    var acceptanceCookie = "cookies_accepted";
+    if (readCookie(acceptanceCookie))
+    {
+       // Hide the cookie bar
+       document.querySelector(".cookie-bar").style.display = "none";
+    }
     // JavaScript to handle cookie acceptance
     document.getElementById("accept-cookies").addEventListener("click", function() {
+      var now = new Date();
+      // the cookie settins expire in 3 months
+      now.setMonth( now.getMonth() + 3 );
       // Set a cookie to track the user's acceptance
-      document.cookie = "cookies_accepted=true; expires=Fri, 31 Dec 9999 23:59:59 GMT; path=/";
+      document.cookie = acceptanceCookie + "=true; expires=" + now.toUTCString() + "; path=/; SameSite=Lax;";
       // Hide the cookie bar
       document.querySelector(".cookie-bar").style.display = "none";
     });
+    function readCookie(name) 
+    {
+        return (name = new RegExp('(?:^|;\\s*)' + ('' + name).replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&') + '=([^;]*)').exec(document.cookie)) && name[1];
+    }
   </script>
 
 
@@ -38,8 +52,8 @@
 justify-content: center;">
 
   <div class="card" style="width: 18rem; margin: 10px">
-    <img src="https://pbs.twimg.com/media/EY5TTgeWoAEittJ?format=jpg&name=large" class="card-img-top"
-    style = "max-width: 100%; max-height: 46.4%;">
+	  <img src="{% static 'tud-lr.webp' %}" class="card-img-top"
+    style = "width: 100%; height: 46.4%; object-fit: cover;">
     <div class="card-body">
         <h5 class="card-title" style="color:Gray">Delfi Space</h5>
         <p class="card-text"> Ongoing project </p>
@@ -49,8 +63,8 @@ justify-content: center;">
   </div>
 
       <div class="card" style="width: 18rem; margin: 10px">
-        <img src="https://d2k0ddhflgrk1i.cloudfront.net/_processed_/0/8/csm_Delfi-C3_0c2c5a8cde.webp" class="card-img-top"
-        style = "max-width: 100%; max-height: 46.4%;" >
+	      <img src="{% static 'delfi-c3.webp' %}" class="card-img-top"
+        style = "width: 100%; height: 46.4%; object-fit: cover;" >
         <div class="card-body">
 
             <h5 class="card-title" style="color:Gray">Delfi-C3</h5>
@@ -61,8 +75,8 @@ justify-content: center;">
       </div>
 
       <div class="card" style="width: 18rem; margin: 10px">
-        <img src="https://d2k0ddhflgrk1i.cloudfront.net/_processed_/2/e/csm_Delfi-n3Xt_f8c3d11d4d.webp" class="card-img-top"
-        style = "max-width: 100%; max-height: 46.4%;" >
+	      <img src="{% static 'delfi-n3xt.webp' %}" class="card-img-top"
+        style = "width: 100%; height: 46.4%; object-fit: cover;" >
         <div class="card-body">
 
             <h5 class="card-title" style="color:Gray">Delfi-n3Xt</h5>
@@ -74,8 +88,8 @@ justify-content: center;">
       </div>
 
       <div class="card" style="width: 18rem; margin: 10px">
-        <img src="https://www.delta.tudelft.nl/sites/default/files/images/delfiPQ%20satelliet.jpg" class="card-img-top"
-        style = "max-width: 100%; max-height: 46.4%;" >
+        <img src="{%  static 'delfi-pq.webp' %}" class="card-img-top"
+        style = "width: 100%; height: 46.4%; object-fit: cover;" >
         <div class="card-body">
 
             <h5 class="card-title" style="color:Gray">Delfi-PQ</h5>
@@ -88,7 +102,7 @@ justify-content: center;">
       <div class="card" style="width: 18rem; margin: 10px">
 
         <img src="https://d2a3ux41sjxpco.cloudfront.net/carousel/file/project_photo/29562/normal_8e31396ce80e9ac783c4900792933c114ff3bed5.png" class="card-img-top"
-        style = "max-width: 100%; max-height: 46.4%;">
+        style = "width: 100%; height: 46.4%; object-fit: cover;">
 
         <div class="card-body">
 
