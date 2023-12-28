@@ -4,7 +4,7 @@ version: '3.7'
 
 services:
   db:
-    image: postgres:latest
+    image: postgres:16.0
     volumes:
       - db_data:/var/lib/postgresql/data
     environment:
@@ -48,7 +48,7 @@ services:
 
 
   influxdb:
-    image: influxdb:latest
+    image: influxdb:2.7
     ports:
       - 8086:8086
     volumes:
@@ -63,7 +63,7 @@ services:
 
   influx-cli:
     #  initializes influxdb user/password/bucket...
-    image: influxdb:latest
+    image: influxdb:2.7
     depends_on:
       - influxdb
     command: sh -c 'sleep 5; influx setup
@@ -76,7 +76,7 @@ services:
      --force'
 
   grafana:
-    image: grafana/grafana:latest
+    image: grafana/grafana:10.2.3
     ports:
       - '3000:3000'
     volumes:
