@@ -52,7 +52,7 @@ services:
 
     pgadmin:
         container_name: pgadmin4_container
-        image: dpage/pgadmin4:4:6.4
+        image: dpage/pgadmin4:latest
         restart: always
         environment:
             - PGADMIN_DEFAULT_EMAIL=${PGADMIN_DEFAULT_EMAIL:-admin@admin.com}
