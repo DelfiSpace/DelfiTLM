@@ -5,7 +5,7 @@ TIME_FORMAT = '%Y-%m-%dT%H:%M:%SZ'
 SATELLITES = {
     "delfi_pq": {
         "norad_id": '51074',
-        "status": "Operational",
+        "status": "Decayed",
     },
     "delfi_next": {
         "norad_id": '39428',
