@@ -1,4 +1,5 @@
 """Functions sending emails to users."""
+import traceback
 from django.core.mail import send_mail
 from django.conf import settings
 from django.contrib.auth.tokens import default_token_generator
@@ -7,7 +8,7 @@ from django.utils.encoding import force_bytes
 from django.utils.http import urlsafe_base64_encode
 from django.template.loader import render_to_string
 from django_logger import logger
-import traceback
+
 
 def get_protocol(request):
     """Return the HTTP or HTTPS based on
@@ -26,7 +27,7 @@ def send_welcome_email(user):
         'username': user.username,
     })
 
-    try:    
+    try:
         send_mail(
             subject=subject,
             message=message,
@@ -34,7 +35,7 @@ def send_welcome_email(user):
             recipient_list = [user.email],
             fail_silently=False,
         )
-    except Exception as e:
+    except Exception as _: #pylint: disable=broad-except
         logger.error("Email backend: %s", str(settings.EMAIL_BACKEND))
         logger.error("Email host: %s", str(settings.EMAIL_HOST))
         logger.error("Email port: %s", str(settings.EMAIL_PORT))
@@ -58,7 +59,7 @@ def send_confirm_account_deleted_email(user):
             recipient_list = [user.email],
             fail_silently=False,
         )
-    except Exception as e:
+    except Exception as _: #pylint: disable=broad-except
         logger.error("Email backend: %s", str(settings.EMAIL_BACKEND))
         logger.error("Email host: %s", str(settings.EMAIL_HOST))
         logger.error("Email port: %s", str(settings.EMAIL_PORT))
@@ -90,7 +91,7 @@ def _send_email_with_token(request, user, email_template, subject, email=None):
             recipient_list = [email],
             fail_silently=False,
         )
-    except Exception as e:
+    except Exception as _: #pylint: disable=broad-except
         logger.error("Email backend: %s", str(settings.EMAIL_BACKEND))
         logger.error("Email host: %s", str(settings.EMAIL_HOST))
         logger.error("Email port: %s", str(settings.EMAIL_PORT))
@@ -119,7 +120,7 @@ def send_email_change_request_confirmation(user):
              recipient_list = [user.email],
              fail_silently=False,
         )
-    except Exception as e:
+    except Exception as _: #pylint: disable=broad-except
         logger.error("Email backend: %s", str(settings.EMAIL_BACKEND))
         logger.error("Email host: %s", str(settings.EMAIL_HOST))
         logger.error("Email port: %s", str(settings.EMAIL_PORT))
