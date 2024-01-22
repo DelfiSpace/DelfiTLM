@@ -72,12 +72,10 @@ services:
         ports:
             - "8080:8080"
         environment:
-                #- ENROLL_KEY=${CROWDSEC_LAPI}
             #this is the list of collections we want to install
             #https://hub.crowdsec.net/author/crowdsecurity/collections/nginx
             COLLECTIONS: "crowdsecurity/nginx"
             GID: "${GID-1000}"
-            #- ENROLL_KEY=${CROWDSEC_LAPI}
         depends_on:
             - 'proxy'
         volumes:
