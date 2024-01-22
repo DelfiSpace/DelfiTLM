@@ -41,6 +41,7 @@ services:
             - app
             - pgadmin
             - grafana
+            - influxdb
         restart: always
         logging:
             driver: "json-file"
