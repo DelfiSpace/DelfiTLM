@@ -10,6 +10,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.tokens import default_token_generator
 from django.utils.encoding import force_text
 from django.utils.http import urlsafe_base64_decode
+from django_logger import logger
 from .send_emails import send_welcome_email, send_email_verification_registration, \
     send_password_reset_email, send_confirm_account_deleted_email, \
     send_email_change_request_confirmation, send_new_email_verification
@@ -133,6 +134,14 @@ def login_member(request):
                     last_login=timezone.now()
                 )
                 return redirect("account")
+
+        # report a failed login attempt including IP
+        x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
+        if x_forwarded_for:
+            ip = x_forwarded_for.split(',')[0]
+        else:
+            ip = request.META.get('REMOTE_ADDR')
+        logger.warning("login failed for user " + username + " on IP " + ip)
 
         messages.error(request, "Invalid username or password!")
         status = HTTPStatus.UNAUTHORIZED
