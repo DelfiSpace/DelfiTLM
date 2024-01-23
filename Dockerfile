@@ -35,10 +35,18 @@ RUN adduser user
 RUN chown -R user:user /vol
 RUN chmod -R 755 /vol/web
 
+RUN mkdir /app/logs
+RUN chown -R user:user /app
 RUN chmod -R 755 /app/logs
-RUN chmod -R 666 /app/transmission/processing/temp
-RUN chmod -R 666 /app/home/temp
-RUN chmod -R 666 /app/de421.bsp
+
+RUN chmod -R 744 /app/transmission/processing/temp
+RUN chmod -R 744 /app/home/temp
+
+# download the solar system latest ephemeris from JPL SSD  ftp server
+ADD https://ssd.jpl.nasa.gov/ftp/eph/planets/bsp/de421.bsp /app/de421.bsp
+RUN chown user:user /app/de421.bsp
+RUN chmod -R 744 /app/de421.bsp
+
 # switch to unprivileged user
 USER user
 
