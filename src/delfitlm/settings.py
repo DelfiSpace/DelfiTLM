@@ -158,6 +158,12 @@ PYCROWDSEC_EXCLUDE_VIEWS = {"ban_view"}
 
 PYCROWDSEC_POLL_INTERVAL = 10
 
+# Improved security settings
+# Close the session when user closes the browser
+SESSION_EXPIRE_AT_BROWSER_CLOSE = True 
+# Sessions expires after a period of inactivity 
+SESSION_COOKIE_AGE = 5 * 60
+
 # Database
 # https://docs.djangoproject.com/en/3.2/ref/settings/#databases
 
