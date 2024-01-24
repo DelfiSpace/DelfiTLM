@@ -4,7 +4,7 @@ services:
     app:
         volumes:
             - static_data:/vol/web
-            - app_logs:/app/logs
+            - app_logs:/var/log/django
         environment:
             # could also add database config here and remove it from settings.py
             - DEBUG=0

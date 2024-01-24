@@ -247,15 +247,10 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 if DEBUG and os.environ.get('RUN_MAIN', None) != 'true':
     LOGGING = {}
 
-# make sure the log folder exists
-log_path = "logs"
-#full_log_path = os.path.abspath(os.getcwd()) + "/" + log_path
-full_log_path = "/var/log"
-print("Test log output path: " + full_log_path)
+full_log_path = "/var/log/django"
 
-os.makedirs(os.path.dirname(full_log_path), exist_ok=True)
-
-if sys.argv[1] == 'test':
+# have a specific logging profile for testing and one for production
+if len(sys.argv) > 1 and sys.argv[1] == 'test':
     LOGGING = {
         'version': 1,
         'disable_existing_loggers': False,
@@ -265,23 +260,11 @@ if sys.argv[1] == 'test':
                 'level': 1
             }
         },
-        #'filters': {
-        #    'require_debug_false': {
-        #        '()': 'django.utils.log.RequireDebugFalse',
-        #    },
-        #    'require_debug_true': {
-        #        '()': 'django.utils.log.RequireDebugTrue',
-        #    },
-        #},
         'handlers': {
-        #    'std_err': {
-        #        'class': 'logging.StreamHandler'
-        #    },
             'debug': {
                 'class': 'logging.StreamHandler',
                 'level': 'DEBUG',
                 'formatter': 'default',
-                #'filters': ['require_debug_false'],
             }
         },
         'formatters': {
@@ -291,79 +274,79 @@ if sys.argv[1] == 'test':
         }
     }
 else:
-  LOGGING = {
-    'version': 1,
-    'disable_existing_loggers': False,
-    'loggers': {
-        'django_logger': {
-            'handlers': ['docker_logger', 'debug', 'info', 'warning', 'error', 'mail_admin'],
-            'level': 1
-        }
-    },
-    'filters': {
-        'require_debug_false': {
-            '()': 'django.utils.log.RequireDebugFalse',
+    LOGGING = {
+        'version': 1,
+        'disable_existing_loggers': False,
+        'loggers': {
+            'django_logger': {
+                'handlers': ['docker_logger', 'debug', 'info', 'warning', 'error', 'mail_admin'],
+                'level': 1
+            }
         },
-        'require_debug_true': {
-            '()': 'django.utils.log.RequireDebugTrue',
+        'filters': {
+            'require_debug_false': {
+                '()': 'django.utils.log.RequireDebugFalse',
+            },
+            'require_debug_true': {
+                '()': 'django.utils.log.RequireDebugTrue',
+            },
         },
-    },
-    'handlers': {
-        'std_err': {
-            'class': 'logging.StreamHandler'
+        'handlers': {
+            'std_err': {
+                'class': 'logging.StreamHandler'
+            },
+            'docker_logger': {
+                'class': 'logging.StreamHandler',
+                'level': 'WARNING',
+                'formatter': 'default',
+                'filters': ['require_debug_false'],
+            },
+            'debug': {
+                'class': 'logging.handlers.RotatingFileHandler',
+                'filename': full_log_path + '/debug.log',
+                'level': 'DEBUG',
+                'formatter': 'default',
+                'backupCount': 2,
+                'maxBytes': 5 * 1024 * 1024,  # bytes (5MB)
+                'filters': ['require_debug_true'],
+            },
+            'info': {
+                'class': 'logging.handlers.RotatingFileHandler',
+                'filename': full_log_path + '/info.log',
+                'level': 'INFO',
+                'formatter': 'default',
+                'backupCount': 2,
+                'maxBytes': 5 * 1024 * 1024,
+            },
+            'warning': {
+                'class': 'logging.handlers.RotatingFileHandler',
+                'filename': full_log_path + '/warning.log',
+                'level': 'WARNING',
+                'formatter': 'default',
+                'backupCount': 2,
+                'maxBytes': 5 * 1024 * 1024,
+            },
+            'error': {
+                'class': 'logging.handlers.RotatingFileHandler',
+                'filename': full_log_path + '/error.log',
+                'level': 'ERROR',
+                'formatter': 'error',
+                'backupCount': 2,
+                'maxBytes': 5 * 1024 * 1024,
+            },
+            'mail_admin': {
+                'level': 'ERROR',
+                'filters': ['require_debug_false'],
+                'class': 'django.utils.log.AdminEmailHandler'
+            }
         },
-        'docker_logger': {
-            'class': 'logging.StreamHandler',
-            'level': 'WARNING',
-            'formatter': 'default',
-            'filters': ['require_debug_false'],
+        'formatters': {
+            'default': {
+                'format': '%(asctime)s [%(module)s | %(levelname)s] %(message)s',
+            },
+            'error': {
+                'format': '%(asctime)s [%(module)s | %(levelname)s] %(message)s @ %(pathname)s : %(lineno)d : %(funcName)s',
+            },
         },
-        'debug': {
-            'class': 'logging.handlers.RotatingFileHandler',
-            'filename': full_log_path + '/debug.log',
-            'level': 'DEBUG',
-            'formatter': 'default',
-            'backupCount': 2,
-            'maxBytes': 5 * 1024 * 1024,  # bytes (5MB)
-            'filters': ['require_debug_true'],
+    }
 
-        },
-        'info': {
-            'class': 'logging.handlers.RotatingFileHandler',
-            'filename': full_log_path + '/info.log',
-            'level': 'INFO',
-            'formatter': 'default',
-            'backupCount': 2,
-            'maxBytes': 5 * 1024 * 1024,
-        },
-        'warning': {
-            'class': 'logging.handlers.RotatingFileHandler',
-            'filename': full_log_path + '/warning.log',
-            'level': 'WARNING',
-            'formatter': 'default',
-            'backupCount': 2,
-            'maxBytes': 5 * 1024 * 1024,
-        },
-        'error': {
-            'class': 'logging.handlers.RotatingFileHandler',
-            'filename': full_log_path + '/error.log',
-            'level': 'ERROR',
-            'formatter': 'error',
-            'backupCount': 2,
-            'maxBytes': 5 * 1024 * 1024,
-        },
-        'mail_admin': {
-            'level': 'ERROR',
-            'filters': ['require_debug_false'],
-            'class': 'django.utils.log.AdminEmailHandler'
-        }
-    },
-    'formatters': {
-        'default': {
-            'format': '%(asctime)s [%(module)s | %(levelname)s] %(message)s',
-        },
-        'error': {
-            'format': '%(asctime)s [%(module)s | %(levelname)s] %(message)s @ %(pathname)s : %(lineno)d : %(funcName)s',
-        },
-    },
-  }

@@ -35,9 +35,9 @@ RUN adduser user
 RUN chown -R user:user /vol
 RUN chmod -R 755 /vol/web
 
-RUN mkdir /app/logs
+RUN mkdir /var/log/django
 RUN chown -R user:user /app
-RUN chmod -R 755 /app/logs
+RUN chmod -R 755 /var/log/django
 
 RUN chmod -R 744 /app/transmission/processing/temp
 RUN chmod -R 744 /app/home/temp
