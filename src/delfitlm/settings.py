@@ -247,6 +247,10 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 if DEBUG and os.environ.get('RUN_MAIN', None) != 'true':
     LOGGING = {}
 
+# make sure the log folder exists
+log_path = "log"
+os.makedirs(os.path.dirname(log_path), exist_ok=True)
+
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
