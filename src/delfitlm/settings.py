@@ -255,7 +255,13 @@ print("Test log output path: " + full_log_path)
 
 os.makedirs(os.path.dirname(full_log_path), exist_ok=True)
 
-LOGGING = {
+if sys.argv[1] == 'test':
+    LOGGING['root'] = {
+        'handlers': ['console'],
+        'level': 'DEBUG',
+    }
+else
+  LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
     'loggers': {
@@ -330,4 +336,4 @@ LOGGING = {
             'format': '%(asctime)s [%(module)s | %(levelname)s] %(message)s @ %(pathname)s : %(lineno)d : %(funcName)s',
         },
     },
-}
+  }
