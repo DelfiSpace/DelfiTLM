@@ -1,5 +1,5 @@
 APScheduler==3.9.1
-asgiref==3.4.1
+asgiref==3.7.2
 astroid==3.0.1
 attrs==21.4.0
 autobahn==23.1.2
@@ -20,6 +20,7 @@ django-filter==21.1
 django-pandas==0.6.6
 django-revproxy==0.10.0
 django-tables2==2.4.1
+django-axes==6.3.0
 djangorestframework==3.13.1
 djangorestframework-api-key==2.1.0
 hyperlink==21.0.0

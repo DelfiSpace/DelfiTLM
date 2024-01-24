@@ -81,6 +81,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'django_filters',
+    'axes', # Django Axes
     'channels',
     'rest_framework',
     'rest_framework_api_key',
@@ -105,6 +106,7 @@ INSTALLED_APPS = [
 API_KEY_CUSTOM_HEADER = "HTTP_AUTHORIZATION"
 
 MIDDLEWARE = [
+    'axes.middleware.AxesMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -222,6 +224,12 @@ USE_I18N = True
 USE_L10N = True
 
 USE_TZ = True
+
+# Django Axes settings
+# monitor user login attempts and block brute-forcing attacks
+AXES_FAILURE_LIMIT = 6                 # maximum number of attempts before locking triggers
+AXES_COOLOFF_TIME = 2                  # cool-off for 2 hours
+AXES_RESET_ON_SUCCESS = True           # reset the number of unsuccesful login attempts on success
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/3.2/howto/static-files/
