@@ -249,7 +249,8 @@ if DEBUG and os.environ.get('RUN_MAIN', None) != 'true':
 
 # make sure the log folder exists
 log_path = "logs"
-full_log_path = os.path.abspath(os.getcwd()) + "/" + log_path
+#full_log_path = os.path.abspath(os.getcwd()) + "/" + log_path
+full_log_path = "/var/log"
 print("Test log output path: " + full_log_path)
 
 os.makedirs(os.path.dirname(full_log_path), exist_ok=True)
@@ -293,7 +294,7 @@ LOGGING = {
         },
         'info': {
             'class': 'logging.handlers.RotatingFileHandler',
-            'filename': 'logs/info.log',
+            'filename': full_log_path + '/info.log',
             'level': 'INFO',
             'formatter': 'default',
             'backupCount': 2,
@@ -301,7 +302,7 @@ LOGGING = {
         },
         'warning': {
             'class': 'logging.handlers.RotatingFileHandler',
-            'filename': 'logs/warning.log',
+            'filename': full_log_path + '/warning.log',
             'level': 'WARNING',
             'formatter': 'default',
             'backupCount': 2,
@@ -309,7 +310,7 @@ LOGGING = {
         },
         'error': {
             'class': 'logging.handlers.RotatingFileHandler',
-            'filename': 'logs/error.log',
+            'filename': full_log_path + '/error.log',
             'level': 'ERROR',
             'formatter': 'error',
             'backupCount': 2,
