@@ -251,7 +251,7 @@ if DEBUG and os.environ.get('RUN_MAIN', None) != 'true':
 log_path = "logs"
 full_log_path = os.path.abspath(os.getcwd()) + "/" + log_path
 print("Test log output path: " + full_log_path)
-irom django_logger import logger
+
 os.makedirs(os.path.dirname(full_log_path), exist_ok=True)
 
 LOGGING = {
