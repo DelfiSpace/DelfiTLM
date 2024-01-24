@@ -259,8 +259,36 @@ if sys.argv[1] == 'test':
     LOGGING = {
         'version': 1,
         'disable_existing_loggers': False,
-        'handlers': ['console'],
-        'level': 'DEBUG',
+        'loggers': {
+            'django_logger': {
+                'handlers': ['debug'],
+                'level': 1
+            }
+        },
+        #'filters': {
+        #    'require_debug_false': {
+        #        '()': 'django.utils.log.RequireDebugFalse',
+        #    },
+        #    'require_debug_true': {
+        #        '()': 'django.utils.log.RequireDebugTrue',
+        #    },
+        #},
+        'handlers': {
+        #    'std_err': {
+        #        'class': 'logging.StreamHandler'
+        #    },
+            'debug': {
+                'class': 'logging.StreamHandler',
+                'level': 'DEBUG',
+                'formatter': 'default',
+                #'filters': ['require_debug_false'],
+            }
+        },
+        'formatters': {
+            'default': {
+                'format': '%(asctime)s [%(module)s | %(levelname)s] %(message)s',
+            }
+        }
     }
 else:
   LOGGING = {
