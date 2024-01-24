@@ -135,13 +135,13 @@ def login_member(request):
                 )
                 return redirect("account")
 
-        # report a failed login attempt including IP
-        x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
-        if x_forwarded_for:
-            ip = x_forwarded_for.split(',')[0]
-        else:
-            ip = request.META.get('REMOTE_ADDR')
-        logger.warning("login failed for user " + username + " on IP " + ip)
+            # report a failed login attempt including IP
+            x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
+            if x_forwarded_for:
+                ip = x_forwarded_for.split(',')[0]
+            else:
+                ip = request.META.get('REMOTE_ADDR')
+            logger.warning("login failed for user " + username + " on IP " + ip)
 
         messages.error(request, "Invalid username or password!")
         status = HTTPStatus.UNAUTHORIZED
