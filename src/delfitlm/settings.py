@@ -260,7 +260,7 @@ if sys.argv[1] == 'test':
         'handlers': ['console'],
         'level': 'DEBUG',
     }
-else
+else:
   LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
