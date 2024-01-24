@@ -248,7 +248,7 @@ if DEBUG and os.environ.get('RUN_MAIN', None) != 'true':
     LOGGING = {}
 
 # make sure the log folder exists
-log_path = "log"
+log_path = "/app/logs"
 os.makedirs(os.path.dirname(log_path), exist_ok=True)
 
 LOGGING = {
