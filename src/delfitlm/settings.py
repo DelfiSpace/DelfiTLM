@@ -256,7 +256,9 @@ print("Test log output path: " + full_log_path)
 os.makedirs(os.path.dirname(full_log_path), exist_ok=True)
 
 if sys.argv[1] == 'test':
-    LOGGING['root'] = {
+    LOGGING = {
+        'version': 1,
+        'disable_existing_loggers': False,
         'handlers': ['console'],
         'level': 'DEBUG',
     }
