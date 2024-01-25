@@ -1,0 +1,21 @@
+version: 2
+updates:
+  # Enable version updates for npm
+  - package-ecosystem: "pip"
+    # Look for `requirements.txt` and `lock` files
+    directory: "/"
+    # Check the pip registry for updates every day (weekdays)
+    schedule:
+      # daily is good at the beginning, to converge quickly to a secure system
+      # weekly can be used once the system is stable
+      interval: "daily"
+
+  # Enable version updates for Docker
+  - package-ecosystem: "docker"
+    # Look for a `Dockerfile` in the `root` directory
+    directory: "/"
+    # Check for updates once a week
+    schedule:
+      # daily is good at the beginning, to converge quickly to a secure system
+      # weekly can be used once the system is stable
+      interval: "daily"
