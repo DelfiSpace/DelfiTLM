@@ -162,8 +162,8 @@ PYCROWDSEC_POLL_INTERVAL = 10
 
 # Improved security settings
 # Close the session when user closes the browser
-SESSION_EXPIRE_AT_BROWSER_CLOSE = True 
-# Sessions expires after a period of inactivity 
+SESSION_EXPIRE_AT_BROWSER_CLOSE = True
+# Sessions expires after a period of inactivity
 SESSION_COOKIE_AGE = 5 * 60
 
 # Database
@@ -258,7 +258,7 @@ if DEBUG and os.environ.get('RUN_MAIN', None) != 'true':
 full_log_path = "/var/log/django"
 
 # have a specific logging profile for testing and one for production
-if len(sys.argv) > 1 and sys.argv[1] == 'test':
+if (len(sys.argv) > 1 and sys.argv[1] == 'test') or DEBUG:
     LOGGING = {
         'version': 1,
         'disable_existing_loggers': False,
