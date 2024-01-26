@@ -229,7 +229,9 @@ USE_TZ = True
 # monitor user login attempts and block brute-forcing attacks
 AXES_FAILURE_LIMIT = 6                 # maximum number of attempts before locking triggers
 AXES_COOLOFF_TIME = 2                  # cool-off for 2 hours
-AXES_RESET_ON_SUCCESS = True           # reset the number of unsuccesful login attempts on success
+# Lockout custom template
+AXES_LOCKOUT_URL = "/login/"
+AXES_LOCKOUT_TEMPLATE = "registration/login.html"
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/3.2/howto/static-files/

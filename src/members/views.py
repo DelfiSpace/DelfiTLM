@@ -11,6 +11,7 @@ from django.contrib.auth.tokens import default_token_generator
 from django.utils.encoding import force_text
 from django.utils.http import urlsafe_base64_decode
 from django_logger import logger
+from axes.handlers.proxy import AxesProxyHandler
 from .send_emails import send_welcome_email, send_email_verification_registration, \
     send_password_reset_email, send_confirm_account_deleted_email, \
     send_email_change_request_confirmation, send_new_email_verification
@@ -128,26 +129,20 @@ def login_member(request):
                 messages.error(request, "Email not verified!")
                 return redirect("resend_verify")
 
-            if member is not None and member.is_active is True:
+            if member is not None and member.is_active is True and AxesProxyHandler.is_locked(request, credentials={'username': username}) is False:
                 login(request, member)
                 Member.objects.filter(username=member.username).update(
                     last_login=timezone.now()
                 )
                 return redirect("account")
 
-            # report a failed login attempt including IP
-            x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
-            if x_forwarded_for:
-                ip = x_forwarded_for.split(',')[0]
-            else:
-                ip = request.META.get('REMOTE_ADDR')
-            logger.warning("login failed for user " + username + " on IP " + ip)
-
-        messages.error(request, "Invalid username or password!")
+        if AxesProxyHandler.is_locked(request, credentials={'username': username}) is True:
+            messages.error(request, "Account locked: too many login attempts. Please try again later.")
+        else:
+            messages.error(request, "Invalid username or password!")
         status = HTTPStatus.UNAUTHORIZED
 
     return render(request, "registration/login.html", context={'form': form}, status=status)
-
 
 @login_required(login_url='/login')
 def generate_key(request):
