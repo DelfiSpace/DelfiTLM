@@ -128,8 +128,8 @@ def login_member(request):
                 messages.error(request, "Email not verified!")
                 return redirect("resend_verify")
 
-            if ((member is not None and member.is_active is True) and 
-                (AxesProxyHandler.is_locked(request, credentials={'username': username}) is False):
+            if (member is not None and member.is_active is True) and \
+                AxesProxyHandler.is_locked(request, credentials={'username': username}) is False:
                 login(request, member)
                 Member.objects.filter(username=member.username).update(
                     last_login=timezone.now()
