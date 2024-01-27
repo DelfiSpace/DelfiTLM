@@ -135,6 +135,10 @@ def login_member(request):
                     last_login=timezone.now()
                 )
                 return redirect("account")
+        else:
+            # make sure the username is intialized in case the form is not valid, 
+            # this allows for user lookup in the failed login table
+            username = "None"
 
         if AxesProxyHandler.is_locked(request, credentials={'username': username}) is True:
             messages.error(request, "Account locked: too many login attempts. Please try again later.")
