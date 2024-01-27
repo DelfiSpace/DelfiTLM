@@ -136,7 +136,7 @@ def login_member(request):
                 )
                 return redirect("account")
         else:
-            # make sure the username is intialized in case the form is not valid, 
+            # make sure the username is intialized in case the form is not valid,
             # this allows for user lookup in the failed login table
             username = "None"
 
