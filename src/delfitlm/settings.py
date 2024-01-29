@@ -116,8 +116,8 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-if DEBUG == 0:
-    MIDDLEWARE.append("pycrowdsec.django.crowdsec_middleware")
+#if DEBUG == 0:
+#    MIDDLEWARE.append("pycrowdsec.django.crowdsec_middleware")
 
 ROOT_URLCONF = 'delfitlm.urls'
 
@@ -148,17 +148,20 @@ ASGI_APPLICATION = 'delfitlm.asgi.application'
 WSGI_APPLICATION = 'delfitlm.wsgi.application'
 
 # Crowdsec bouncer: https://github.com/crowdsecurity/pycrowdsec
+# only enable it if the API KEY is provided, otherwise skip
+if "CROWDSEC_LAPI" in os.environ:
+    PYCROWDSEC_LAPI_KEY = os.environ.get('CROWDSEC_LAPI')
+    PYCROWDSEC_LAPI_URL = os.environ.get('CROWDSEC_URL')
 
-PYCROWDSEC_LAPI_KEY = os.environ.get('CROWDSEC_LAPI')
-PYCROWDSEC_LAPI_URL = os.environ.get('CROWDSEC_URL')
+    PYCROWDSEC_ACTIONS = {
+        "ban": lambda request: redirect(reverse("ban_view")),
+    }
+    # IMPORTANT: If any action is doing a redirect to some view, always exclude it for pycrowdsec. Otherwise the middleware will trigger the redirect on the action view too.
+    PYCROWDSEC_EXCLUDE_VIEWS = {"ban_view"}
+    PYCROWDSEC_POLL_INTERVAL = 10
 
-PYCROWDSEC_ACTIONS = {
-    "ban": lambda request: redirect(reverse("ban_view")),
-}
-# IMPORTANT: If any action is doing a redirect to some view, always exclude it for pycrowdsec. Otherwise the middleware will trigger the redirect on the action view too.
-PYCROWDSEC_EXCLUDE_VIEWS = {"ban_view"}
-
-PYCROWDSEC_POLL_INTERVAL = 10
+    if DEBUG == 0:
+        MIDDLEWARE.append("pycrowdsec.django.crowdsec_middleware")
 
 # Improved security settings
 # Close the session when user closes the browser
