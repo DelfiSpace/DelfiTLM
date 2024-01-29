@@ -10,7 +10,6 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.tokens import default_token_generator
 from django.utils.encoding import force_text
 from django.utils.http import urlsafe_base64_decode
-from django_logger import logger
 from axes.handlers.proxy import AxesProxyHandler
 from .send_emails import send_welcome_email, send_email_verification_registration, \
     send_password_reset_email, send_confirm_account_deleted_email, \
@@ -129,12 +128,17 @@ def login_member(request):
                 messages.error(request, "Email not verified!")
                 return redirect("resend_verify")
 
-            if member is not None and member.is_active is True and AxesProxyHandler.is_locked(request, credentials={'username': username}) is False:
+            if (member is not None and member.is_active is True) and \
+                AxesProxyHandler.is_locked(request, credentials={'username': username}) is False:
                 login(request, member)
                 Member.objects.filter(username=member.username).update(
                     last_login=timezone.now()
                 )
                 return redirect("account")
+        else:
+            # make sure the username is intialized in case the form is not valid,
+            # this allows for user lookup in the failed login table
+            username = "None"
 
         if AxesProxyHandler.is_locked(request, credentials={'username': username}) is True:
             messages.error(request, "Account locked: too many login attempts. Please try again later.")
