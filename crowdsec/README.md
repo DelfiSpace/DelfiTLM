@@ -58,19 +58,28 @@ Now, access the host machine:
 
 ```
 mode: iptables
-piddir: /var/run/
 update_frequency: 10s
-daemonize: true
 log_mode: file
 log_dir: /var/log/
 log_level: info
-api_url: http://localhost:8080/
-api_key: add-key-here
-disable_ipv6: yes
+log_compression: true
+log_max_size: 1
+log_max_backups: 3
+log_max_age: 30
+api_url: http://127.0.0.1:8080/
+api_key: <add-key-here>
+insecure_skip_verify: false
+disable_ipv6: true
+deny_action: DROP
+deny_log: false
+supported_decisions_types:
+  - ban
+#to change the blacklists name
+blacklists_ipv4: crowdsec-blacklists
 #if present, insert rule in those chains
 iptables_chains:
-  # - INPUT
-  # - FORWARD
+#  - INPUT
+#  - FORWARD
   - DOCKER-USER
 ```
 
