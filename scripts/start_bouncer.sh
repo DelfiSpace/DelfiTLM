@@ -1,1 +1,0 @@
-sudo systemctl start cs-firewall-bouncer.service
