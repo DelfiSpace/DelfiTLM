@@ -74,7 +74,7 @@ services:
         environment:
             #this is the list of collections we want to install
             #https://hub.crowdsec.net/author/crowdsecurity/collections/nginx
-            COLLECTIONS: "crowdsecurity/nginx"
+            COLLECTIONS: "crowdsecurity/nginx crowdsecurity/base-http-scenarios crowdsecurity/http-cve crowdsecurity/whitelist-good-actors"
             GID: "${GID-1000}"
         depends_on:
             - 'proxy'
