@@ -119,6 +119,11 @@ MIDDLEWARE = [
 #if DEBUG == 0:
 #    MIDDLEWARE.append("pycrowdsec.django.crowdsec_middleware")
 
+AUTHENTICATION_BACKENDS = [
+   'axes.backends.AxesBackend', # Axes must be first
+   'django.contrib.auth.backends.ModelBackend',
+]
+
 ROOT_URLCONF = 'delfitlm.urls'
 
 TEMPLATES = [
