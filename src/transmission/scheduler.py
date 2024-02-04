@@ -18,6 +18,7 @@ from apscheduler.executors.pool import ThreadPoolExecutor
 from apscheduler.events import EVENT_JOB_ADDED, EVENT_JOB_REMOVED, EVENT_JOB_EXECUTED, EVENT_JOB_SUBMITTED
 from django.forms import ValidationError
 from django_logger import logger
+from django.contrib.auth.decorators import login_required
 from transmission.processing.satellites import SATELLITES
 from transmission.processing.process_raw_bucket import process_raw_bucket
 from transmission.processing.telemetry_scraper import scrape
@@ -32,7 +33,7 @@ def get_job_id(satellite: str, job_description: str) -> str:
 
     return satellite + "_" + job_description
 
-
+@login_required(login_url='/login')
 def schedule_job(job_type: str, satellite: str = None, link: str = None,
                  date: datetime = None, interval: int = None) -> None:
     """Schedule job for a specified satellite and/or link.

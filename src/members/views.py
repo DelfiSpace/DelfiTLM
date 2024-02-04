@@ -133,7 +133,11 @@ def login_member(request):
                 Member.objects.filter(username=member.username).update(
                     last_login=timezone.now()
                 )
-                return redirect("account")
+                try:
+                    if request.GET['next']:
+                        return redirect(request.GET['next'])
+                except Exception as e:
+                    return redirect("account")
         else:
             # make sure the username is intialized in case the form is not valid,
             # this allows for user lookup in the failed login table
