@@ -118,7 +118,7 @@ class TestAccount(TestCase):
 
     def test_user_logged_in(self):
         # the user is logged in and can view the account page
-        login = self.client.login(username='user', password='delfispace4242')
+        login = self.client.authenticate(username='user', password='delfispace4242')
         self.assertTrue(login)
         response = self.client.get(reverse('account'))
         self.assertEqual(response.status_code, 200)
@@ -369,7 +369,7 @@ class TestChangePassword(TestCase):
     def test_change_password_user_logged_in(self):
         # user is logged in and password reset is login protected
         # the user receives the change password form
-        self.client.login(username='user', password='delfispace4242')
+        self.client.authenticate(username='user', password='delfispace4242')
         response = self.client.get(reverse('change_password'))
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'registration/change_password.html')
