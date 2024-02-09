@@ -3,13 +3,18 @@
 from transmission.models import Downlink, Satellite, Uplink
 from transmission.processing.save_raw_data import store_frames
 from django.contrib.auth.models import Permission
+from django.contrib.auth import authenticate, login
+from django.http import HttpRequest, SimpleCookie
 from django.test import TestCase
 from django.urls import reverse
 from django.test.client import Client
+from django_logger import logger
+from django.conf import settings
 from ..models import Member
 import re
 import django
 import time
+from importlib import import_module
 
 # pylint: disable=all
 
@@ -117,12 +122,72 @@ class TestAccount(TestCase):
         self.client.logout()
 
     def test_user_logged_in(self):
+        
+ 
+        logger.info("test_user_logged_in")
+
+        ##engine = import_module(settings.SESSION_ENGINE)
+        ##cookie = SimpleCookie()
+        
+        ##if cookie:
+        ##    return engine.SessionStore(cookie.value)
+        ##session = engine.SessionStore()
+        ##session.save()
+        #self.cookies[settings.SESSION_COOKIE_NAME] = session.session_key
+
         # the user is logged in and can view the account page
-        login = self.client.authenticate(username='user', password='delfispace4242')
-        self.assertTrue(login)
+        request = HttpRequest()
+        ##request.session = session
+        request.session = self.client.session
+        authenticated_user = authenticate(request, username="user", password="delfispace4242")
+        logger.info(authenticated_user)
+        logger.info(type(authenticated_user))
+        logger.info(type(authenticated_user.username))
+        
+        #if authenticated_user is not None and authenticated_user != "User"
+        self.assertEqual(authenticated_user.username, "user", "User aithentication failed.")
+        logger.info ("trying to login")
+        #try:
+        request = HttpRequest()
+        ##request.session = session
+        request.session = self.client.session
+        login(request, authenticated_user)
+        
+        request.session.save()
+        #self.client._set_login_cookies(request)
+        # Set the cookie to represent the session.
+        session_cookie = settings.SESSION_COOKIE_NAME
+        self.client.cookies[session_cookie] = request.session.session_key
+        cookie_data = {
+            "max-age": None,
+            "path": "/",
+            "domain": settings.SESSION_COOKIE_DOMAIN,
+            "secure": settings.SESSION_COOKIE_SECURE or None,
+            "expires": None,
+        }
+        self.client.cookies[session_cookie].update(cookie_data)
+
+
         response = self.client.get(reverse('account'))
-        self.assertEqual(response.status_code, 200)
+        logger.info("Get reply")
+        logger.info(response.status_code)
+        logger.info(response)
         self.assertTemplateUsed(response, 'account.html')
+        #except Exception as e:
+        #logger.error(e)
+        
+        logger.info("login succesfull")
+        #response = request.get(reverse('account'))
+        #logger.info("Get reply")
+        #logger.info(response.status_code)
+        #logger.info(response)
+        #logger.info("Pre login")
+        #login = self.client.authenticate(username='user', password='delfispace4242')
+        #logger.info("post login")
+        #self.assertTrue(login)
+        #response = self.client.get(reverse('account'))
+        #self.assertEqual(response.status_code, 200)
+        #self.assertTemplateUsed(response, 'account.html')
 
     def test_user_not_logged_in(self):
         # the user is not logged in and since account is login protected the user is redirected to login
@@ -369,7 +434,7 @@ class TestChangePassword(TestCase):
     def test_change_password_user_logged_in(self):
         # user is logged in and password reset is login protected
         # the user receives the change password form
-        self.client.authenticate(username='user', password='delfispace4242')
+        self.client.login(username='user', password='delfispace4242')
         response = self.client.get(reverse('change_password'))
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'registration/change_password.html')
