@@ -121,41 +121,29 @@ class TestAccount(TestCase):
     def tearDown(self):
         self.client.logout()
 
-    def test_user_logged_in(self):
-        
- 
-        logger.info("test_user_logged_in")
-
-        ##engine = import_module(settings.SESSION_ENGINE)
-        ##cookie = SimpleCookie()
-        
-        ##if cookie:
-        ##    return engine.SessionStore(cookie.value)
-        ##session = engine.SessionStore()
-        ##session.save()
-        #self.cookies[settings.SESSION_COOKIE_NAME] = session.session_key
-
-        # the user is logged in and can view the account page
+    def login_wrapper(self, username, password):
+        # create a request to retrieve Axes authentication success of failure
         request = HttpRequest()
-        ##request.session = session
+        # store the session coookie in the request
         request.session = self.client.session
-        authenticated_user = authenticate(request, username="user", password="delfispace4242")
-        logger.info(authenticated_user)
-        logger.info(type(authenticated_user))
-        logger.info(type(authenticated_user.username))
+        # try to authenticate the user
+        authenticated_user = authenticate(request, username=username, password=password)
+
+        if authenticated_user is None:
+            # authentication failure
+            return False, "Username / password not correct"
         
-        #if authenticated_user is not None and authenticated_user != "User"
-        self.assertEqual(authenticated_user.username, "user", "User aithentication failed.")
-        logger.info ("trying to login")
-        #try:
+        if authenticated_user.username != "user":
+            # username / password not correct
+            return False, "Incorrect user authenticated"
+
+        # login now
         request = HttpRequest()
-        ##request.session = session
         request.session = self.client.session
         login(request, authenticated_user)
-        
+
+        # save the session cookie
         request.session.save()
-        #self.client._set_login_cookies(request)
-        # Set the cookie to represent the session.
         session_cookie = settings.SESSION_COOKIE_NAME
         self.client.cookies[session_cookie] = request.session.session_key
         cookie_data = {
@@ -166,29 +154,33 @@ class TestAccount(TestCase):
             "expires": None,
         }
         self.client.cookies[session_cookie].update(cookie_data)
+        return True, "Success"
 
+    def test_user_logged_in(self):
+        # the user is logged in and can view the account page
+        login_result, message = self.login_wrapper('user', 'delfispace4242')
 
+        # check if login succeeded
+        self.assertTrue(login_result, message)
+
+        # check if the account page has been loaded
         response = self.client.get(reverse('account'))
-        logger.info("Get reply")
-        logger.info(response.status_code)
-        logger.info(response)
         self.assertTemplateUsed(response, 'account.html')
-        #except Exception as e:
-        #logger.error(e)
-        
-        logger.info("login succesfull")
-        #response = request.get(reverse('account'))
-        #logger.info("Get reply")
-        #logger.info(response.status_code)
-        #logger.info(response)
-        #logger.info("Pre login")
-        #login = self.client.authenticate(username='user', password='delfispace4242')
-        #logger.info("post login")
-        #self.assertTrue(login)
-        #response = self.client.get(reverse('account'))
-        #self.assertEqual(response.status_code, 200)
-        #self.assertTemplateUsed(response, 'account.html')
 
+    def test_user_login_wrong_user(self):
+        # the user is logged in and can view the account page
+        login_result, message = self.login_wrapper('user1', 'delfispace4242')
+
+        # check if login succeeded
+        self.assertFalse(login_result, "Non-existent user correctly logged in")
+
+    def test_user_login_wrong_password(self):
+        # the user is logged in and can view the account page
+        login_result, message = self.login_wrapper('user', 'delfispace424')
+
+        # check if login succeeded
+        self.assertFalse(login_result, "User with wrong password correctly logged in") 
+        
     def test_user_not_logged_in(self):
         # the user is not logged in and since account is login protected the user is redirected to login
         response = self.client.get(reverse('account'), follow=True)
@@ -424,6 +416,41 @@ class TestChangePassword(TestCase):
     def tearDown(self):
         self.client.logout()
 
+    def login_wrapper(self, username, password):
+        # create a request to retrieve Axes authentication success of failure
+        request = HttpRequest()
+        # store the session coookie in the request
+        request.session = self.client.session
+        # try to authenticate the user
+        authenticated_user = authenticate(request, username=username, password=password)
+
+        if authenticated_user is None:
+            # authentication failure
+            return False, "Username / password not correct"
+
+        if authenticated_user.username != "user":
+            # username / password not correct
+            return False, "Incorrect user authenticated"
+
+        # login now
+        request = HttpRequest()
+        request.session = self.client.session
+        login(request, authenticated_user)
+
+        # save the session cookie
+        request.session.save()
+        session_cookie = settings.SESSION_COOKIE_NAME
+        self.client.cookies[session_cookie] = request.session.session_key
+        cookie_data = {
+            "max-age": None,
+            "path": "/",
+            "domain": settings.SESSION_COOKIE_DOMAIN,
+            "secure": settings.SESSION_COOKIE_SECURE or None,
+            "expires": None,
+        }
+        self.client.cookies[session_cookie].update(cookie_data)
+        return True, "Success"
+
     def test_change_password_user_not_logged_in(self):
         # user is not logged in and password reset is login protected
         # the user is redirected to the login page
@@ -434,7 +461,7 @@ class TestChangePassword(TestCase):
     def test_change_password_user_logged_in(self):
         # user is logged in and password reset is login protected
         # the user receives the change password form
-        self.client.login(username='user', password='delfispace4242')
+        self.login_wrapper(username='user', password='delfispace4242')
         response = self.client.get(reverse('change_password'))
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'registration/change_password.html')
@@ -442,7 +469,7 @@ class TestChangePassword(TestCase):
     def test_password_changed(self):
         # user is logged in and password reset is login protected
         # the user receives the change django password form
-        self.client.login(username='user', password='delfispace4242')
+        self.login_wrapper(username='user', password='delfispace4242')
         response = self.client.get(reverse('change_password'))
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'registration/change_password.html')
@@ -458,7 +485,7 @@ class TestChangePassword(TestCase):
 
     def test_change_invalid_password(self):
         # reset password form successfully retrieved
-        self.client.login(username='user', password='delfispace4242')
+        self.login_wrapper(username='user', password='delfispace4242')
         response = self.client.get(reverse('change_password'))
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'registration/change_password.html')
