@@ -3,6 +3,8 @@ import json
 from django.test import Client, TestCase, RequestFactory
 from rest_framework.test import force_authenticate
 from django.contrib.auth.models import Permission
+from django.contrib.auth import authenticate, login
+from django.http import HttpRequest, SimpleCookie
 from django.urls import reverse
 from transmission.models import Downlink, Satellite, Uplink
 from transmission.processing.bookkeep_new_data_time_range import combine_time_ranges
@@ -12,6 +14,8 @@ from transmission.views import submit_frame, submit_job, modify_scheduler
 
 from members.models import Member
 from members.views import generate_key
+
+from django.conf import settings
 
 from unittest.mock import patch
 
@@ -164,6 +168,41 @@ class TestSchedulerStateChange(TestCase):
 
 
 class TestJobSubmission(TestCase):
+    def login_wrapper(self, username, password):
+        # create a request to retrieve Axes authentication success of failure
+        request = HttpRequest()
+        # store the session coookie in the request
+        request.session = self.client.session
+        # try to authenticate the user
+        authenticated_user = authenticate(request, username=username, password=password)
+
+        if authenticated_user is None:
+            # authentication failure
+            return False, "Username / password not correct"
+
+        if authenticated_user.username != "user":
+            # username / password not correct
+            return False, "Incorrect user authenticated"
+
+        # login now
+        request = HttpRequest()
+        request.session = self.client.session
+        login(request, authenticated_user)
+
+        # save the session cookie
+        request.session.save()
+        session_cookie = settings.SESSION_COOKIE_NAME
+        self.client.cookies[session_cookie] = request.session.session_key
+        cookie_data = {
+            "max-age": None,
+            "path": "/",
+            "domain": settings.SESSION_COOKIE_DOMAIN,
+            "secure": settings.SESSION_COOKIE_SECURE or None,
+            "expires": None,
+        }
+        self.client.cookies[session_cookie].update(cookie_data)
+        return True, "Success"
+
     def setUp(self):
         self.factory = RequestFactory()
         self.client = Client()
@@ -171,7 +210,7 @@ class TestJobSubmission(TestCase):
         self.user.set_password('delfispace4242')
         self.user.save()
 
-        self.client.post(reverse('login'), {'username': 'user', 'password': 'delfispace4242'})
+        self.login_wrapper('user', 'delfispace4242')
 
         Satellite.objects.create(sat='delfic3', norad_id=1).save()
 
@@ -279,7 +318,7 @@ class TestJobSubmission(TestCase):
 
     @patch("transmission.scheduler.Scheduler.add_job_to_schedule")
     def testBufferProcessingJob(self, mock_scheduler):
-        response = self.client.post(reverse('submit_job'), {'sat': '', 'job_type': 'buffer_processing', 'link': ''},
+        response = self.client.post(reverse('submit_job'), {'sat': '', 'job_type': 'buffer_processing', 'link': '', 'user': 'user'},
                                     follow=True)
 
         self.assertTemplateUsed(response, 'transmission/submit_job.html')
