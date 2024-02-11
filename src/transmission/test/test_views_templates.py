@@ -365,11 +365,12 @@ class TestTableViews(TestCase):
 
     def test_requested_tables_no_permissions(self):
         # cannot access uplink/downlink tables without proper permission
+        # if not logged in, redirect to ligin page
         response = self.client.get(reverse('get_frames_table', args=["downlink"]))
-        self.assertEqual(response.status_code, 403)
+        self.assertEqual(response.status_code, 302)
 
         response = self.client.get(reverse('get_frames_table', args=["uplink"]))
-        self.assertEqual(response.status_code, 403)
+        self.assertEqual(response.status_code, 302)
 
     def test_requested_tables_bad_requests(self):
         # tables must be requested with a get request
