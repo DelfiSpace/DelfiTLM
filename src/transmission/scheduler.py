@@ -18,7 +18,6 @@ from apscheduler.executors.pool import ThreadPoolExecutor
 from apscheduler.events import EVENT_JOB_ADDED, EVENT_JOB_REMOVED, EVENT_JOB_EXECUTED, EVENT_JOB_SUBMITTED
 from django.forms import ValidationError
 from django_logger import logger
-from django.contrib.auth.decorators import login_required
 from transmission.processing.satellites import SATELLITES
 from transmission.processing.process_raw_bucket import process_raw_bucket
 from transmission.processing.telemetry_scraper import scrape
