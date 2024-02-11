@@ -73,7 +73,7 @@ def verify(request, uidb64, token):
     else:
         messages.error(request, 'Verification link is invalid or expired!')
         status = HTTPStatus.BAD_REQUEST
-    return render(request, "registration/login.html", context={'form': form}, status=status)
+    return render(request, "registration/login.html", status=status)
     #return render(request, "home/index.html", status=status)
 
 
@@ -136,7 +136,7 @@ def login_member(request):
                 )
                 if request.GET.get('next'):
                     return redirect(request.GET['next'])
-                
+ 
                 return redirect("account")
         else:
             # make sure the username is intialized in case the form is not valid,
