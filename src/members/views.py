@@ -72,7 +72,7 @@ def verify(request, uidb64, token):
     else:
         messages.error(request, 'Verification link is invalid or expired!')
         status = HTTPStatus.BAD_REQUEST
-    return render(request, 'login', status=status)
+    return render(request, "registration/login.html", status=status)
 
 def resend_verification_email(request):
     """Resent verification emails, in case it's not received."""
@@ -146,7 +146,7 @@ def login_member(request):
             messages.error(request, "Invalid username or password!")
         status = HTTPStatus.UNAUTHORIZED
 
-    return render(request, 'login' context={'form': form}, status=status)
+    return render(request, "registration/login.html", context={'form': form}, status=status)
 
 @login_required(login_url='/login')
 def generate_key(request):
