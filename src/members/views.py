@@ -68,12 +68,13 @@ def verify(request, uidb64, token):
         user.last_login = timezone.now()
         user.save()
 
-        login(request, user)
+        #login(request, user)
         messages.info(request, "Your email has been successfully verified.")
     else:
         messages.error(request, 'Verification link is invalid or expired!')
         status = HTTPStatus.BAD_REQUEST
-    return render(request, "home/index.html", status=status)
+    return render(request, "registration/login.html", context={'form': form}, status=status)
+    #return render(request, "home/index.html", status=status)
 
 
 def resend_verification_email(request):
@@ -135,8 +136,8 @@ def login_member(request):
                 )
                 if request.GET.get('next'):
                     return redirect(request.GET['next'])
-                else:
-                    return redirect("account")
+                
+                return redirect("account")
         else:
             # make sure the username is intialized in case the form is not valid,
             # this allows for user lookup in the failed login table
