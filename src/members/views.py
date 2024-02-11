@@ -128,15 +128,14 @@ def login_member(request):
                 messages.error(request, "Email not verified!")
                 return redirect("resend_verify")
 
-            if (member is not None and member.is_active is True): 
+            if (member is not None and member.is_active is True):
                 login(request, member)
                 Member.objects.filter(username=member.username).update(
                     last_login=timezone.now()
                 )
-                try:
-                    if request.GET['next']:
-                        return redirect(request.GET['next'])
-                except Exception as e:
+                if request.GET.get('next'):
+                    return redirect(request.GET['next'])
+                else:
                     return redirect("account")
         else:
             # make sure the username is intialized in case the form is not valid,
