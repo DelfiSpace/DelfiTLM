@@ -2,7 +2,7 @@ APScheduler==3.9.1
 asgiref==3.4.1
 astroid==3.0.1
 attrs==21.4.0
-autobahn==23.1.2
+autobahn==23.6.2
 Automat==20.2.0
 autopep8==1.6.0
 certifi==2023.7.22
@@ -11,7 +11,7 @@ channels==3.0.4
 charset-normalizer==2.1.0
 constantly==15.1.0
 coverage==6.4.2
-cryptography==41.0.6
+cryptography==42.0.0
 daphne==3.0.2
 Django==3.2.24
 django-bootstrap-v5==1.0.11
@@ -45,7 +45,7 @@ pycrowdsec==0.0.4
 pylint==3.0.2
 pylint-django==2.5.5
 pylint-plugin-utils==0.8
-pyOpenSSL==23.2.0
+pyOpenSSL==24.0.0
 python-dateutil==2.8.2
 pytz==2021.3
 pytz-deprecation-shim==0.1.0.post0
