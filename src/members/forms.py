@@ -4,7 +4,7 @@ from django.core.validators import MaxValueValidator, MinValueValidator
 from django.contrib.auth.forms import UserCreationForm, PasswordResetForm, PasswordChangeForm
 from .models import Member
 
-
+#pylint: disable=too-many-ancestors
 class RegisterForm(UserCreationForm):
     """Register user form"""
     email = forms.EmailField(required=True)

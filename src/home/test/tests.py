@@ -10,4 +10,4 @@ from home.views import *
 class TestUrls(SimpleTestCase):
     def test_index(self):
         url = reverse('homepage')
-        self.assertEquals(resolve(url).func, home)
+        self.assertEqual(resolve(url).func, home)
