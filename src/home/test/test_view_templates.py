@@ -11,5 +11,5 @@ class TestViews(SimpleTestCase):
         self.client = Client()
         self.list_url = reverse('homepage')
         response = self.client.get(self.list_url)
-        self.assertEquals(response.status_code, 200)
+        self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'home/index.html')

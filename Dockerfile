@@ -1,5 +1,5 @@
 FROM  ubuntu:20.04
-FROM  python:3.9
+FROM  python:3.12
 
 ENV PATH="/scripts:${PATH}"
 
