@@ -8,7 +8,7 @@ from django.contrib import messages
 from django.contrib.auth import login, authenticate, logout, update_session_auth_hash
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.tokens import default_token_generator
-from django.utils.encoding import force_text
+from django.utils.encoding import force_str
 from django.utils.http import urlsafe_base64_decode
 from .send_emails import send_welcome_email, send_email_verification_registration, \
     send_password_reset_email, send_confirm_account_deleted_email, \
@@ -51,7 +51,7 @@ def verify(request, uidb64, token):
     """Verify user email"""
     status = HTTPStatus.OK
     try:
-        uid = force_text(urlsafe_base64_decode(uidb64))
+        uid = force_str(urlsafe_base64_decode(uidb64))
         user = Member.objects.get(pk=uid)
 
     except(TypeError, ValueError, OverflowError):
