@@ -13,7 +13,7 @@ constantly==15.1.0
 coverage==6.4.2
 cryptography==42.0.0
 daphne==3.0.2
-Django==3.2.23
+Django==3.2.24
 django-bootstrap-v5==1.0.11
 djecrety
 django-filter==21.1
