@@ -50,7 +50,7 @@ services:
 
     pgadmin:
         container_name: pgadmin4_container
-        image: dpage/pgadmin4:latest
+        image: dpage/pgadmin4:8.3
         restart: always
         environment:
             - PGADMIN_DEFAULT_EMAIL=${PGADMIN_DEFAULT_EMAIL:-admin@admin.com}
@@ -67,7 +67,7 @@ services:
 
 
     crowdsec:
-        image: crowdsecurity/crowdsec:latest
+        image: crowdsecurity/crowdsec:v1.6.0-1
         restart: always
         ports:
             - "8080:8080"
