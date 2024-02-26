@@ -76,10 +76,17 @@ services:
             #https://hub.crowdsec.net/author/crowdsecurity/collections/nginx
             COLLECTIONS: "crowdsecurity/nginx crowdsecurity/base-http-scenarios crowdsecurity/http-cve crowdsecurity/whitelist-good-actors"
             GID: "${GID-1000}"
+            SMTP_HOST: "${SMTP_HOST}"
+            SMTP_PORT: "${SMTP_PORT}"
+            FROM_EMAIL: "${FROM_EMAIL}"
+            ADMIN_EMAIL: "${ADMIN_EMAIL}"
+            CUSTOM_HOSTNAME: "${MY_HOST}"
         depends_on:
             - 'proxy'
         volumes:
             - ./crowdsec/acquis.yaml:/etc/crowdsec/acquis.yaml
+            - ./crowdsec/email.yaml:/etc/crowdsec/notifications/email.yaml
+            - ./crowdsec/profiles.yaml:/etc/crowdsec/profiles.yaml
             - logs:/var/log/nginx/:ro
             - crowdsec_db:/var/lib/crowdsec/data/
             - crowdsec_config:/etc/crowdsec/
