@@ -14,8 +14,8 @@ services:
             - SMTP_PORT=${SMTP_PORT}
             - FROM_EMAIL=${FROM_EMAIL:-webmaster@localhost}
             - SATNOGS_TOKEN=${SATNOGS_TOKEN}
-            - CROWDSEC_LAPI=${CROWDSEC_LAPI}
-            - CROWDSEC_URL=${CROWDSEC_URL:-http://crowdsec:8080/}
+            - CROWDSEC_LAPI
+            - CROWDSEC_URL
         restart: always
         logging:
             driver: "json-file"
