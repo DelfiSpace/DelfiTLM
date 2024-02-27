@@ -759,10 +759,10 @@ class TestAccountDeletion(TestCase):
         self.assertEqual(len(Uplink.objects.all()), 3)
 
         for frame in Downlink.objects.all():
-            self.assertEquals(frame.observer, str(self.user.UUID))
+            self.assertEqual(frame.observer, str(self.user.UUID))
 
         for frame in Uplink.objects.all():
-            self.assertEquals(frame.operator, 'user')
+            self.assertEqual(frame.operator, 'user')
 
         # login
         self.client.post(reverse('login'), {'username': 'user', 'password': 'delfispace4242'})
@@ -781,10 +781,10 @@ class TestAccountDeletion(TestCase):
         self.assertEqual(len(Uplink.objects.all()), 3)
 
         for frame in Downlink.objects.all():
-            self.assertEquals(frame.observer, str(self.user.UUID))
+            self.assertEqual(frame.observer, str(self.user.UUID))
 
         for frame in Uplink.objects.all():
-            self.assertEquals(frame.operator, 'user')
+            self.assertEqual(frame.operator, 'user')
 
 
 class TestEmailChangeRequest(TestCase):

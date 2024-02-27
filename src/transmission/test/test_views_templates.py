@@ -45,7 +45,7 @@ class TestSchedulerStateChange(TestCase):
         request.user = unauthorized_user
         response = modify_scheduler(request, "start")
 
-        self.assertEquals(response.status_code, 403)
+        self.assertEqual(response.status_code, 403)
 
     def testBadRequest(self):
         response = self.client.post(reverse('submit_job'),
@@ -225,7 +225,7 @@ class TestJobSubmission(TestCase):
         request.user = unauthorized_user
         response = submit_job(request)
 
-        self.assertEquals(response.status_code, 403)
+        self.assertEqual(response.status_code, 403)
 
     def testBadFormSubmission(self):
         response = self.client.post(reverse('submit_job'), {'sat': '', 'job_type': 'scraper', 'link': ''}, follow=True)
@@ -414,7 +414,7 @@ class TestSubmitFrames(TestCase):
         request = self.factory.get(path='submit_frame')
         response = submit_frame(request)
 
-        self.assertEquals(response.status_code, 405)
+        self.assertEqual(response.status_code, 405)
 
     def test_submit_invalid_json(self):
 
@@ -436,7 +436,7 @@ class TestSubmitFrames(TestCase):
 
         response = submit_frame(request)
 
-        self.assertEquals(response.status_code, 400)
+        self.assertEqual(response.status_code, 400)
 
     def test_submit_frame_is_not_hex(self):
 
@@ -460,7 +460,7 @@ class TestSubmitFrames(TestCase):
 
         response = submit_frame(request)
 
-        self.assertEquals(response.status_code, 400)
+        self.assertEqual(response.status_code, 400)
 
     def test_submit_no_timestamps(self):
 
@@ -483,7 +483,7 @@ class TestSubmitFrames(TestCase):
 
         response = submit_frame(request)
 
-        self.assertEquals(response.status_code, 400)
+        self.assertEqual(response.status_code, 400)
         self.assertEqual(len(Downlink.objects.all()), 0)  # downlink table has no entry
 
     def test_submit_with_timestamps(self):
@@ -513,7 +513,7 @@ class TestSubmitFrames(TestCase):
         # test downlink
         response = submit_frame(request)
 
-        self.assertEquals(response.status_code, 201)
+        self.assertEqual(response.status_code, 201)
         self.assertEqual(len(Downlink.objects.all()), 1)  # downlink table has 1 entry
         self.assertEqual(str(Downlink.objects.first().timestamp), "2021-12-19 02:20:14.959630+00:00")
 
@@ -523,7 +523,7 @@ class TestSubmitFrames(TestCase):
         request.META['HTTP_AUTHORIZATION'] = json.loads(response_key)['generated_key']
 
         response = submit_frame(request)
-        self.assertEquals(response.status_code, 201)
+        self.assertEqual(response.status_code, 201)
         self.assertEqual(len(Uplink.objects.all()), 1)  # uplink table has 1 entry
         self.assertEqual(str(Uplink.objects.first().timestamp), "2021-12-19 02:20:14.959630+00:00")
 
@@ -558,7 +558,7 @@ class TestSubmitFrames(TestCase):
         # test downlink
         response = submit_frame(request)
 
-        self.assertEquals(response.status_code, 201)
+        self.assertEqual(response.status_code, 201)
         self.assertEqual(len(Downlink.objects.all()), 3)  # downlink table has 1 entry
 
         # test uplink
@@ -570,7 +570,7 @@ class TestSubmitFrames(TestCase):
         request.META['HTTP_AUTHORIZATION'] = json.loads(response_key)['generated_key']
 
         response = submit_frame(request)
-        self.assertEquals(response.status_code, 201)
+        self.assertEqual(response.status_code, 201)
         self.assertEqual(len(Uplink.objects.all()), 3)  # uplink table has 1 entry
 
     def test_submit_with_non_utc_timestamps(self):
@@ -594,7 +594,7 @@ class TestSubmitFrames(TestCase):
 
         response = submit_frame(request)
 
-        self.assertEquals(response.status_code, 201)
+        self.assertEqual(response.status_code, 201)
         self.assertEqual(len(Downlink.objects.all()), 1)  # downlink table has 1 entry
         self.assertEqual(str(Downlink.objects.first().timestamp), "2022-02-06 16:49:05.421398+00:00")
 
@@ -619,7 +619,7 @@ class TestSubmitFrames(TestCase):
 
         response = submit_frame(request)
 
-        self.assertEquals(response.status_code, 401)
+        self.assertEqual(response.status_code, 401)
         self.assertEqual(len(Downlink.objects.all()), 0)  # downlink table has no entry
 
     def test_submit_without_permissions(self):
@@ -650,7 +650,7 @@ class TestSubmitFrames(TestCase):
 
         response = submit_frame(request)
 
-        self.assertEquals(response.status_code, 403)
+        self.assertEqual(response.status_code, 403)
 
         # DOWNLINK
         request = self.factory.post(path='submit_frame', data=frame_json, content_type='application/json')
@@ -660,7 +660,7 @@ class TestSubmitFrames(TestCase):
 
         response = submit_frame(request)
 
-        self.assertEquals(response.status_code, 403)
+        self.assertEqual(response.status_code, 403)
 
         self.assertEqual(len(Uplink.objects.all()), 0)  # uplink table empty
         self.assertEqual(len(Downlink.objects.all()), 0)  # downlink table empty
@@ -686,5 +686,5 @@ class TestSubmitFrames(TestCase):
 
         response = submit_frame(request)
 
-        self.assertEquals(response.status_code, 400)
+        self.assertEqual(response.status_code, 400)
         self.assertEqual(len(Uplink.objects.all()), 0)

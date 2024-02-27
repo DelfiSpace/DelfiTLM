@@ -116,8 +116,9 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-#if DEBUG == 0:
-#    MIDDLEWARE.append("pycrowdsec.django.crowdsec_middleware")
+# Force the CSRT TRUSTED ORIGINS to the hostname plus the scheme
+MY_HOST = os.environ.get('MY_HOST', 'localhost')
+CSRF_TRUSTED_ORIGINS = ["https://" + MY_HOST, "http://" + MY_HOST]
 
 AUTHENTICATION_BACKENDS = [
    'axes.backends.AxesBackend', # Axes must be first
