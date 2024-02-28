@@ -110,5 +110,26 @@ PYCROWDSEC_EXCLUDE_VIEWS = {"ban_view"}
 
 PYCROWDSEC_POLL_INTERVAL = 10
 ```
+## Whitelists
+
+Whitelista are used to ignore machines considered to be safe (such as security scanners) and avoid them to trigger a ban. A guide is available [here](https://docs.crowdsec.net/docs/whitelist/create/). It is reccommended to use the PostOverflows whitelist to limit the amount of events.
+
+To add a whitelist, a file needs to be added to the Docker CrowdSec config volume: it should be noted that deleting the volume will cause the whitelist to be deleted.
+
+This guide applies to Linux, but it can be adapted to any other operating system.
+
+Create a whitelist file in the Docker volume:
+```sudo touch /var/lib/docker/volumes/delfitlm_crowdsec_config/_data/postoverflows/s01-whitelist/mywhitelist.yaml ```
+
+Edit the whitelist file just created and paste the following lines, adapting the content:
+```
+name: <my-domain>/<my-name>
+description: "<Description of this whitelist>"
+whitelist:
+  reason: <Reason for the whitelist>
+  ip:
+    - "<IP address to whitelist>"
+```
+Restart the CrowdSec image.
 
 
