@@ -132,4 +132,9 @@ whitelist:
 ```
 Restart the CrowdSec image.
 
+## Email notifications
+
+CrowdSec, with the [email plugin](https://docs.crowdsec.net/docs/notification_plugins/email/) allows to send notifications in case of critical events. Emails are sent in case decisions are taken or errors are detected.
+
+
 
