@@ -26,3 +26,5 @@ class Command(BaseCommand):
             if buckets_api.find_bucket_by_name(bucket) is None:
                 buckets_api.create_bucket(bucket_name=bucket, retention_rules=retention_rules)
                 print(f"Bucket: {bucket} created")
+            else:
+                print(f"Bucket: {bucket} already present")
