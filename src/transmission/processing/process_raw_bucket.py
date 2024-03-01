@@ -60,14 +60,10 @@ def parse_and_store_frame(satellite: str, timestamp: str, frame: str, observer: 
             except ValueError:
                 pass
 
-            # print(field + " " + str(value) + " " + status)
-            logger.debug("%s: field: %s, val: %s, status: %s", satellite, field, str(value), status)
-
             db_fields["fields"][field] = value
             db_fields["tags"]["status"] = status
 
             write_api.write(bucket, INFLUX_ORG, db_fields)
-            # print(db_fields)
             db_fields["fields"] = {}
             db_fields["tags"] = {}
 
