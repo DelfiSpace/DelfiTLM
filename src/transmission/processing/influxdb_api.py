@@ -3,12 +3,13 @@ from datetime import datetime, timedelta
 import os
 from influxdb_client import InfluxDBClient
 from influxdb_client.client.write_api import SYNCHRONOUS
+import traceback
 
 from transmission.processing.satellites import TIME_FORMAT
 from django_logger import logger
 
 INFLUXDB_URL = "http://influxdb:8086"
-INFLUX_ORG = os.environ.get('INFLUXDB_V2_ORG', 'Delfi Space')
+INFLUX_ORG = os.environ.get('INFLUXDB_V2_ORG', 'DelfiSpace')
 
 
 def get_influxdb_client():
@@ -86,7 +87,6 @@ def commit_frame(write_api, query_api, satellite: str, link: str, tlm: dict) -> 
     write_frame_to_raw_bucket(write_api, satellite, link, tlm["timestamp"], tlm)
     return True
 
-
 def save_raw_frame_to_influxdb(satellite: str, link: str, telemetry) -> bool:
     """Connect to influxdb and save raw telemetry.
     Return True if telemetry was stored, False otherwise."""
@@ -102,3 +102,28 @@ def save_raw_frame_to_influxdb(satellite: str, link: str, telemetry) -> bool:
         stored = stored or commit_frame(write_api, query_api, satellite, link, telemetry)
 
     return stored
+
+def get_last_received_frame(satellite: str):
+    [write_api, query_api] = get_influx_db_read_and_query_api()
+    bucket = satellite + "_raw_data"
+
+    query = f'''from(bucket: "{bucket}")
+    |> range(start: -15y)
+    |> filter(fn: (r) => r["_measurement"] == "{satellite + "_downlink_raw_data"}")
+    |> filter(fn: (r) => r["_field"] == "timestamp")
+    |> tail(n: 1)
+    '''
+    
+    try:
+       ret = query_api.query(query=query)
+
+       for table in ret:
+           logger.info(table.records[0]["_value"])
+           #for record in table.records:
+           #    #logger.info(record.values)
+           #    logger.info(record["_value"])
+           return datetime.strptime(table.records[0]["_value"], '%Y-%m-%dT%H:%M:%SZ')
+
+    except:
+        e = traceback.format_exc()
+        logger.error(e)
