@@ -11,7 +11,7 @@ from django.db import models
 from django.db.models.query import QuerySet
 from django.utils.dateparse import parse_datetime
 from skyfield.api import load, EarthSatellite
-import pytz
+from datetime import timezone
 from django_logger import logger
 from members.models import Member
 from transmission.models import Uplink, Downlink, TLE, Satellite
@@ -102,7 +102,7 @@ def parse_submitted_frame(frame: dict, frame_entry: models.Model) -> models.Mode
     # assign the frame HEX values
     frame_entry.frame = frame['frame']
     # assign the timestamp
-    frame_entry.timestamp = parse_datetime(frame["timestamp"]).astimezone(pytz.utc)
+    frame_entry.timestamp = parse_datetime(frame["timestamp"]).astimezone(timezone.utc)
     # assign frequency, if present
     if "frequency" in frame and frame["frequency"] is not None:
         frame_entry.frequency = frame["frequency"]

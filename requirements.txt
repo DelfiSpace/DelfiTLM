@@ -26,8 +26,7 @@ djangorestframework-api-key==3.0.0
 hyperlink==21.0.0
 idna==3.6
 incremental==22.10.0
-influxdb==5.3.1
-influxdb-client==1.40.0
+influxdb-client==1.41.0
 isort==5.13.2
 jplephem==2.21
 lazy-object-proxy==1.10.0
@@ -47,12 +46,9 @@ pylint==3.0.3
 pylint-django==2.5.5
 pylint-plugin-utils==0.8.2
 pyOpenSSL==24.0.0
-python-dateutil==2.8.2
-pytz==2021.3
-pytz-deprecation-shim==0.1.0.post0
 requests==2.31.0
 Rx==3.2.0
-satellitetle==0.14.0
+satellitetle==0.15.1
 service-identity==24.1.0
 sgp4==2.23
 six==1.16.0
