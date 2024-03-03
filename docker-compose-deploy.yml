@@ -22,7 +22,7 @@ services:
             driver: "json-file"
             options:
                 max-file: "5"   # file count
-                max-size: "10m" # file size
+                max-size: "1m"  # file size
 
 
     proxy:
