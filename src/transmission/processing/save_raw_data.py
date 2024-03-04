@@ -70,7 +70,7 @@ def build_frame_model_object(frame: dict, username: str, application: str = None
         if not user.has_perm("transmission.add_downlink"):
             raise PermissionDenied()
         frame_entry = Downlink()
-        frame_entry.observer = user.UUID
+        frame_entry.observer = user
 
     else:
         raise ValidationError("Invalid frame link.")
