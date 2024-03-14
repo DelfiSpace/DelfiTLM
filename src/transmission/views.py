@@ -50,7 +50,7 @@ def submit_frame(request):  # pylint:disable=R0911
                         api_key_name, number_of_saved_frames)
 
             try:
-                schedule_job("buffer_processing", date=datetime.now() + timedelta(seconds=30))
+                schedule_job("buffer_processing", date=datetime.now())
             except ValidationError as _:
                 pass
 
