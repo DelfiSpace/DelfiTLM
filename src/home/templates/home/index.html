@@ -45,8 +45,14 @@
     }
   </script>
 
-  <h1 class="text-center mb-4">Delfi Space - TU Delft SpaceOps</h1>
+  <h1 class="text-center mb-4 mb-0">DelfiSpace</h1>
 
+<img src="{% static 'tud-lr.webp' %}" class="img-fluid rounded"
+ityle = "width: 100%; height: 20%%; object-fit: cover;">
+  
+  <p class="text-center">Space Operations at the Delft University of Technology</p>
+
+  <h1 class="text-center mb-4">Our Satellites</h1>
 
 <div style="display: flex; flex-direction: row; flex-wrap: wrap;
 justify-content: center;">
@@ -128,7 +134,11 @@ justify-content: center;">
         <div class="card" style="width: 450; margin: 10px">
             <iframe src="/grafana/d-solo/sknvMScVz/latest-reception-times?orgId=1&panelId=5" width="450" height="200" frameborder="0"></iframe>
         </div-->
+
+	<h1 class="text-center mb-4 mt-4">Where are our satellites</h1>
+
     {% include 'home/map.html' %}
+    <p class="text-center">Only currently orbiting satellites are shown on the map. Decayed and not launched satellites ones are not visible.</p>
 </div>
 </div>
 {% endblock %}
