@@ -9,7 +9,14 @@ let SATELLITES = {
 // refresh rate in seconds
 const refreshRate = 2;
 
-let map = L.map('map').setView([latitude, longitude], zoomLevel);
+let map = L.map('map',{
+    noWrap: true,
+    zoomSnap: 0.1,
+    maxBounds: [
+      [-90.0, -180.0],
+      [90.0, 180.0]],
+    maxBoundsViscosity: 1.0
+    }).setView([0, 0], 0);
 
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
@@ -20,9 +27,18 @@ sunlightOverlay.addTo(map);
 
 setInterval(function(){updateTerminator(sunlightOverlay)}, refreshRate * 1000);
 
+let minZoom = 1.0 / 10.0 * Math.ceil(10 * Math.log2(Math.max(map.getSize().x, map.getSize().y) / 256))
+map.setMinZoom(minZoom);
+
 function updateTerminator(t) {
   t.setTime();
 }
+
+map.on('resize', function () 
+    { 
+	let minZoom = 1.0 / 10.0 * Math.ceil(10 * Math.log2(Math.max(map.getSize().x, map.getSize().y) / 256))
+        map.setMinZoom(minZoom);
+    });
 
 let markers = {}
 
@@ -31,10 +47,8 @@ function findSat() {
     .then(response => response.json())
     .then(data => {
       let satellite_list = data.satellites;
-      console.log(satellite_list);
 
       for (const element of satellite_list){
-        console.log(element);
         let sat = element.satellite
         let lat = element.latitude.toFixed(2);
         let long = element.longitude.toFixed(2);
