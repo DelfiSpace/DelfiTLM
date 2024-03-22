@@ -115,30 +115,19 @@ def get_satellite_location_now_api(request, norad_id):
 def _get_satellites_status():
     """Method to find satellite status."""
     sats_status = {}
-    logger.info("_get_satellites_status")
     for sat, info in SATELLITES.items():
-        logger.info(sat)
         sats_status[str(sat + "_status")] = info["status"]
         last_rx_time = get_last_received_frame(sat)
-        logger.info(type(last_rx_time))
-        logger.info(last_rx_time)
         if last_rx_time is not None and type(last_rx_time) is datetime:
-            logger.info("XXX")
             sats_status[str(sat + "_last_data")] = last_rx_time#.strftime('%m %d %Y %H:%M:%S UTC')
         else:
-            logger.info("YYY")
             sats_status[str(sat + "_last_data")] = None
-        logger.info(sats_status[str(sat + "_last_data")])
-        
-        logger.info(type(info["launch"]))
 
         if info["launch"] is not None: 
             launch_time = datetime.strptime(info["launch"], '%Y-%m-%dT%H:%M:%S.%fZ')#.strftime('%M %d%S %Y')
-            logger.info(launch_time)
             sats_status[str(sat + "_launch")] = launch_time
         else:
             sats_status[str(sat + "_launch")] = None
-    logger.info(sats_status)
     return sats_status
 
 
@@ -152,16 +141,13 @@ def home(request):
     """Render index.html page"""
     #context = _get_satellites_status()
     context = []
-    logger.info("before Rendering home view")
+
     try:
         context = _get_satellites_status()
-        logger.info("after status")
-        #get_last_received_frame("delfi_pq")
         return render(request, "home/index.html", context)
     except Exception as e:
         logger.error(traceback.format_exc())
     return render(request, "home/index.html", context)
-
 
 def ban_view(request):
     """Ban request"""
