@@ -43,7 +43,10 @@ def get_tle(norad_id: str):
             return tles[norad_id]['tle']
 
     except Exception as _:
-        pass
+        # something went wrong retrieving TLEs
+        # use the old ones, even if outdated
+        logger.error("Error retrieving TLEs\n%s", traceback.format_exc())
+        return tles[norad_id]['tle']
 
     return None
 
@@ -53,7 +56,7 @@ def get_satellite_location_now(norad_id: str) -> dict:
     tle = get_tle(norad_id)
 
     if tle is None:
-        return {"satellite": None, "latitude": None, "longitude": None, "sunlit": None}
+        return {"satellite": None, "norad_id": None, "latitude": None, "longitude": None, "sunlit": None}
 
     time_scale = load.timescale()
     time = time_scale.now()
@@ -70,7 +73,7 @@ def get_satellite_location_now(norad_id: str) -> dict:
     eph = load('de421.bsp')
     sunlit = satellite.at(time).is_sunlit(eph)
 
-    return {"satellite": str(tle[0]), "latitude": lat_deg, "longitude": lon_deg, "sunlit": int(sunlit)}
+    return {"satellite": str(tle[0]), "norad_id": norad_id, "latitude": lat_deg, "longitude": lon_deg, "sunlit": int(sunlit)}
 
 
 def get_next_pass_over_delft(request, norad_id: str):
