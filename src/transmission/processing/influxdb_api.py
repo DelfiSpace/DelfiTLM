@@ -118,10 +118,6 @@ def get_last_received_frame(satellite: str):
        ret = query_api.query(query=query)
 
        for table in ret:
-           logger.info(table.records[0]["_value"])
-           #for record in table.records:
-           #    #logger.info(record.values)
-           #    logger.info(record["_value"])
            return datetime.strptime(table.records[0]["_value"], '%Y-%m-%dT%H:%M:%SZ')
 
     except:
