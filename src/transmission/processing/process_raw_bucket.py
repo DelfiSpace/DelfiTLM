@@ -97,9 +97,18 @@ def process_retrieved_frames(satellite: str, link: str, start_time: str, end_tim
                 r["_field"] == "{radio_amateur}")
         |> pivot(rowKey:["_time"], columnKey: ["_field"], valueColumn: "_value")
         '''
+
+    if skip_processed == True:
+        get_unprocessed_frames_query = get_unprocessed_frames_query + f'''
+        |> filter(fn: (r) => r["processed"] == false)
+        '''
+
     # query result as dataframe
     dataframe = query_api.query_data_frame(query=get_unprocessed_frames_query)
     dataframe = dataframe.reset_index()
+
+    logger.info("Before query")
+
 
     failed_processing_count = 0
     processed_frames_count = 0
@@ -109,7 +118,8 @@ def process_retrieved_frames(satellite: str, link: str, start_time: str, end_tim
         total_frames_count += 1
         try:
             if row["processed"] and skip_processed:  # skip frame if it's processed
-                logger.info("%s: frame skipped (already processed): %s ", satellite, row["frame"])
+                logger.info("You should not see this message")
+                #logger.info("%s: frame skipped (already processed): %s ", satellite, row["frame"])
                 continue
             # store processed frame
             parse_and_store_frame(satellite, row["_time"], row["frame"], row[radio_amateur], link)
@@ -134,6 +144,8 @@ def process_retrieved_frames(satellite: str, link: str, start_time: str, end_tim
                     f"{processed_frames_count} were successfully parsed, " + \
                     f"{skipped_frames_count} were skipped, and " + \
                     f"{failed_processing_count} failed."
+
+    logger.info("Query ended")
 
     logger.info("%s: %s frames processed from %s - %s; %s", satellite, link, start_time, end_time, frames_status)
 
@@ -162,24 +174,32 @@ def _process_raw_bucket(satellite: str, link: str, all_frames: bool, failed: boo
 
     time_range.combine_time_ranges(satellite, link)
 
+    logger.info("_process_raw_bucket " + str(satellite) + " " + str(all_frames) + " " + str(failed))
     # process the entire bucket
     if all_frames:
+        logger.info("_process_raw_bucket 1")
         return process_retrieved_frames(satellite, link, "0", "now()", skip_processed=False)
     # process frames in the failed frames time range
     if failed:
+        logger.info("_process_raw_bucket 2")
         file = time_range.get_failed_data_file_path(satellite, link)
         new_data_time_range = time_range.read_time_range_file(file)
     # process frames in the new data time range (newly ingested data)
     else:
+        logger.info("_process_raw_bucket 3")
         file = time_range.get_new_data_file_path(satellite, link)
         new_data_time_range = time_range.read_time_range_file(file)
 
     processed_frames_count = 0
     total_frames_count = 0
 
+    logger.info("_process_raw_bucket 4")
+
     # if the time range is empty there are no frames to process
     if new_data_time_range[satellite][link] != []:
 
+        logger.info("_process_raw_bucket 5")
+        
         start_time = new_data_time_range[satellite][link][0]
         end_time = new_data_time_range[satellite][link][1]
         processed_frames_count, total_frames_count = process_retrieved_frames(satellite, link, start_time, end_time)
@@ -188,5 +208,6 @@ def _process_raw_bucket(satellite: str, link: str, all_frames: bool, failed: boo
         if failed is False or processed_frames_count == total_frames_count:
             time_range.reset_new_data_timestamps(satellite, link, file)
     else:
+        logger.info("_process_raw_bucket 6")
         logger.info("%s: no frames to process", satellite)
     return processed_frames_count, total_frames_count
