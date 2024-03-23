@@ -34,7 +34,7 @@ def get_satnogs_params(satellite: str) -> dict:
     now = datetime.utcnow().strftime(TIME_FORMAT)
     logger.debug("Now: %s", now)
     # params = {'app_source':'network', 'end': now, 'format': 'json', 'satellite': '51074'}
-    params = {'end': now, 'format': 'json', 'satellite': SATELLITES[satellite]}
+    params = {'end': now, 'format': 'json', 'satellite': SATELLITES[satellite]['norad_id']}
     return params
 
 
@@ -70,23 +70,30 @@ def scrape(satellite: str, save_to_db=True, save_to_file=False) -> None:
     logger.info("SatNOGS scraper started. Scraping %s telemetry.", satellite)
     time_range = {}
     while True:
+        logger.info(get_satnogs_params(satellite))
         response = requests.get(
             SATNOGS_PATH,
             params=get_satnogs_params(satellite),
             headers=get_satnogs_headers(),
-            timeout=10 # seconds
+            timeout=100 # seconds
         )
+        logger.info(response)
         telemetry_tmp = response.json()
+        logger.info(telemetry_tmp)
         try:
+            logger.info("1")
             last = telemetry_tmp[-1]
+            logger.info(last)
             first = telemetry_tmp[0]
+            logger.info(first)
+            logger.info(sate_to_db)
 
             # concatenate telemetry
             telemetry = telemetry + telemetry_tmp
 
             last_time = datetime.strptime(last['timestamp'], TIME_FORMAT)
             next_time = last_time - timedelta(seconds=1)
-            logger.debug("Next: %s", next_time.strftime(TIME_FORMAT))
+            logger.info("Next: %s", next_time.strftime(TIME_FORMAT))
 
             if save_to_db:
                 fields_to_save = ["frame", "timestamp", "observer"]
@@ -99,20 +106,20 @@ def scrape(satellite: str, save_to_db=True, save_to_file=False) -> None:
 
                 # if the frame is not stored (due to it being stored in a past scrape) and
                 # the next request retrieves data older than a week -> stop
-                elif (datetime.now() - next_time).days > 7:
-                    logger.info("SatNOGS scraper stopped. Done scraping %s telemetry.", satellite)
-                    break  # stop scraping
+                #elif (datetime.now() - next_time).days > 7:
+                #    logger.info("SatNOGS scraper stopped. Done scraping %s telemetry.", satellite)
+                #    break  # stop scraping
 
         except IndexError:
             logger.info("SatNOGS scraper stopped. Done scraping %s telemetry.", satellite)
             break
 
         except KeyError:
-            logger.debug(telemetry_tmp)
+            logger.info(telemetry_tmp)
             if 'detail' in telemetry_tmp:
                 if "throttled" in telemetry_tmp["detail"]:
                     delay = re.findall('[0-9]+', telemetry_tmp["detail"])[0]
-                    logger.debug("Sleeping %s s (request throttled)", delay)
+                    logger.info("Sleeping %s s (request throttled)", delay)
                     time.sleep(int(delay))
                     path = get_new_data_scraper_temp_folder(satellite)
                     path += satellite + "_downlink_" + str(len(os.listdir(path))) + ".json"
@@ -124,3 +131,4 @@ def scrape(satellite: str, save_to_db=True, save_to_file=False) -> None:
 
         if save_to_file:
             dump_telemetry_to_file(satellite, telemetry)
+    logger.info("Scraper done")
