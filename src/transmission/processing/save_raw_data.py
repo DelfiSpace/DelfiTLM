@@ -64,13 +64,25 @@ def build_frame_model_object(frame: dict, username: str, application: str = None
         if not user.has_perm("transmission.add_uplink"):
             raise PermissionDenied()
         frame_entry = Uplink()
-        frame_entry.operator = user
+        if "username" not in frame:
+            frame_entry.operator = user
+        else:
+            if user.is_staff:
+                frame_entry.operator = frame["username"]
+            else:
+                raise PermissionDenied()
 
     elif frame["link"] == "downlink":
         if not user.has_perm("transmission.add_downlink"):
             raise PermissionDenied()
         frame_entry = Downlink()
-        frame_entry.observer = user
+        if "username" not in frame:
+            frame_entry.observer = user
+        else:
+            if user.is_staff:
+                frame_entry.observer = frame["username"]
+            else:
+                raise PermissionDenied()
 
     else:
         raise ValidationError("Invalid frame link.")
