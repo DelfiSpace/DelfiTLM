@@ -21,7 +21,7 @@ from django_logger import logger
 from transmission.processing.satellites import SATELLITES
 from transmission.processing.process_raw_bucket import process_raw_bucket
 from transmission.processing.telemetry_scraper import scrape
-from transmission.processing.save_raw_data import process_uplink_and_downlink
+from transmission.processing.save_raw_data import process_uplink_and_downlink, reprocess_uplink_and_downlink
 
 
 def get_job_id(satellite: str, job_description: str) -> str:
@@ -49,6 +49,11 @@ def schedule_job(job_type: str, satellite: str = None, link: str = None,
         args = []
         job_id = job_type
         scheduler.add_job_to_schedule(process_uplink_and_downlink, args, job_id, date, interval)
+
+    elif job_type == "buffer_reprocessing":
+        args = []
+        job_id = job_type
+        scheduler.add_job_to_schedule(reprocess_uplink_and_downlink, args, job_id, date, interval)
 
     elif job_type == "raw_bucket_processing" and satellite in SATELLITES:
         args = [satellite, link]
@@ -155,7 +160,7 @@ class Scheduler(metaclass=Singleton):
         # automated processing pipeline:
         # - when a buffer processing task completes that will trigger the raw bucket processing
         # - when a scraper task completes that will trigger the raw bucket processing
-        if "buffer_processing" in event.job_id:
+        if ("buffer_processing" in event.job_id) or ("buffer_reprocessing" in event.job_id):
             for sat in SATELLITES:
                 schedule_job("raw_bucket_processing", sat)
 

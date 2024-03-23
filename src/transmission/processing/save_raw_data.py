@@ -135,13 +135,30 @@ def process_uplink_and_downlink() -> tuple:
     """Process all unprocessed uplink and downlink frames,
     i.e. move them to the influxdb raw satellite data bucket."""
 
+    logger.info("Process incoming frames")
     downlink_frames = Downlink.objects.all().filter(processed=False)
-    process_frames(downlink_frames, "downlink")
+    downlink_frames_count = process_frames(downlink_frames, "downlink")
 
     uplink_frames = Uplink.objects.all().filter(processed=False)
-    process_frames(uplink_frames, "uplink")
+    uplink_frames_count = process_frames(uplink_frames, "uplink")
 
-    return len(downlink_frames), len(uplink_frames)
+    logger.info("Incoming frames processed")
+    return downlink_frames_count, uplink_frames_count
+
+
+def reprocess_uplink_and_downlink() -> tuple:
+    """Reprocess all invalid uplink and downlink frames,
+    i.e. move them to the influxdb raw satellite data bucket."""
+
+    logger.info("Reprocess incoming frames")
+    downlink_frames = Downlink.objects.all().filter(processed=True).filter(invalid=True)
+    downlink_frames_count = process_frames(downlink_frames, "downlink")
+
+    uplink_frames = Uplink.objects.all().filter(processed=True).filter(invalid=True)
+    uplink_frames_count = process_frames(uplink_frames, "uplink")
+
+    logger.info("Incoming frames reprocessed")
+    return downlink_frames_count, uplink_frames_count
 
 
 def process_frames(frames: QuerySet, link: str) -> int:
@@ -154,10 +171,9 @@ def process_frames(frames: QuerySet, link: str) -> int:
     for frame_obj in frames:
         frame_dict = frame_obj.to_dictionary()
         stored, satellite = store_frame_to_influxdb(frame_dict, link)
+        frame_obj.processed = True
         if stored:
-            frame_obj.processed = True
             frame_obj.invalid = False
-            frame_obj.save()
             processed_frames += 1
             if satellite not in processed_frames_timestamps:
                 processed_frames_timestamps[satellite] = include_timestamp_in_time_range(
@@ -171,6 +187,10 @@ def process_frames(frames: QuerySet, link: str) -> int:
                     frame_obj.timestamp,
                     existing_range=processed_frames_timestamps[satellite]
                 )
+        else:
+            frame_obj.invalid = True
+        frame_obj.save()
+
     for satellite, time_range in processed_frames_timestamps.items():
         path = get_new_data_buffer_temp_folder(satellite)
         path += satellite + "_" + link + "_" + str(len(os.listdir(path))) + ".json"
