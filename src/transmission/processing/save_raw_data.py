@@ -169,17 +169,13 @@ def process_frames(frames: QuerySet, link: str) -> int:
     if a frame was successfully stored in influxdb.
     Returns the count of successfully processed_frames."""
 
-    logger.info("process_frames started")
-
     parsers = SatParsers()
 
     processed_frames = 0
     processed_frames_timestamps = {}
     for frame_obj in frames:
         frame_dict = frame_obj.to_dictionary()
-        #logger.info(frame_dict)
         stored, satellite = store_frame_to_influxdb(parsers, frame_dict, link)
-        #logger.info(str(stored) + " " + str(satellite))
         frame_obj.processed = True
         if stored:
             frame_obj.invalid = False
@@ -195,18 +191,14 @@ def store_frame_to_influxdb(parsers: SatParsers, frame: dict, link: str) -> tupl
     """Try to store frame to influxdb.
     Returns True if the frame was successfully stored, False otherwise."""
 
-    #logger.info("store_frame_to_influxdb")
     satellite = get_satellite_from_frame(parsers, frame["frame"])
-    #logger.info("satellite " + str(satellite))
 
     if satellite is None:
-        #logger.warning("invalid %s frame, cannot match satellite: %s", link, frame["frame"])
         return False, satellite
 
     fields_to_save = ["frame", "timestamp", "observer", "frequency", "application", "metadata"]
 
     frame = strip_tlm(frame, fields_to_save)
-    #logger.info("saving " + str(frame))
     stored = save_raw_frame_to_influxdb(satellite, link, frame)
 
     return stored, satellite
@@ -215,13 +207,8 @@ def store_frame_to_influxdb(parsers: SatParsers, frame: dict, link: str) -> tupl
 def get_satellite_from_frame(parsers: SatParsers, frame: str) -> Union[str, None]:
     """Find the corresponding satellite by attempting to parse the frame.
     If the parsing is successful, return the satellite name, else None."""
-    #logger.info("get_satellite_from_frame")
-    #logger.info(type(parsers))
     for sat, parser in parsers.parsers.items():
-        #logger.info(str(sat) + " " + str(parser))
         if parser is not None:
-            #logger.info(parser)
-            #logger.info(type(parser))
             try:
                 parser.processTMFrame(bytes.fromhex(frame))
                 return sat
