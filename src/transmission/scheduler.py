@@ -111,7 +111,7 @@ class Scheduler(metaclass=Singleton):
             logger.info("Scheduler already instantiated")
         else:
             executors = {
-                'default': ThreadPoolExecutor(1),
+                'default': ThreadPoolExecutor(10),
                 # 'processpool': ProcessPoolExecutor(0)
             }
             job_defaults = {
@@ -160,6 +160,24 @@ class Scheduler(metaclass=Singleton):
         # automated processing pipeline:
         # - when a buffer processing task completes that will trigger the raw bucket processing
         # - when a scraper task completes that will trigger the raw bucket processing
+        #if ("buffer_processing" in event.job_id) or ("buffer_reprocessing" in event.job_id):
+        #    for sat in SATELLITES:
+        #        schedule_job("raw_bucket_processing", sat)
+
+        #elif "scraper" in event.job_id:
+        #    for sat in SATELLITES:
+        #        if sat in event.job_id:
+        #            schedule_job("raw_bucket_processing", sat, "downlink")
+
+    def submitted_job_listener(self, event) -> None:
+        """Listens to submitted jobs"""
+        self.running_jobs.add(event.job_id)
+        logger.info("Scheduler submitted job: %s", event.job_id)
+
+
+        # automated processing pipeline:
+        # - when a buffer processing task completes that will trigger the raw bucket processing
+        # - when a scraper task completes that will trigger the raw bucket processing
         if ("buffer_processing" in event.job_id) or ("buffer_reprocessing" in event.job_id):
             for sat in SATELLITES:
                 schedule_job("raw_bucket_processing", sat)
@@ -168,11 +186,6 @@ class Scheduler(metaclass=Singleton):
             for sat in SATELLITES:
                 if sat in event.job_id:
                     schedule_job("raw_bucket_processing", sat, "downlink")
-
-    def submitted_job_listener(self, event) -> None:
-        """Listens to submitted jobs"""
-        self.running_jobs.add(event.job_id)
-        logger.info("Scheduler submitted job: %s", event.job_id)
 
     def get_pending_jobs(self) -> set:
         """Get the ids of the currently scheduled jobs."""
