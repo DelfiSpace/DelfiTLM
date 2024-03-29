@@ -9,20 +9,21 @@ Limitations:
     - reprocess_failed_raw_bucket
 """
 import datetime
+import traceback
 from typing import Callable
 from apscheduler.schedulers.base import STATE_STOPPED, STATE_PAUSED, STATE_RUNNING
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.interval import IntervalTrigger
 from apscheduler.triggers.date import DateTrigger
 from apscheduler.executors.pool import ThreadPoolExecutor
-from apscheduler.events import EVENT_JOB_ADDED, EVENT_JOB_REMOVED, EVENT_JOB_EXECUTED, EVENT_JOB_SUBMITTED
+from apscheduler.events import EVENT_JOB_ADDED, EVENT_JOB_REMOVED, EVENT_JOB_EXECUTED, EVENT_JOB_SUBMITTED, EVENT_JOB_ERROR
 from django.forms import ValidationError
 from django_logger import logger
 from transmission.processing.satellites import SATELLITES
 from transmission.processing.process_raw_bucket import process_raw_bucket
 from transmission.processing.telemetry_scraper import scrape
 from transmission.processing.save_raw_data import process_uplink_and_downlink, reprocess_uplink_and_downlink
-
+from transmission.processing.XTCEParser import XTCEParser, XTCEException
 
 def get_job_id(satellite: str, job_description: str) -> str:
     """Create an id, job description"""
@@ -128,8 +129,11 @@ class Scheduler(metaclass=Singleton):
             self.scheduler.add_listener(self.executed_job_listener, EVENT_JOB_EXECUTED)
             self.scheduler.add_listener(self.add_job_listener, EVENT_JOB_ADDED)
             self.scheduler.add_listener(self.remove_job_listener, EVENT_JOB_REMOVED)
+            self.scheduler.add_listener(self.exception_listener, EVENT_JOB_ERROR)
 
             Scheduler.__instance = self
+
+            XTCEParser.loadGateway();
 
     def get_state(self) -> str:
         """Returns the state of the scheduler: running, paused, shutdown."""
@@ -142,14 +146,19 @@ class Scheduler(metaclass=Singleton):
 
         return ""
 
+    def exception_listener(self, event) -> None:
+        """Listens to newly added jobs"""
+        self.running_jobs.remove(event.job_id)
+        logger.error(traceback.print_tb(event.exception.__traceback__))
+
     def add_job_listener(self, event) -> None:
         """Listens to newly added jobs"""
-        logger.info("Scheduler added job: %s", event.job_id)
+        #logger.info("Scheduler added job: %s", event.job_id)
         self.pending_jobs.add(event.job_id)
 
     def remove_job_listener(self, event) -> None:
         """Listens to removed jobs"""
-        logger.info("Scheduler removed job: %s", event.job_id)
+        #logger.info("Scheduler removed job: %s", event.job_id)
         self.pending_jobs.remove(event.job_id)
 
     def executed_job_listener(self, event) -> None:
@@ -157,23 +166,10 @@ class Scheduler(metaclass=Singleton):
         logger.info("Scheduler executed job: %s", event.job_id)
         self.running_jobs.remove(event.job_id)
 
-        # automated processing pipeline:
-        # - when a buffer processing task completes that will trigger the raw bucket processing
-        # - when a scraper task completes that will trigger the raw bucket processing
-        #if ("buffer_processing" in event.job_id) or ("buffer_reprocessing" in event.job_id):
-        #    for sat in SATELLITES:
-        #        schedule_job("raw_bucket_processing", sat)
-
-        #elif "scraper" in event.job_id:
-        #    for sat in SATELLITES:
-        #        if sat in event.job_id:
-        #            schedule_job("raw_bucket_processing", sat, "downlink")
-
     def submitted_job_listener(self, event) -> None:
         """Listens to submitted jobs"""
-        self.running_jobs.add(event.job_id)
         logger.info("Scheduler submitted job: %s", event.job_id)
-
+        self.running_jobs.add(event.job_id)
 
         # automated processing pipeline:
         # - when a buffer processing task completes that will trigger the raw bucket processing
@@ -182,10 +178,10 @@ class Scheduler(metaclass=Singleton):
             for sat in SATELLITES:
                 schedule_job("raw_bucket_processing", sat)
 
-        elif "scraper" in event.job_id:
-            for sat in SATELLITES:
-                if sat in event.job_id:
-                    schedule_job("raw_bucket_processing", sat, "downlink")
+        #elif "scraper" in event.job_id:
+        #    for sat in SATELLITES:
+        #        if sat in event.job_id:
+        #            schedule_job("raw_bucket_processing", sat, "downlink")
 
     def get_pending_jobs(self) -> set:
         """Get the ids of the currently scheduled jobs."""
