@@ -4,6 +4,7 @@ import re
 import copy
 import json
 from typing import Union
+import time
 
 from django.forms import ValidationError
 from django.core.exceptions import PermissionDenied
@@ -137,39 +138,67 @@ def process_uplink_and_downlink() -> tuple:
     i.e. move them to the influxdb raw satellite data bucket."""
 
     logger.info("Process incoming frames")
-    downlink_frames = Downlink.objects.all().filter(processed=False)
-    downlink_frames_count = process_frames(downlink_frames, "downlink")
+    iterations = 0
 
-    uplink_frames = Uplink.objects.all().filter(processed=False)
-    uplink_frames_count = process_frames(uplink_frames, "uplink")
+    parsers = SatParsers()
 
-    logger.info("Incoming frames processed")
-    return downlink_frames_count, uplink_frames_count
+    # once the last frame has been processed, maintain the task active for
+    # at least 10 seconds while looking for more frames to process
+    while iterations < 50:
+        time.sleep(0.2)
 
+        total_processed_frames = 0
+
+        # set a maximum length to the results to ensure responsive data processing
+        downlink_frames = Downlink.objects.all().filter(processed=False)[:100]
+        downlink_frames_count = process_frames(parsers, downlink_frames, "downlink")
+        total_processed_frames += downlink_frames_count
+
+        # set a maximum length to the results to ensure responsive data processing
+        uplink_frames = Uplink.objects.all().filter(processed=False)[:100]
+        uplink_frames_count = process_frames(parsers, uplink_frames, "uplink")
+        total_processed_frames += uplink_frames_count
+
+        logger.info("Incoming frames processed. Downlink: " + str(downlink_frames_count) + " Uplink: " + str(uplink_frames_count) )
+
+        # one more iteration
+        iterations += 1
+        #logger.info("Frames " + str(total_processed_frames) + " Iterations " + str(iterations))
+
+        if total_processed_frames != 0:
+            # frames were processed in this iteration, reset the iteration counter
+            iterations = 0
+
+    #return downlink_frames_count, uplink_frames_count
+    return 0, 0
 
 def reprocess_uplink_and_downlink() -> tuple:
     """Reprocess all invalid uplink and downlink frames,
     i.e. move them to the influxdb raw satellite data bucket."""
 
     logger.info("Reprocess incoming frames")
+
+    parsers = SatParsers()
+
     downlink_frames = Downlink.objects.all().filter(processed=True).filter(invalid=True)
     logger.info("Downlink count " + str(len(downlink_frames)))
-    downlink_frames_count = process_frames(downlink_frames, "downlink")
+    try:
+        downlink_frames_count = process_frames(parsers, downlink_frames, "downlink")
+    except Exception as _:
+        logger.info(traceback.format_exc())
 
     uplink_frames = Uplink.objects.all().filter(processed=True).filter(invalid=True)
     logger.info("Uplink count " + str(len(uplink_frames)))
-    uplink_frames_count = process_frames(uplink_frames, "uplink")
+    uplink_frames_count = process_frames(parsers, uplink_frames, "uplink")
 
     logger.info("Incoming frames reprocessed")
     return downlink_frames_count, uplink_frames_count
 
 
-def process_frames(frames: QuerySet, link: str) -> int:
+def process_frames(parsers: SatParsers, frames: QuerySet, link: str) -> int:
     """Try to store frame to influxdb and set the processed flag to True
     if a frame was successfully stored in influxdb.
     Returns the count of successfully processed_frames."""
-
-    parsers = SatParsers()
 
     processed_frames = 0
     processed_frames_timestamps = {}
@@ -183,7 +212,6 @@ def process_frames(frames: QuerySet, link: str) -> int:
         else:
             frame_obj.invalid = True
         frame_obj.save()
-
     return processed_frames
 
 
