@@ -2,6 +2,7 @@
 from datetime import datetime, timedelta
 import json
 import os
+import traceback
 from django.core.exceptions import PermissionDenied
 from django.core.serializers.json import DjangoJSONEncoder
 from django.http.response import JsonResponse
@@ -10,9 +11,8 @@ from pycrowdsec.client import StreamClient
 from skyfield.api import load, EarthSatellite, wgs84, Topos
 from satellite_tle import fetch_tle_from_celestrak
 from transmission.processing.satellites import SATELLITES, TIME_FORMAT
-from transmission.processing.influxdb_api import get_last_received_frame 
+from transmission.processing.influxdb_api import get_last_received_frame
 from django_logger import logger
-import traceback
 
 #pylint: disable=W0718
 def get_tle(norad_id: str):
@@ -73,7 +73,8 @@ def get_satellite_location_now(norad_id: str) -> dict:
     eph = load('de421.bsp')
     sunlit = satellite.at(time).is_sunlit(eph)
 
-    return {"satellite": str(tle[0]), "norad_id": norad_id, "latitude": lat_deg, "longitude": lon_deg, "sunlit": int(sunlit)}
+    return {"satellite": str(tle[0]), "norad_id": norad_id, "latitude": lat_deg, "longitude": lon_deg, 
+            "sunlit": int(sunlit)}
 
 
 def get_next_pass_over_delft(request, norad_id: str):
@@ -121,13 +122,13 @@ def _get_satellites_status():
     for sat, info in SATELLITES.items():
         sats_status[str(sat + "_status")] = info["status"]
         last_rx_time = get_last_received_frame(sat)
-        if last_rx_time is not None and type(last_rx_time) is datetime:
-            sats_status[str(sat + "_last_data")] = last_rx_time#.strftime('%m %d %Y %H:%M:%S UTC')
+        if last_rx_time is not None and isinstance(last_rx_time, datetime):
+            sats_status[str(sat + "_last_data")] = last_rx_time
         else:
             sats_status[str(sat + "_last_data")] = None
 
-        if info["launch"] is not None: 
-            launch_time = datetime.strptime(info["launch"], '%Y-%m-%dT%H:%M:%S.%fZ')#.strftime('%M %d%S %Y')
+        if info["launch"] is not None:
+            launch_time = datetime.strptime(info["launch"], '%Y-%m-%dT%H:%M:%S.%fZ')
             sats_status[str(sat + "_launch")] = launch_time
         else:
             sats_status[str(sat + "_launch")] = None
@@ -148,7 +149,7 @@ def home(request):
     try:
         context = _get_satellites_status()
         return render(request, "home/index.html", context)
-    except Exception as e:
+    except Exception as _:
         logger.error(traceback.format_exc())
     return render(request, "home/index.html", context)
 
