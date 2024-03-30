@@ -7,7 +7,6 @@ from django.contrib.auth import authenticate, login
 from django.http import HttpRequest, SimpleCookie
 from django.urls import reverse
 from transmission.models import Downlink, Satellite, Uplink
-from transmission.processing.bookkeep_new_data_time_range import combine_time_ranges
 from transmission.processing.satellites import SATELLITES
 from transmission.processing.save_raw_data import store_frames
 from transmission.views import submit_frame, submit_job, modify_scheduler
@@ -338,9 +337,6 @@ class TestTableViews(TestCase):
         Satellite.objects.create(sat='delfic3', norad_id=1).save()
 
     def tearDown(self):
-        for sat in SATELLITES:
-            combine_time_ranges(sat, 'uplink')
-            combine_time_ranges(sat, 'downlink')
         self.client.logout()
 
     def test_requested_tables(self):
@@ -398,10 +394,6 @@ class TestSubmitFrames(TestCase):
         Satellite.objects.create(sat='delfic3', norad_id=1).save()
 
     def tearDown(self):
-        for sat in SATELLITES:
-            combine_time_ranges(sat, 'uplink')
-            combine_time_ranges(sat, 'downlink')
-
         self.client.logout()
 
     def test_submit_get_request_not_allowed(self):

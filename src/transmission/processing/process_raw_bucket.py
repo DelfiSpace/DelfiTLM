@@ -4,7 +4,6 @@ import time
 import traceback
 from transmission.processing.XTCEParser import SatParsers, XTCEException
 from django_logger import logger
-import transmission.processing.bookkeep_new_data_time_range as time_range
 from transmission.processing.influxdb_api import INFLUX_ORG, commit_frame, \
     get_influx_db_read_and_query_api, write_frame_to_raw_bucket
 
@@ -21,9 +20,6 @@ def store_raw_frame(satellite: str, timestamp: str, frame: str, observer: str, l
     }
 
     stored = commit_frame(write_api, query_api, satellite, link, frame_fields)
-    if stored:
-        file = time_range.get_new_data_file_path(satellite, link)
-        time_range.include_timestamp_in_time_range(satellite, link, timestamp, file)
     return stored
 
 

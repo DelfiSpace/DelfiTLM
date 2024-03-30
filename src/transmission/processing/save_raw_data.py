@@ -17,8 +17,6 @@ from django_logger import logger
 from members.models import Member
 from transmission.models import Uplink, Downlink, TLE, Satellite
 from transmission.processing.XTCEParser import SatParsers, XTCEException
-from transmission.processing.bookkeep_new_data_time_range import get_new_data_buffer_temp_folder, \
-    include_timestamp_in_time_range, save_timestamps_to_file
 from transmission.processing.influxdb_api import save_raw_frame_to_influxdb
 from transmission.processing.telemetry_scraper import strip_tlm
 import traceback

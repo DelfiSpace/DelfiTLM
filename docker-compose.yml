@@ -23,7 +23,6 @@ services:
     build:
         context: .
     volumes:
-      - ./src/transmission/processing/temp/:/app/transmission/processing/temp/
       - ./src/home/temp/:/app/home/temp/
     environment:
         - ALLOWED_HOSTS=${ALLOWED_HOSTS:-localhost,127.0.0.1}

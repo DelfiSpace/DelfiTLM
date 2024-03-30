@@ -40,8 +40,6 @@ RUN mkdir /var/log/django
 RUN chown -R user:user /app
 RUN chmod -R 755 /var/log/django
 
-RUN chown -R user:user /app/transmission/processing/temp
-RUN chmod -R 755 /app/transmission/processing/temp
 RUN chown -R user:user /app/home/temp
 RUN chmod -R 755 /app/home/temp
 

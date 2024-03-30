@@ -8,8 +8,6 @@ import requests
 
 from django_logger import logger
 from transmission.processing.satellites import SATELLITES, TIME_FORMAT
-from transmission.processing.bookkeep_new_data_time_range import get_new_data_scraper_temp_folder, \
-    include_timestamp_in_time_range, save_timestamps_to_file
 from transmission.processing.influxdb_api import save_raw_frame_to_influxdb
 
 SATNOGS_PATH = "https://db.satnogs.org/api/telemetry/"
