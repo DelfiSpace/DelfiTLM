@@ -149,7 +149,8 @@ class Scheduler(metaclass=Singleton):
     def exception_listener(self, event) -> None:
         """Listens to newly added jobs"""
         self.running_jobs.remove(event.job_id)
-        logger.error(traceback.print_tb(event.exception.__traceback__))
+        logger.info("Terminated job: %s", event.job_id)
+        logger.error(event.traceback)
 
     def add_job_listener(self, event) -> None:
         """Listens to newly added jobs"""
@@ -163,12 +164,12 @@ class Scheduler(metaclass=Singleton):
 
     def executed_job_listener(self, event) -> None:
         """Listens to executed jobs"""
-        logger.info("Scheduler executed job: %s", event.job_id)
+        logger.info("Executed job: %s", event.job_id)
         self.running_jobs.remove(event.job_id)
 
     def submitted_job_listener(self, event) -> None:
         """Listens to submitted jobs"""
-        logger.info("Scheduler submitted job: %s", event.job_id)
+        logger.info("Started job: %s", event.job_id)
         self.running_jobs.add(event.job_id)
 
         # automated processing pipeline:

@@ -62,10 +62,15 @@ def parse_and_store_frame(parsers: SatParsers, satellite: str, timestamp: str, f
             except ValueError:
                 pass
 
-            db_fields["fields"][field] = value
-            db_fields["tags"]["status"] = status
+            try:
+                db_fields["fields"][field] = value
+                db_fields["tags"]["status"] = status
 
-            write_api.write(bucket, INFLUX_ORG, db_fields)
+                write_api.write(bucket, INFLUX_ORG, db_fields)
+            except :
+                logger.info(db_fields)
+                raise
+
             db_fields["fields"] = {}
             db_fields["tags"] = {}
 
@@ -137,8 +142,17 @@ def process_retrieved_frames(parsers: SatParsers, satellite: str, link: str, sta
             mark_invalid_flag(satellite, link, row["_time"], False)
             processed_frames_count += 1
 
-        except xtce_parser.XTCEException as ex:
+        except XTCEException as ex:
             logger.error("%s: frame processing error: %s (%s)", satellite, ex, row["frame"])
+            # mark raw frame as processed
+            mark_processed_flag(satellite, link, row["_time"], True)
+            # mark frame as invalid
+            mark_invalid_flag(satellite, link, row["_time"], True)
+            failed_processing_count += 1
+
+        except Exception as ex:
+            logger.error("%s: frame storage error: %s (%s)", satellite, ex, row["frame"])
+            logger.error(traceback.format_exc())
             # mark raw frame as processed
             mark_processed_flag(satellite, link, row["_time"], True)
             # mark frame as invalid
