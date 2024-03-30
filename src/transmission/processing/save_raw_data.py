@@ -135,7 +135,6 @@ def process_uplink_and_downlink() -> tuple:
     """Process all unprocessed uplink and downlink frames,
     i.e. move them to the influxdb raw satellite data bucket."""
 
-    logger.info("Process incoming frames")
     iterations = 0
 
     parsers = SatParsers()
@@ -157,11 +156,8 @@ def process_uplink_and_downlink() -> tuple:
         uplink_frames_count = process_frames(parsers, uplink_frames, "uplink")
         total_processed_frames += uplink_frames_count
 
-        logger.info("Incoming frames processed. Downlink: " + str(downlink_frames_count) + " Uplink: " + str(uplink_frames_count) )
-
         # one more iteration
         iterations += 1
-        #logger.info("Frames " + str(total_processed_frames) + " Iterations " + str(iterations))
 
         if total_processed_frames != 0:
             # frames were processed in this iteration, reset the iteration counter

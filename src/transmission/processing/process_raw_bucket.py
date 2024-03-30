@@ -27,7 +27,7 @@ def parse_and_store_frame(parsers: SatParsers, satellite: str, timestamp: str, f
     """Store parsed frame in influxdb"""
 
     parser = parsers.parsers[satellite]
-    #logger.debug("%s: frame: %s", satellite, frame)
+
     telemetry = parser.processTMFrame(bytes.fromhex(frame))
     bucket = satellite + "_" + link
 
@@ -69,9 +69,6 @@ def parse_and_store_frame(parsers: SatParsers, satellite: str, timestamp: str, f
 
             db_fields["fields"] = {}
             db_fields["tags"] = {}
-
-        #logger.info("%s: processed frame stored. Frame timestamp: %s, link: %s, bucket: %s",
-        #            satellite, timestamp, link, bucket)
 
 
 def mark_processed_flag(satellite: str, link: str, timestamp: str, value: bool) -> None:
@@ -185,7 +182,6 @@ def process_raw_bucket(satellite: str, link: str = None, all_frames: bool = Fals
 
         # one more iteration
         iterations += 1
-        logger.info("Frames " + str(total_processed_frames) + " Iterations " + str(iterations))
 
         if total_processed_frames != 0:
             # frames were processed in this iteration, reset the iteration counter
