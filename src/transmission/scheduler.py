@@ -22,7 +22,7 @@ from django_logger import logger
 from transmission.processing.satellites import SATELLITES
 from transmission.processing.process_raw_bucket import process_raw_bucket
 from transmission.processing.telemetry_scraper import scrape
-from transmission.processing.save_raw_data import process_uplink_and_downlink, reprocess_uplink_and_downlink
+from transmission.processing.save_raw_data import process_uplink_and_downlink
 from transmission.processing.XTCEParser import XTCEParser, XTCEException
 
 def get_job_id(satellite: str, job_description: str) -> str:
@@ -47,14 +47,14 @@ def schedule_job(job_type: str, satellite: str = None, link: str = None,
         scheduler.add_job_to_schedule(scrape, args, job_id, date, interval)
 
     elif job_type == "buffer_processing":
-        args = []
+        args = [False]
         job_id = job_type
         scheduler.add_job_to_schedule(process_uplink_and_downlink, args, job_id, date, interval)
 
     elif job_type == "buffer_reprocessing":
-        args = []
+        args = [True]
         job_id = job_type
-        scheduler.add_job_to_schedule(reprocess_uplink_and_downlink, args, job_id, date, interval)
+        scheduler.add_job_to_schedule(process_uplink_and_downlink, args, job_id, date, interval)
 
     elif job_type == "raw_bucket_processing" and satellite in SATELLITES:
         args = [satellite, link]

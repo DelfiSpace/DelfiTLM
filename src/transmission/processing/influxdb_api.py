@@ -3,7 +3,6 @@ from datetime import datetime, timedelta
 import os
 from influxdb_client import InfluxDBClient
 from influxdb_client.client.write_api import SYNCHRONOUS
-import traceback
 
 from transmission.processing.satellites import TIME_FORMAT
 from django_logger import logger
@@ -108,18 +107,17 @@ def get_last_received_frame(satellite: str):
     bucket = satellite + "_raw_data"
 
     query = f'''from(bucket: "{bucket}")
-    |> range(start: -15y)
+    |> range(start: 0)
     |> filter(fn: (r) => r["_measurement"] == "{satellite + "_downlink_raw_data"}")
     |> filter(fn: (r) => r["_field"] == "timestamp")
     |> tail(n: 1)
     '''
     
-    try:
-       ret = query_api.query(query=query)
+    ret = query_api.query(query=query)
 
-       for table in ret:
-           return datetime.strptime(table.records[0]["_value"], '%Y-%m-%dT%H:%M:%SZ')
+    if len(ret) > 0:
+        return datetime.strptime(ret[0].records[0]["_value"], '%Y-%m-%dT%H:%M:%SZ')
+    else:
+        # no result
+        return None
 
-    except:
-        e = traceback.format_exc()
-        logger.error(e)

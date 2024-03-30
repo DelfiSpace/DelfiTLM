@@ -84,7 +84,6 @@ def scrape(satellite: str, save_to_db=True, save_to_file=False) -> None:
             logger.info(last)
             first = telemetry_tmp[0]
             logger.info(first)
-            logger.info(sate_to_db)
 
             # concatenate telemetry
             telemetry = telemetry + telemetry_tmp
@@ -96,11 +95,7 @@ def scrape(satellite: str, save_to_db=True, save_to_file=False) -> None:
             if save_to_db:
                 fields_to_save = ["frame", "timestamp", "observer"]
                 stripped_tlm = strip_tlm_list(telemetry_tmp, fields_to_save)
-                if save_raw_frame_to_influxdb(satellite, "downlink", stripped_tlm):
-                    time_range = include_timestamp_in_time_range(satellite, 'downlink',
-                                                                 first["timestamp"], existing_range=time_range)
-                    time_range = include_timestamp_in_time_range(satellite, 'downlink',
-                                                                 last["timestamp"], existing_range=time_range)
+                save_raw_frame_to_influxdb(satellite, "downlink", stripped_tlm)
 
                 # if the frame is not stored (due to it being stored in a past scrape) and
                 # the next request retrieves data older than a week -> stop
@@ -119,9 +114,6 @@ def scrape(satellite: str, save_to_db=True, save_to_file=False) -> None:
                     delay = re.findall('[0-9]+', telemetry_tmp["detail"])[0]
                     logger.info("Sleeping %s s (request throttled)", delay)
                     time.sleep(int(delay))
-                    path = get_new_data_scraper_temp_folder(satellite)
-                    path += satellite + "_downlink_" + str(len(os.listdir(path))) + ".json"
-                    save_timestamps_to_file(time_range, path)
                 else:
                     break
             else:

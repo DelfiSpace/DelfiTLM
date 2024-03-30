@@ -5,6 +5,7 @@ import copy
 import json
 from typing import Union
 import time
+from datetime import timezone
 
 from django.forms import ValidationError
 from django.core.exceptions import PermissionDenied
@@ -12,7 +13,6 @@ from django.db import models
 from django.db.models.query import QuerySet
 from django.utils.dateparse import parse_datetime
 from skyfield.api import load, EarthSatellite
-from datetime import timezone
 from django_logger import logger
 from members.models import Member
 from transmission.models import Uplink, Downlink, TLE, Satellite
@@ -131,9 +131,12 @@ def parse_submitted_frame(frame: dict, frame_entry: models.Model) -> models.Mode
     return frame_entry
 
 
-def process_uplink_and_downlink() -> tuple:
-    """Process all unprocessed uplink and downlink frames,
-    i.e. move them to the influxdb raw satellite data bucket."""
+def process_uplink_and_downlink(invalid_frames: bool = False) -> tuple:
+    """Process all processed uplink and downlink frames,
+    i.e. move them to the influxdb raw satellite data bucket.
+    if invalid_frames is false, only new frames are processed. If 
+    invalid_frames is true, only frames already marked as invalid 
+    will be processed."""
 
     iterations = 0
 
@@ -146,15 +149,18 @@ def process_uplink_and_downlink() -> tuple:
 
         total_processed_frames = 0
 
-        # set a maximum length to the results to ensure responsive data processing
-        downlink_frames = Downlink.objects.all().filter(processed=False)[:100]
-        downlink_frames_count = process_frames(parsers, downlink_frames, "downlink")
-        total_processed_frames += downlink_frames_count
+        if not invalid_frames:
+            # set a maximum length to the results to ensure responsive data processing
+            downlink_frames = Downlink.objects.all().filter(processed=False)[:100]
+            uplink_frames = Uplink.objects.all().filter(processed=False)[:100]
+        else:
+            # set a maximum length to the results to ensure responsive data processing
+            downlink_frames = Downlink.objects.all().filter(processed=True).filter(invalid=True)[:100]
+            uplink_frames = Uplink.objects.all().filter(processed=True).filter(invalid=True)[:100]
 
-        # set a maximum length to the results to ensure responsive data processing
-        uplink_frames = Uplink.objects.all().filter(processed=False)[:100]
+        downlink_frames_count = process_frames(parsers, downlink_frames, "downlink")
         uplink_frames_count = process_frames(parsers, uplink_frames, "uplink")
-        total_processed_frames += uplink_frames_count
+        total_processed_frames += downlink_frames_count + uplink_frames_count
 
         # one more iteration
         iterations += 1
@@ -166,28 +172,6 @@ def process_uplink_and_downlink() -> tuple:
     #return downlink_frames_count, uplink_frames_count
     return 0, 0
 
-def reprocess_uplink_and_downlink() -> tuple:
-    """Reprocess all invalid uplink and downlink frames,
-    i.e. move them to the influxdb raw satellite data bucket."""
-
-    logger.info("Reprocess incoming frames")
-
-    parsers = SatParsers()
-
-    downlink_frames = Downlink.objects.all().filter(processed=True).filter(invalid=True)
-    logger.info("Downlink count " + str(len(downlink_frames)))
-    try:
-        downlink_frames_count = process_frames(parsers, downlink_frames, "downlink")
-    except Exception as _:
-        logger.info(traceback.format_exc())
-
-    uplink_frames = Uplink.objects.all().filter(processed=True).filter(invalid=True)
-    logger.info("Uplink count " + str(len(uplink_frames)))
-    uplink_frames_count = process_frames(parsers, uplink_frames, "uplink")
-
-    logger.info("Incoming frames reprocessed")
-    return downlink_frames_count, uplink_frames_count
-
 
 def process_frames(parsers: SatParsers, frames: QuerySet, link: str) -> int:
     """Try to store frame to influxdb and set the processed flag to True
@@ -195,7 +179,6 @@ def process_frames(parsers: SatParsers, frames: QuerySet, link: str) -> int:
     Returns the count of successfully processed_frames."""
 
     processed_frames = 0
-    processed_frames_timestamps = {}
     for frame_obj in frames:
         frame_dict = frame_obj.to_dictionary()
         stored, satellite = store_frame_to_influxdb(parsers, frame_dict, link)
