@@ -73,7 +73,7 @@ def get_satellite_location_now(norad_id: str) -> dict:
     eph = load('de421.bsp')
     sunlit = satellite.at(time).is_sunlit(eph)
 
-    return {"satellite": str(tle[0]), "norad_id": norad_id, "latitude": lat_deg, "longitude": lon_deg, 
+    return {"satellite": str(tle[0]), "norad_id": norad_id, "latitude": lat_deg, "longitude": lon_deg,
             "sunlit": int(sunlit)}
 
 

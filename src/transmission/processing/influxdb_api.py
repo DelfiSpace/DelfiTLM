@@ -105,7 +105,9 @@ def get_last_received_frame(satellite: str):
     """Retrieve the last received frame for the specified satellite from the raw 
     data bucket."""
 
-    [write_api, query_api] = get_influx_db_read_and_query_api()
+    client = get_influxdb_client()
+    query_api = client.query_api()
+
     bucket = satellite + "_raw_data"
 
     query = f'''from(bucket: "{bucket}")
@@ -118,7 +120,8 @@ def get_last_received_frame(satellite: str):
     ret = query_api.query(query=query)
 
     if len(ret) > 0:
+        # data received found in bucket
         return datetime.strptime(ret[0].records[0]["_value"], '%Y-%m-%dT%H:%M:%SZ')
-    else:
-        # no result
-        return None
+    
+    # no result
+    return None

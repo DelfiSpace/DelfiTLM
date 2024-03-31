@@ -1,5 +1,4 @@
 """Scripts for saving the frames into the database"""
-import os
 import re
 import copy
 import json
@@ -13,13 +12,11 @@ from django.db import models
 from django.db.models.query import QuerySet
 from django.utils.dateparse import parse_datetime
 from skyfield.api import load, EarthSatellite
-from django_logger import logger
 from members.models import Member
 from transmission.models import Uplink, Downlink, TLE, Satellite
 from transmission.processing.XTCEParser import SatParsers, XTCEException
 from transmission.processing.influxdb_api import save_raw_frame_to_influxdb
 from transmission.processing.telemetry_scraper import strip_tlm
-import traceback
 
 
 def store_frames(frames, username: str, application: str = None) -> int:

@@ -3,11 +3,9 @@ import string
 import time
 import traceback
 from transmission.processing.XTCEParser import SatParsers, XTCEException
-from django_logger import logger
 from transmission.processing.influxdb_api import INFLUX_ORG, commit_frame, \
     get_influx_db_read_and_query_api, write_frame_to_raw_bucket
-
-write_api, query_api = get_influx_db_read_and_query_api()
+from django_logger import logger
 
 
 def store_raw_frame(satellite: str, timestamp: str, frame: str, observer: str, link: str) -> bool:
@@ -173,12 +171,12 @@ def process_raw_bucket(satellite: str, link: str = None, all_frames: bool = Fals
         if link in ["uplink", "downlink"]:
             processed_frames_count = _process_raw_bucket(parsers, satellite,
                     link, all_frames, failed)
-            total_processed_frames += processed_frames_count 
+            total_processed_frames += processed_frames_count
         else:
             processed_frames_count = _process_raw_bucket(parsers, satellite,
                     "uplink", all_frames, failed)
             total_processed_frames += processed_frames_count
-            processed_frames_count = _process_raw_bucket(parsers, satellite, 
+            processed_frames_count = _process_raw_bucket(parsers, satellite,
                     "downlink", all_frames, failed)
             total_processed_frames += processed_frames_count
 
