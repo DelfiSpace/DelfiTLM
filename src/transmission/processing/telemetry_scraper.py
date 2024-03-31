@@ -66,7 +66,6 @@ def scrape(satellite: str, save_to_db=True, save_to_file=False) -> None:
     telemetry = []
     telemetry_tmp = []
     logger.info("SatNOGS scraper started. Scraping %s telemetry.", satellite)
-    time_range = {}
     while True:
         logger.info(get_satnogs_params(satellite))
         response = requests.get(

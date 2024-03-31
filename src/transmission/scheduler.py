@@ -9,21 +9,21 @@ Limitations:
     - reprocess_failed_raw_bucket
 """
 import datetime
-import traceback
 from typing import Callable
 from apscheduler.schedulers.base import STATE_STOPPED, STATE_PAUSED, STATE_RUNNING
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.interval import IntervalTrigger
 from apscheduler.triggers.date import DateTrigger
 from apscheduler.executors.pool import ThreadPoolExecutor
-from apscheduler.events import EVENT_JOB_ADDED, EVENT_JOB_REMOVED, EVENT_JOB_EXECUTED, EVENT_JOB_SUBMITTED, EVENT_JOB_ERROR
+from apscheduler.events import EVENT_JOB_ADDED, EVENT_JOB_REMOVED, EVENT_JOB_EXECUTED, 
+    EVENT_JOB_SUBMITTED, EVENT_JOB_ERROR
 from django.forms import ValidationError
 from django_logger import logger
 from transmission.processing.satellites import SATELLITES
 from transmission.processing.process_raw_bucket import process_raw_bucket
 from transmission.processing.telemetry_scraper import scrape
 from transmission.processing.save_raw_data import process_uplink_and_downlink
-from transmission.processing.XTCEParser import XTCEParser, XTCEException
+from transmission.processing.XTCEParser import XTCEParser
 
 def get_job_id(satellite: str, job_description: str) -> str:
     """Create an id, job description"""
@@ -133,7 +133,9 @@ class Scheduler(metaclass=Singleton):
 
             Scheduler.__instance = self
 
-            XTCEParser.loadGateway();
+            # TODO not very nice to start it here, but this class is a singleton and 
+            # in ensures the gateway is loaded only once
+            XTCEParser.loadGateway()
 
     def get_state(self) -> str:
         """Returns the state of the scheduler: running, paused, shutdown."""

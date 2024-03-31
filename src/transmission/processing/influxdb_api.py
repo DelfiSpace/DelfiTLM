@@ -5,7 +5,6 @@ from influxdb_client import InfluxDBClient
 from influxdb_client.client.write_api import SYNCHRONOUS
 
 from transmission.processing.satellites import TIME_FORMAT
-from django_logger import logger
 
 INFLUXDB_URL = "http://influxdb:8086"
 INFLUX_ORG = os.environ.get('INFLUXDB_V2_ORG', 'DelfiSpace')
@@ -103,6 +102,9 @@ def save_raw_frame_to_influxdb(satellite: str, link: str, telemetry) -> bool:
     return stored
 
 def get_last_received_frame(satellite: str):
+    """Retrieve the last received frame for the specified satellite from the raw 
+    data bucket."""
+
     [write_api, query_api] = get_influx_db_read_and_query_api()
     bucket = satellite + "_raw_data"
 
@@ -112,7 +114,7 @@ def get_last_received_frame(satellite: str):
     |> filter(fn: (r) => r["_field"] == "timestamp")
     |> tail(n: 1)
     '''
-    
+
     ret = query_api.query(query=query)
 
     if len(ret) > 0:
@@ -120,4 +122,3 @@ def get_last_received_frame(satellite: str):
     else:
         # no result
         return None
-

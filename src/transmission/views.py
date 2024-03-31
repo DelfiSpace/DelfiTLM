@@ -1,5 +1,5 @@
 """API request handling. Map requests to the corresponding HTMLs."""
-from datetime import timedelta, datetime
+from datetime import datetime
 from http import HTTPStatus
 import json
 from json.decoder import JSONDecodeError

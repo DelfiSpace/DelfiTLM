@@ -23,7 +23,8 @@ def store_raw_frame(satellite: str, timestamp: str, frame: str, observer: str, l
     return stored
 
 
-def parse_and_store_frame(parsers: SatParsers, satellite: str, timestamp: str, frame: str, observer: str, link: str) -> None:
+def parse_and_store_frame(parsers: SatParsers, satellite: str, timestamp: str, frame: str,
+        observer: str, link: str) -> None:
     """Store parsed frame in influxdb"""
 
     parser = parsers.parsers[satellite]
@@ -105,15 +106,13 @@ def process_retrieved_frames(parsers: SatParsers, satellite: str, link: str, sta
         |> pivot(rowKey:["_time"], columnKey: ["_field"], valueColumn: "_value")
         '''
 
-    if skip_processed == True:
-        get_unprocessed_frames_query = get_unprocessed_frames_query + f'''
-        |> filter(fn: (r) => r["processed"] == false)
-        '''
+    if skip_processed:
+        get_unprocessed_frames_query = get_unprocessed_frames_query + \
+        "|> filter(fn: (r) => r[\"processed\"] == false)"
 
     # limit the maximum numbr of frames processed per round
-    get_unprocessed_frames_query = get_unprocessed_frames_query + f'''
-        |> limit(n:100, offset: 0)
-        '''
+    get_unprocessed_frames_query = get_unprocessed_frames_query + \
+        "|> limit(n:100, offset: 0)"
 
     # query result as dataframe
     dataframe = query_api.query_data_frame(query=get_unprocessed_frames_query)
@@ -158,7 +157,7 @@ def process_retrieved_frames(parsers: SatParsers, satellite: str, link: str, sta
 def process_raw_bucket(satellite: str, link: str = None, all_frames: bool = False, failed: bool = False):
     """Trigger bucket processing or reprocessing given satellite."""
     # if link is None process both uplink and downlink, otherwise process only specified link
-   
+
     total_processed_frames = 0
     iterations = 0
 
@@ -168,16 +167,19 @@ def process_raw_bucket(satellite: str, link: str = None, all_frames: bool = Fals
     # at least 10 seconds while looking for more frames to process
     while iterations < 50:
         time.sleep(0.2)
-    
+
         total_processed_frames = 0
 
         if link in ["uplink", "downlink"]:
-            processed_frames_count, total_frames_count = _process_raw_bucket(parsers, satellite, link, all_frames, failed)
+            processed_frames_count = _process_raw_bucket(parsers, satellite,
+                    link, all_frames, failed)
             total_processed_frames += processed_frames_count 
         else:
-            processed_frames_count, total_frames_count = _process_raw_bucket(parsers, satellite, "uplink", all_frames, failed)
+            processed_frames_count = _process_raw_bucket(parsers, satellite,
+                    "uplink", all_frames, failed)
             total_processed_frames += processed_frames_count
-            processed_frames_count, total_frames_count = _process_raw_bucket(parsers, satellite, "downlink", all_frames, failed)
+            processed_frames_count = _process_raw_bucket(parsers, satellite, 
+                    "downlink", all_frames, failed)
             total_processed_frames += processed_frames_count
 
         # one more iteration
@@ -196,11 +198,5 @@ def _process_raw_bucket(parsers: SatParsers, satellite: str, link: str, all_fram
     # process the entire bucket
     if all_frames:
         return process_retrieved_frames(parsers, satellite, link, "0", "now()", skip_processed=False)
-    else:
-        return process_retrieved_frames(parsers, satellite, link, "0", "now()", skip_processed=True)
 
-    processed_frames_count = 0
-    total_frames_count = 0
-
-    return processed_frames_count, total_frames_count
-
+    return process_retrieved_frames(parsers, satellite, link, "0", "now()", skip_processed=True)
