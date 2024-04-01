@@ -7,6 +7,7 @@ from transmission.processing.influxdb_api import INFLUX_ORG, commit_frame, \
     get_influx_db_read_and_query_api, write_frame_to_raw_bucket
 from django_logger import logger
 
+write_api, query_api = get_influx_db_read_and_query_api()
 
 def store_raw_frame(satellite: str, timestamp: str, frame: str, observer: str, link: str) -> bool:
     """Store raw unprocessed frame in influxdb"""
@@ -82,7 +83,7 @@ def mark_invalid_flag(satellite: str, link: str, timestamp: str, value: bool) ->
 
 # pylint: disable=R0914
 def process_retrieved_frames(parsers: SatParsers, satellite: str, link: str, start_time: str, end_time: str,
-                             skip_processed: bool = True) -> tuple:
+                             skip_processed: bool = True) -> int:
     """Parse frames, store the parsed form and mark the raw entry as processed.
     Return the total number of frames attempting to process and
     how many frames were successfully processed.
@@ -116,13 +117,10 @@ def process_retrieved_frames(parsers: SatParsers, satellite: str, link: str, sta
     dataframe = query_api.query_data_frame(query=get_unprocessed_frames_query)
     dataframe = dataframe.reset_index()
 
-    failed_processing_count = 0
     processed_frames_count = 0
-    total_frames_count = 0
 
     # process each frame
     for _, row in dataframe.iterrows():
-        total_frames_count += 1
         try:
             # store processed frame
             parse_and_store_frame(parsers, satellite, row["_time"], row["frame"], row[radio_amateur], link)
@@ -138,18 +136,20 @@ def process_retrieved_frames(parsers: SatParsers, satellite: str, link: str, sta
             mark_processed_flag(satellite, link, row["_time"], True)
             # mark frame as invalid
             mark_invalid_flag(satellite, link, row["_time"], True)
-            failed_processing_count += 1
 
-        except Exception as ex:
+        # indeed a very broad exception, but it keeps the processor running in case of rogue frames
+        except Exception as ex:       # pylint: disable=broad-except
             logger.error("%s: frame storage error: %s (%s)", satellite, ex, row["frame"])
             logger.error(traceback.format_exc())
+            logger.info("Problematic frame: " + str(row["_time"]) + " " + str(row["frame"]) + 
+                    " " +  str(row[radio_amateur]) + " " + str(link))
+            logger.info(row)
             # mark raw frame as processed
             mark_processed_flag(satellite, link, row["_time"], True)
             # mark frame as invalid
             mark_invalid_flag(satellite, link, row["_time"], True)
-            failed_processing_count += 1
 
-    return processed_frames_count, total_frames_count
+    return processed_frames_count
 
 
 def process_raw_bucket(satellite: str, link: str = None, all_frames: bool = False, failed: bool = False):
@@ -173,10 +173,10 @@ def process_raw_bucket(satellite: str, link: str = None, all_frames: bool = Fals
                     link, all_frames, failed)
             total_processed_frames += processed_frames_count
         else:
-            processed_frames_count = _process_raw_bucket(parsers, satellite,
+            processed_frames_count = _process_raw_bucket(parsers, satellite, \
                     "uplink", all_frames, failed)
             total_processed_frames += processed_frames_count
-            processed_frames_count = _process_raw_bucket(parsers, satellite,
+            processed_frames_count = _process_raw_bucket(parsers, satellite, \
                     "downlink", all_frames, failed)
             total_processed_frames += processed_frames_count
 
@@ -188,7 +188,7 @@ def process_raw_bucket(satellite: str, link: str = None, all_frames: bool = Fals
             iterations = 0
 
 
-def _process_raw_bucket(parsers: SatParsers, satellite: str, link: str, all_frames: bool, failed: bool) -> tuple:
+def _process_raw_bucket(parsers: SatParsers, satellite: str, link: str, all_frames: bool, failed: bool) -> int:
     """Trigger bucket processing given satellite and link.
     all_frames=True will process the entire bucket and failed=True will process only failed frames.
     When both flags are True all frames will be processed."""
