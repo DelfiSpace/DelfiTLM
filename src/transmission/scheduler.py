@@ -33,6 +33,21 @@ def get_job_id(satellite: str, job_description: str) -> str:
 
     return satellite + "_" + job_description
 
+
+def raw_bucket_processing_trigger_callback(satellites_list):
+    """Trigger raw bucket processing tasks. This callback is called when the buffer
+    processor finishes processing one block of frames."""
+
+    # retrieve the current scheduler instance
+    scheduler = Scheduler()
+
+    for satellite in satellites_list:
+        args = [satellite]
+        job_id = get_job_id(satellite, "raw_bucket_processing")
+        # add a new job to the execution list
+        scheduler.add_job_to_schedule(process_raw_bucket, args, job_id)
+
+
 def schedule_job(job_type: str, satellite: str = None, link: str = None,
                  date: datetime = None, interval: int = None) -> None:
     """Schedule job for a specified satellite and/or link.
@@ -47,12 +62,14 @@ def schedule_job(job_type: str, satellite: str = None, link: str = None,
         scheduler.add_job_to_schedule(scrape, args, job_id, date, interval)
 
     elif job_type == "buffer_processing":
-        args = [False]
+        # process new frames. Add the trigger callback for start the raw bucket processing tasks
+        args = [False, raw_bucket_processing_trigger_callback]
         job_id = job_type
         scheduler.add_job_to_schedule(process_uplink_and_downlink, args, job_id, date, interval)
 
     elif job_type == "buffer_reprocessing":
-        args = [True]
+        # re-process failed frames. Add the trigger callback for start the raw bucket processing tasks
+        args = [True, raw_bucket_processing_trigger_callback]
         job_id = job_type
         scheduler.add_job_to_schedule(process_uplink_and_downlink, args, job_id, date, interval)
 
@@ -113,7 +130,6 @@ class Scheduler(metaclass=Singleton):
         else:
             executors = {
                 'default': ThreadPoolExecutor(10),
-                # 'processpool': ProcessPoolExecutor(0)
             }
             job_defaults = {
                 'coalesce': True,
@@ -156,12 +172,10 @@ class Scheduler(metaclass=Singleton):
 
     def add_job_listener(self, event) -> None:
         """Listens to newly added jobs"""
-        #logger.info("Scheduler added job: %s", event.job_id)
         self.pending_jobs.add(event.job_id)
 
     def remove_job_listener(self, event) -> None:
         """Listens to removed jobs"""
-        #logger.info("Scheduler removed job: %s", event.job_id)
         self.pending_jobs.remove(event.job_id)
 
     def executed_job_listener(self, event) -> None:
@@ -174,13 +188,7 @@ class Scheduler(metaclass=Singleton):
         logger.info("Started job: %s", event.job_id)
         self.running_jobs.add(event.job_id)
 
-        # automated processing pipeline:
-        # - when a buffer processing task completes that will trigger the raw bucket processing
-        # - when a scraper task completes that will trigger the raw bucket processing
-        if ("buffer_processing" in event.job_id) or ("buffer_reprocessing" in event.job_id):
-            for sat in SATELLITES:
-                schedule_job("raw_bucket_processing", sat)
-
+        # TODO: add callback to force buffer processing when scraper is done
         #elif "scraper" in event.job_id:
         #    for sat in SATELLITES:
         #        if sat in event.job_id:

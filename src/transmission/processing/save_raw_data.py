@@ -5,6 +5,7 @@ import json
 from typing import Union
 import time
 from datetime import timezone
+from django_logger import logger
 
 from django.forms import ValidationError
 from django.core.exceptions import PermissionDenied
@@ -128,7 +129,7 @@ def parse_submitted_frame(frame: dict, frame_entry: models.Model) -> models.Mode
     return frame_entry
 
 
-def process_uplink_and_downlink(invalid_frames: bool = False) -> tuple:
+def process_uplink_and_downlink(invalid_frames: bool = False, callback = None) -> tuple:
     """Process all processed uplink and downlink frames,
     i.e. move them to the influxdb raw satellite data bucket.
     if invalid_frames is false, only new frames are processed. If 
@@ -138,6 +139,10 @@ def process_uplink_and_downlink(invalid_frames: bool = False) -> tuple:
     iterations = 0
 
     parsers = SatParsers()
+
+    # list the satellites whose frames have been processed:
+    # ths allows to later start their processing task
+    satellites_list = list()
 
     # once the last frame has been processed, maintain the task active for
     # at least 10 seconds while looking for more frames to process
@@ -155,9 +160,16 @@ def process_uplink_and_downlink(invalid_frames: bool = False) -> tuple:
             downlink_frames = Downlink.objects.all().filter(processed=True).filter(invalid=True)[:100]
             uplink_frames = Uplink.objects.all().filter(processed=True).filter(invalid=True)[:100]
 
-        downlink_frames_count = process_frames(parsers, downlink_frames, "downlink")
-        uplink_frames_count = process_frames(parsers, uplink_frames, "uplink")
-        total_processed_frames += downlink_frames_count + uplink_frames_count
+        downlink_frames_count = process_frames(parsers, downlink_frames, "downlink", satellites_list)
+        uplink_frames_count = process_frames(parsers, uplink_frames, "uplink", satellites_list)
+        total_processed_frames = downlink_frames_count + uplink_frames_count
+
+        #satellites_list = list(set(downlink_sat_list + uplink_sat_list))
+        #logger.info("Satellites: " + ' '.join(satellites_list))
+        if callback is not None:
+            callback(satellites_list)
+            # empty the list
+            satellites_list = list()
 
         # one more iteration
         iterations += 1
@@ -170,7 +182,7 @@ def process_uplink_and_downlink(invalid_frames: bool = False) -> tuple:
     return 0, 0
 
 
-def process_frames(parsers: SatParsers, frames: QuerySet, link: str) -> int:
+def process_frames(parsers: SatParsers, frames: QuerySet, link: str, satellites_list: list) -> int:
     """Try to store frame to influxdb and set the processed flag to True
     if a frame was successfully stored in influxdb.
     Returns the count of successfully processed_frames."""
@@ -186,6 +198,9 @@ def process_frames(parsers: SatParsers, frames: QuerySet, link: str) -> int:
         else:
             frame_obj.invalid = True
         frame_obj.save()
+        if satellite not in satellites_list:
+            satellites_list.append(satellite)
+
     return processed_frames
 
 
