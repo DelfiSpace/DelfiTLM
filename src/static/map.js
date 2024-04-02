@@ -7,6 +7,7 @@ const refreshRate = 2;
 
 let map = L.map('map',{
     noWrap: true,
+    autoPan: false,
     zoomSnap: 0.1,
     maxBounds: [
       [-90.0, -180.0],
@@ -15,20 +16,21 @@ let map = L.map('map',{
     }).setView([0, 0], 0);
 
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+	noWrap: true,
+	autoPan: false
     }).addTo(map);
 
 // use an icon to show the satellite position
 var satellite = L.icon({
     iconUrl: 'static/satellite.webp',
-
     iconSize:     [116, 87], // size of the icon
     iconAnchor:   [58, 43], // point of the icon which will correspond to marker's location
     popupAnchor:  [0, -21] // point from which the popup should open relative to the iconAnchor
 });
 
 // add the solar terminator
-let sunlightOverlay = L.terminator();
+let sunlightOverlay = L.terminator({resolution: 5, longitudeRange:360});
 sunlightOverlay.addTo(map);
 
 // update the solar terminator periodically
@@ -41,7 +43,7 @@ setInterval(function(){updateTerminator(sunlightOverlay)}, refreshRate * 1000);
 // limit the zoom value to display the full Earth only once
 function setMinimumZoom(map)
 {
-    let minZoom = 1.0 / 10.0 * Math.ceil(10 * Math.log2(Math.max(map.getSize().x, map.getSize().y) / 256))
+    let minZoom = 1.0 / 10.0 * Math.ceil(10 * Math.log2(Math.min(map.getSize().x, map.getSize().y) / 256))
     map.setMinZoom(minZoom);
 }
 setMinimumZoom(map);
@@ -86,11 +88,11 @@ function updateSatMarker(sat, norad_id, lat, long,) {
     if (markers.hasOwnProperty(sat)){
         markers[sat].setLatLng([lat, long]);
         //markers[sat].bindPopup(sat + " Lat: " + lat + " Long: " + long +"<br>"+ next_pass);
-        markers[sat].bindPopup(sat);
+        markers[sat].bindPopup(sat, {autoPan: false});
     }
     else{
         //let marker = L.marker([lat, long], {icon: satellite}).addTo(map).bindPopup(sat + " Lat: " + lat + " Long: " + long +"<br>"+ next_pass);
-        let marker = L.marker([lat, long], {icon: satellite}).addTo(map).bindPopup(sat).openPopup();
+        let marker = L.marker([lat, long], {icon: satellite, autoPan: false}).addTo(map).bindPopup(sat).openPopup();
         markers[sat] = marker
     }
 
