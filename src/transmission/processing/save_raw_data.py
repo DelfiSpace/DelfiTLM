@@ -142,7 +142,7 @@ def process_uplink_and_downlink(invalid_frames: bool = False, callback = None) -
 
     # list the satellites whose frames have been processed:
     # ths allows to later start their processing task
-    satellites_list = list()
+    satellites_list = []
 
     # once the last frame has been processed, maintain the task active for
     # at least 10 seconds while looking for more frames to process
@@ -166,10 +166,12 @@ def process_uplink_and_downlink(invalid_frames: bool = False, callback = None) -
 
         #satellites_list = list(set(downlink_sat_list + uplink_sat_list))
         #logger.info("Satellites: " + ' '.join(satellites_list))
-        if callback is not None:
+        # if the satellites list is not empty and the scheduler callback is not None
+        if satellites_list and callback is not None:
+            # report the satellites that have been sending frames
             callback(satellites_list)
             # empty the list
-            satellites_list = list()
+            satellites_list = []
 
         # one more iteration
         iterations += 1
@@ -195,11 +197,12 @@ def process_frames(parsers: SatParsers, frames: QuerySet, link: str, satellites_
         if stored:
             frame_obj.invalid = False
             processed_frames += 1
+            # satellite found, add it to the processing list
+            if satellite not in satellites_list:
+                satellites_list.append(satellite)
         else:
             frame_obj.invalid = True
         frame_obj.save()
-        if satellite not in satellites_list:
-            satellites_list.append(satellite)
 
     return processed_frames
 
