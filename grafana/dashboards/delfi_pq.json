@@ -131,7 +131,7 @@
               "type": "influxdb",
               "uid": "3ap6QYRVz"
             },
-            "query": "from(bucket: \"delfi_pq_downlink\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r[\"_measurement\"] == \"DelfiPqRadioEPSTelemetry\")\n  |> filter(fn: (r) => r[\"_field\"] == \"PanelYpCurrent\" or r[\"_field\"] == \"PanelYmCurrent\" or r[\"_field\"] == \"PanelXpCurrent\" or r[\"_field\"] == \"PanelXmCurrent\")\n  |> filter(fn: (r) => r[\"status\"] == \"Valid\" or r[\"status\"] == \"Too Low\" or r[\"status\"] == \"Too High\")\n  |> aggregateWindow(every: v.windowPeriod, fn: mean, createEmpty: false)\n  |> yield(name: \"mean\")",
+            "query": "from(bucket: \"delfi_pq_downlink\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r[\"_measurement\"] == \"RadioEPSTelemetry\")\n  |> filter(fn: (r) => r[\"_field\"] == \"PanelYpCurrent\" or r[\"_field\"] == \"PanelYmCurrent\" or r[\"_field\"] == \"PanelXpCurrent\" or r[\"_field\"] == \"PanelXmCurrent\")\n  |> filter(fn: (r) => r[\"status\"] == \"Valid\" or r[\"status\"] == \"Too Low\" or r[\"status\"] == \"Too High\")\n  |> aggregateWindow(every: v.windowPeriod, fn: mean, createEmpty: false)\n  |> yield(name: \"mean\")",
             "refId": "A"
           }
         ],
@@ -217,7 +217,7 @@
               "type": "influxdb",
               "uid": "3ap6QYRVz"
             },
-            "query": "from(bucket: \"delfi_pq_downlink\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r[\"_measurement\"] == \"DelfiPqRadioEPSTelemetry\")\n  |> filter(fn: (r) => r[\"_field\"] == \"PanelYpCurrent\" or r[\"_field\"] == \"PanelYmCurrent\" or r[\"_field\"] == \"PanelXpCurrent\" or r[\"_field\"] == \"PanelXmCurrent\")\n  |> filter(fn: (r) => r[\"status\"] == \"Valid\" or r[\"status\"] == \"Too Low\" or r[\"status\"] == \"Too High\")\n  |> group(columns: [\"_field\"])\n  |> aggregateWindow(every: v.windowPeriod, fn: mean, createEmpty: false)\n  |> yield(name: \"mean\")",
+            "query": "from(bucket: \"delfi_pq_downlink\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r[\"_measurement\"] == \"RadioEPSTelemetry\")\n  |> filter(fn: (r) => r[\"_field\"] == \"PanelYpCurrent\" or r[\"_field\"] == \"PanelYmCurrent\" or r[\"_field\"] == \"PanelXpCurrent\" or r[\"_field\"] == \"PanelXmCurrent\")\n  |> filter(fn: (r) => r[\"status\"] == \"Valid\" or r[\"status\"] == \"Too Low\" or r[\"status\"] == \"Too High\")\n  |> group(columns: [\"_field\"])\n  |> aggregateWindow(every: v.windowPeriod, fn: mean, createEmpty: false)\n  |> yield(name: \"mean\")",
             "refId": "A"
           }
         ],
@@ -302,7 +302,7 @@
               "type": "influxdb",
               "uid": "3ap6QYRVz"
             },
-            "query": "from(bucket: \"delfi_pq_downlink\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r[\"_measurement\"] == \"DelfiPqRadioEPSTelemetry\")\n  |> filter(fn: (r) => r[\"_field\"] == \"PanelYpVoltage\" or r[\"_field\"] == \"PanelYmVoltage\" or r[\"_field\"] == \"PanelXpVoltage\" or r[\"_field\"] == \"PanelXmVoltage\")\n  |> filter(fn: (r) => r[\"status\"] == \"Valid\" or r[\"status\"] == \"Too Low\" or r[\"status\"] == \"Too High\")\n  |> aggregateWindow(every: v.windowPeriod, fn: mean, createEmpty: false)\n  |> yield(name: \"mean\")",
+            "query": "from(bucket: \"delfi_pq_downlink\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r[\"_measurement\"] == \"RadioEPSTelemetry\")\n  |> filter(fn: (r) => r[\"_field\"] == \"PanelYpVoltage\" or r[\"_field\"] == \"PanelYmVoltage\" or r[\"_field\"] == \"PanelXpVoltage\" or r[\"_field\"] == \"PanelXmVoltage\")\n  |> filter(fn: (r) => r[\"status\"] == \"Valid\" or r[\"status\"] == \"Too Low\" or r[\"status\"] == \"Too High\")\n  |> aggregateWindow(every: v.windowPeriod, fn: mean, createEmpty: false)\n  |> yield(name: \"mean\")",
             "refId": "A"
           }
         ],
@@ -387,7 +387,7 @@
               "type": "influxdb",
               "uid": "3ap6QYRVz"
             },
-            "query": "from(bucket: \"delfi_pq_downlink\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r[\"_measurement\"] == \"DelfiPqRadioEPSTelemetry\")\n  |> filter(fn: (r) => r[\"_field\"] == \"PanelYpVoltage\" or r[\"_field\"] == \"PanelYmVoltage\" or r[\"_field\"] == \"PanelXpVoltage\" or r[\"_field\"] == \"PanelXmVoltage\")\n  |> filter(fn: (r) => r[\"status\"] == \"Valid\" or r[\"status\"] == \"Too Low\" or r[\"status\"] == \"Too High\")\n  |> group(columns:[\"_field\"])\n  |> aggregateWindow(every: v.windowPeriod, fn: mean, createEmpty: false)\n  |> yield(name: \"mean\")",
+            "query": "from(bucket: \"delfi_pq_downlink\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r[\"_measurement\"] == \"RadioEPSTelemetry\")\n  |> filter(fn: (r) => r[\"_field\"] == \"PanelYpVoltage\" or r[\"_field\"] == \"PanelYmVoltage\" or r[\"_field\"] == \"PanelXpVoltage\" or r[\"_field\"] == \"PanelXmVoltage\")\n  |> filter(fn: (r) => r[\"status\"] == \"Valid\" or r[\"status\"] == \"Too Low\" or r[\"status\"] == \"Too High\")\n  |> group(columns:[\"_field\"])\n  |> aggregateWindow(every: v.windowPeriod, fn: mean, createEmpty: false)\n  |> yield(name: \"mean\")",
             "refId": "A"
           }
         ],
@@ -497,7 +497,7 @@
               "type": "influxdb",
               "uid": "3ap6QYRVz"
             },
-            "query": "from(bucket: \"delfi_pq_downlink\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r[\"_measurement\"] == \"DelfiPqRadioEPSTelemetry\")\n  |> filter(fn: (r) => r[\"_field\"] == \"PanelYpTemperature\" or r[\"_field\"] == \"PanelXmTemperature\" or r[\"_field\"] == \"PanelXpTemperature\" or r[\"_field\"] == \"PanelYmTemperature\")\n  |> filter(fn: (r) => r[\"status\"] == \"Valid\" or r[\"status\"] == \"Too Low\" or r[\"status\"] == \"Too High\")\n  |> aggregateWindow(every: v.windowPeriod, fn: mean, createEmpty: false)\n  |> yield(name: \"mean\")",
+            "query": "from(bucket: \"delfi_pq_downlink\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r[\"_measurement\"] == \"RadioEPSTelemetry\")\n  |> filter(fn: (r) => r[\"_field\"] == \"PanelYpTemperature\" or r[\"_field\"] == \"PanelXmTemperature\" or r[\"_field\"] == \"PanelXpTemperature\" or r[\"_field\"] == \"PanelYmTemperature\")\n  |> filter(fn: (r) => r[\"status\"] == \"Valid\" or r[\"status\"] == \"Too Low\" or r[\"status\"] == \"Too High\")\n  |> aggregateWindow(every: v.windowPeriod, fn: mean, createEmpty: false)\n  |> yield(name: \"mean\")",
             "refId": "A"
           }
         ],
@@ -607,7 +607,7 @@
               "type": "influxdb",
               "uid": "3ap6QYRVz"
             },
-            "query": "from(bucket: \"delfi_pq_downlink\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r[\"_measurement\"] == \"DelfiPqRadioEPSTelemetry\")\n  |> filter(fn: (r) => r[\"_field\"] == \"PanelYpTemperature\" or r[\"_field\"] == \"PanelXmTemperature\" or r[\"_field\"] == \"PanelXpTemperature\" or r[\"_field\"] == \"PanelYmTemperature\")\n  |> filter(fn: (r) => r[\"status\"] == \"Valid\" or r[\"status\"] == \"Too Low\" or r[\"status\"] == \"Too High\")\n  |> group(columns: [\"_field\"])\n  |> aggregateWindow(every: v.windowPeriod, fn: mean, createEmpty: false)\n  |> yield(name: \"mean\")",
+            "query": "from(bucket: \"delfi_pq_downlink\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r[\"_measurement\"] == \"RadioEPSTelemetry\")\n  |> filter(fn: (r) => r[\"_field\"] == \"PanelYpTemperature\" or r[\"_field\"] == \"PanelXmTemperature\" or r[\"_field\"] == \"PanelXpTemperature\" or r[\"_field\"] == \"PanelYmTemperature\")\n  |> filter(fn: (r) => r[\"status\"] == \"Valid\" or r[\"status\"] == \"Too Low\" or r[\"status\"] == \"Too High\")\n  |> group(columns: [\"_field\"])\n  |> aggregateWindow(every: v.windowPeriod, fn: mean, createEmpty: false)\n  |> yield(name: \"mean\")",
             "refId": "A"
           }
         ],
@@ -692,7 +692,7 @@
               "type": "influxdb",
               "uid": "3ap6QYRVz"
             },
-            "query": "from(bucket: \"delfi_pq_downlink\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r[\"_measurement\"] == \"DelfiPqRadioEPSTelemetry\")\n  |> filter(fn: (r) => r[\"_field\"] == \"PanelYpTemperature\" or r[\"_field\"] == \"PanelYpVoltage\" or r[\"_field\"] == \"PanelYpCurrent\")\n  |> filter(fn: (r) => r[\"status\"] == \"Valid\" or r[\"status\"] == \"Too Low\" or r[\"status\"] == \"Too High\")\n  |> aggregateWindow(every: v.windowPeriod, fn: mean, createEmpty: false)\n  |> yield(name: \"mean\")",
+            "query": "from(bucket: \"delfi_pq_downlink\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r[\"_measurement\"] == \"RadioEPSTelemetry\")\n  |> filter(fn: (r) => r[\"_field\"] == \"PanelYpTemperature\" or r[\"_field\"] == \"PanelYpVoltage\" or r[\"_field\"] == \"PanelYpCurrent\")\n  |> filter(fn: (r) => r[\"status\"] == \"Valid\" or r[\"status\"] == \"Too Low\" or r[\"status\"] == \"Too High\")\n  |> aggregateWindow(every: v.windowPeriod, fn: mean, createEmpty: false)\n  |> yield(name: \"mean\")",
             "refId": "A"
           }
         ],
@@ -777,7 +777,7 @@
               "type": "influxdb",
               "uid": "3ap6QYRVz"
             },
-            "query": "from(bucket: \"delfi_pq_downlink\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r[\"_measurement\"] == \"DelfiPqRadioEPSTelemetry\")\n  |> filter(fn: (r) => r[\"_field\"] == \"PanelYpTemperature\" or r[\"_field\"] == \"PanelYpVoltage\" or r[\"_field\"] == \"PanelYpCurrent\")\n  |> filter(fn: (r) => r[\"status\"] == \"Valid\" or r[\"status\"] == \"Too Low\" or r[\"status\"] == \"Too High\")\n  |> group(columns: [\"_field\"])\n  |> aggregateWindow(every: v.windowPeriod, fn: mean, createEmpty: false)\n  |> yield(name: \"mean\")",
+            "query": "from(bucket: \"delfi_pq_downlink\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r[\"_measurement\"] == \"RadioEPSTelemetry\")\n  |> filter(fn: (r) => r[\"_field\"] == \"PanelYpTemperature\" or r[\"_field\"] == \"PanelYpVoltage\" or r[\"_field\"] == \"PanelYpCurrent\")\n  |> filter(fn: (r) => r[\"status\"] == \"Valid\" or r[\"status\"] == \"Too Low\" or r[\"status\"] == \"Too High\")\n  |> group(columns: [\"_field\"])\n  |> aggregateWindow(every: v.windowPeriod, fn: mean, createEmpty: false)\n  |> yield(name: \"mean\")",
             "refId": "A"
           }
         ],
@@ -862,7 +862,7 @@
               "type": "influxdb",
               "uid": "3ap6QYRVz"
             },
-            "query": "from(bucket: \"delfi_pq_downlink\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r[\"_measurement\"] == \"DelfiPqRadioEPSTelemetry\")\n  |> filter(fn: (r) => r[\"_field\"] == \"PanelYmCurrent\")\n  |> filter(fn: (r) => r[\"status\"] == \"Too Low\" or r[\"status\"] == \"Valid\")\n  |> aggregateWindow(every: v.windowPeriod, fn: mean, createEmpty: false)\n  |> yield(name: \"mean\")",
+            "query": "from(bucket: \"delfi_pq_downlink\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r[\"_measurement\"] == \"RadioEPSTelemetry\")\n  |> filter(fn: (r) => r[\"_field\"] == \"PanelYmCurrent\")\n  |> filter(fn: (r) => r[\"status\"] == \"Too Low\" or r[\"status\"] == \"Valid\")\n  |> aggregateWindow(every: v.windowPeriod, fn: mean, createEmpty: false)\n  |> yield(name: \"mean\")",
             "refId": "A"
           }
         ],
@@ -947,7 +947,7 @@
               "type": "influxdb",
               "uid": "3ap6QYRVz"
             },
-            "query": "from(bucket: \"delfi_pq_downlink\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r[\"_measurement\"] == \"DelfiPqRadioEPSTelemetry\")\n  |> filter(fn: (r) => r[\"_field\"] == \"PanelYmCurrent\")\n  |> filter(fn: (r) => r[\"status\"] == \"Too Low\" or r[\"status\"] == \"Valid\")\n  |> group()\n  |> aggregateWindow(every: v.windowPeriod, fn: mean, createEmpty: false)\n  |> yield(name: \"mean\")",
+            "query": "from(bucket: \"delfi_pq_downlink\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r[\"_measurement\"] == \"RadioEPSTelemetry\")\n  |> filter(fn: (r) => r[\"_field\"] == \"PanelYmCurrent\")\n  |> filter(fn: (r) => r[\"status\"] == \"Too Low\" or r[\"status\"] == \"Valid\")\n  |> group()\n  |> aggregateWindow(every: v.windowPeriod, fn: mean, createEmpty: false)\n  |> yield(name: \"mean\")",
             "refId": "A"
           }
         ],

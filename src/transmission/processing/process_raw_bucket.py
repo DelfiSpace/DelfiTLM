@@ -32,17 +32,11 @@ def parse_and_store_frame(parsers: SatParsers, satellite: str, timestamp: str, f
     bucket = satellite + "_" + link
 
     if "frame" in telemetry:
-        sat_name_pascal_case = string.capwords(satellite.replace("_", " ")).replace(" ", "")
-        tags = {}
-
         db_fields = {
-
-            "measurement": sat_name_pascal_case + telemetry["frame"],
+            "measurement": telemetry["frame"],
             "time": timestamp,
-            "tags": tags,
-            "fields": {
-                "observer": observer,
-            }
+            "tags": {},
+            "fields": {}
         }
 
         for field, value_and_status in telemetry.items():
@@ -89,19 +83,15 @@ def process_retrieved_frames(parsers: SatParsers, satellite: str, link: str, sta
     how many frames were successfully processed.
     Skip_processed=True will skip over the already processed frames."""
 
-    radio_amateur = 'observer'
-    if link == 'uplink':
-        radio_amateur = 'operator'
-
     # TODO: we need to still check the frames where processing failed
 
     get_unprocessed_frames_query = f'''
         from(bucket: "{satellite + "_raw_data"}")
         |> range(start: {start_time}, stop: {end_time})
-        |> filter(fn: (r) => r._measurement == "{satellite + "_" + link + "_raw_data"}")
+        |> filter(fn: (r) => r._measurement == "raw")
         |> filter(fn: (r) => r["_field"] == "processed" or
                 r["_field"] == "frame" or
-                r["_field"] == "{radio_amateur}")
+                r["_field"] == "user")
         |> pivot(rowKey:["_time"], columnKey: ["_field"], valueColumn: "_value")
         '''
 
@@ -111,7 +101,9 @@ def process_retrieved_frames(parsers: SatParsers, satellite: str, link: str, sta
 
     # limit the maximum numbr of frames processed per round
     get_unprocessed_frames_query = get_unprocessed_frames_query + \
-        "|> limit(n:100, offset: 0)"
+        """
+        |> sort(columns: ["_time"], desc: false)  
+        |> limit(n:100, offset: 0)"""
 
     # query result as dataframe
     dataframe = query_api.query_data_frame(query=get_unprocessed_frames_query)
@@ -123,7 +115,7 @@ def process_retrieved_frames(parsers: SatParsers, satellite: str, link: str, sta
     for _, row in dataframe.iterrows():
         try:
             # store processed frame
-            parse_and_store_frame(parsers, satellite, row["_time"], row["frame"], row[radio_amateur], link)
+            parse_and_store_frame(parsers, satellite, row["_time"], row["frame"], row["user"], link)
             # mark raw frame as processed
             mark_processed_flag(satellite, link, row["_time"], True)
             # mark raw frame as valid
@@ -132,6 +124,7 @@ def process_retrieved_frames(parsers: SatParsers, satellite: str, link: str, sta
 
         except XTCEException as ex:
             logger.error("%s: frame processing error: %s (%s)", satellite, ex, row["frame"])
+            logger.error(traceback.format_exc())
             # mark raw frame as processed
             mark_processed_flag(satellite, link, row["_time"], True)
             # mark frame as invalid
@@ -141,8 +134,7 @@ def process_retrieved_frames(parsers: SatParsers, satellite: str, link: str, sta
         except Exception as ex:       # pylint: disable=broad-except
             logger.error("%s: frame storage error: %s (%s)", satellite, ex, row["frame"])
             logger.error(traceback.format_exc())
-            logger.info("Problematic frame: " + str(row["_time"]) + " " + str(row["frame"]) + 
-                    " " +  str(row[radio_amateur]) + " " + str(link))
+            logger.info("Problematic frame: " + str(row)) 
             logger.info(row)
             # mark raw frame as processed
             mark_processed_flag(satellite, link, row["_time"], True)

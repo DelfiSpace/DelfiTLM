@@ -4,7 +4,7 @@ import copy
 import json
 from typing import Union
 import time
-from datetime import timezone
+from datetime import datetime, timezone
 from django_logger import logger
 
 from django.forms import ValidationError
@@ -120,7 +120,7 @@ def parse_submitted_frame(frame: dict, frame_entry: models.Model) -> models.Mode
     # add metadata
     metadata = copy.deepcopy(frame)
     # remove previously parsed fields
-    for field in ["frame", "timestamp", "frequency"]:
+    for field in ["frame", "timestamp", "frequency", "link", "username"]:
         if field in metadata:
             del metadata[field]
 
@@ -129,7 +129,7 @@ def parse_submitted_frame(frame: dict, frame_entry: models.Model) -> models.Mode
     return frame_entry
 
 
-def process_uplink_and_downlink(invalid_frames: bool = False, callback = None) -> tuple:
+def process_uplink_and_downlink(invalid_frames: bool = False, callback = None):
     """Process all processed uplink and downlink frames,
     i.e. move them to the influxdb raw satellite data bucket.
     if invalid_frames is false, only new frames are processed. If 
@@ -147,25 +147,23 @@ def process_uplink_and_downlink(invalid_frames: bool = False, callback = None) -
     # once the last frame has been processed, maintain the task active for
     # at least 10 seconds while looking for more frames to process
     while iterations < 50:
-        time.sleep(0.2)
-
         total_processed_frames = 0
 
+        logger.info("Iteration " + str(iterations))
         if not invalid_frames:
             # set a maximum length to the results to ensure responsive data processing
-            downlink_frames = Downlink.objects.all().filter(processed=False)[:100]
-            uplink_frames = Uplink.objects.all().filter(processed=False)[:100]
+            downlink_frames = Downlink.objects.all().filter(processed=False).order_by("timestamp")[:100]
+            uplink_frames = Uplink.objects.all().filter(processed=False).order_by("timestamp")[:100]
         else:
             # set a maximum length to the results to ensure responsive data processing
-            downlink_frames = Downlink.objects.all().filter(processed=True).filter(invalid=True)[:100]
-            uplink_frames = Uplink.objects.all().filter(processed=True).filter(invalid=True)[:100]
+            downlink_frames = Downlink.objects.all().filter(processed=True).filter(invalid=True).order_by("timestamp")[:100]
+            uplink_frames = Uplink.objects.all().filter(processed=True).filter(invalid=True).order_by("timestamp")[:100]
 
+        logger.info("Frames listed: " + str(len(downlink_frames)))
         downlink_frames_count = process_frames(parsers, downlink_frames, "downlink", satellites_list)
         uplink_frames_count = process_frames(parsers, uplink_frames, "uplink", satellites_list)
         total_processed_frames = downlink_frames_count + uplink_frames_count
-
-        #satellites_list = list(set(downlink_sat_list + uplink_sat_list))
-        #logger.info("Satellites: " + ' '.join(satellites_list))
+        logger.info("Frames " + str(total_processed_frames))
         # if the satellites list is not empty and the scheduler callback is not None
         if satellites_list and callback is not None:
             # report the satellites that have been sending frames
@@ -180,8 +178,8 @@ def process_uplink_and_downlink(invalid_frames: bool = False, callback = None) -
             # frames were processed in this iteration, reset the iteration counter
             iterations = 0
 
-    #return downlink_frames_count, uplink_frames_count
-    return 0, 0
+        # maintain the thread alive and re-check if new frames have been received
+        time.sleep(0.2)
 
 
 def process_frames(parsers: SatParsers, frames: QuerySet, link: str, satellites_list: list) -> int:
@@ -190,24 +188,29 @@ def process_frames(parsers: SatParsers, frames: QuerySet, link: str, satellites_
     Returns the count of successfully processed_frames."""
 
     processed_frames = 0
+
     for frame_obj in frames:
         frame_dict = frame_obj.to_dictionary()
-        stored, satellite = store_frame_to_influxdb(parsers, frame_dict, link)
+        stored, satellite = store_frame_to_influxdb(parsers, frame_obj.timestamp, frame_dict, link)
         frame_obj.processed = True
+
         if stored:
+            # valid frame
             frame_obj.invalid = False
             processed_frames += 1
+
             # satellite found, add it to the processing list
             if satellite not in satellites_list:
                 satellites_list.append(satellite)
         else:
             frame_obj.invalid = True
+
         frame_obj.save()
 
     return processed_frames
 
 
-def store_frame_to_influxdb(parsers: SatParsers, frame: dict, link: str) -> tuple:
+def store_frame_to_influxdb(parsers: SatParsers, timestamp: datetime, frame: dict, link: str) -> tuple:
     """Try to store frame to influxdb.
     Returns True if the frame was successfully stored, False otherwise."""
 
@@ -216,10 +219,7 @@ def store_frame_to_influxdb(parsers: SatParsers, frame: dict, link: str) -> tupl
     if satellite is None:
         return False, satellite
 
-    fields_to_save = ["frame", "timestamp", "observer", "frequency", "application", "metadata"]
-
-    frame = strip_tlm(frame, fields_to_save)
-    stored = save_raw_frame_to_influxdb(satellite, link, frame)
+    stored = save_raw_frame_to_influxdb(satellite, link, timestamp, frame)
 
     return stored, satellite
 
