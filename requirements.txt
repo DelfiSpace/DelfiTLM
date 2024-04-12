@@ -13,7 +13,7 @@ constantly==23.10.4
 coverage==7.4.1
 cryptography==42.0.4
 daphne==4.1.0
-Django==4.2.10
+Django==4.2.11
 django-bootstrap-v5==1.0.11
 djecrety
 django-filter==23.5
@@ -24,7 +24,7 @@ django-axes==6.3.0
 djangorestframework==3.14.0
 djangorestframework-api-key==3.0.0
 hyperlink==21.0.0
-idna==3.6
+idna==3.7
 incremental==22.10.0
 influxdb==5.3.1
 influxdb-client==1.40.0
