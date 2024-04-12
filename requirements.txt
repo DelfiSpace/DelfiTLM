@@ -11,7 +11,7 @@ channels==4.0.0
 charset-normalizer==3.3.2
 constantly==23.10.4
 coverage==7.4.1
-cryptography==42.0.2
+cryptography==42.0.4
 daphne==4.1.0
 Django==4.2.10
 django-bootstrap-v5==1.0.11
