@@ -88,7 +88,7 @@ function updateSatMarker(sat, norad_id, lat, long,) {
     if (markers.hasOwnProperty(sat)){
         markers[sat].setLatLng([lat, long]);
         //markers[sat].bindPopup(sat + " Lat: " + lat + " Long: " + long +"<br>"+ next_pass);
-        markers[sat].bindPopup(sat, {autoPan: false});
+        //markers[sat].bindPopup(sat, {autoPan: false});
     }
     else{
         //let marker = L.marker([lat, long], {icon: satellite}).addTo(map).bindPopup(sat + " Lat: " + lat + " Long: " + long +"<br>"+ next_pass);
