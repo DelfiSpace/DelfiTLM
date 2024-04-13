@@ -16,9 +16,7 @@ from skyfield.api import load, EarthSatellite
 from members.models import Member
 from transmission.models import Uplink, Downlink, TLE, Satellite
 from transmission.processing.XTCEParser import SatParsers, XTCEException
-from transmission.processing.influxdb_api import save_raw_frame_to_influxdb
-from transmission.processing.telemetry_scraper import strip_tlm
-
+from transmission.processing.influxdb_api import influxdb_api
 
 def store_frames(frames, username: str, application: str = None) -> int:
     """Store frames in batches if the input is a list.
@@ -139,6 +137,7 @@ def process_uplink_and_downlink(invalid_frames: bool = False, callback = None):
     iterations = 0
 
     parsers = SatParsers()
+    db = influxdb_api()
 
     # list the satellites whose frames have been processed:
     # ths allows to later start their processing task
@@ -149,7 +148,6 @@ def process_uplink_and_downlink(invalid_frames: bool = False, callback = None):
     while iterations < 50:
         total_processed_frames = 0
 
-        logger.info("Iteration " + str(iterations))
         if not invalid_frames:
             # set a maximum length to the results to ensure responsive data processing
             downlink_frames = Downlink.objects.all().filter(processed=False).order_by("timestamp")[:100]
@@ -159,11 +157,10 @@ def process_uplink_and_downlink(invalid_frames: bool = False, callback = None):
             downlink_frames = Downlink.objects.all().filter(processed=True).filter(invalid=True).order_by("timestamp")[:100]
             uplink_frames = Uplink.objects.all().filter(processed=True).filter(invalid=True).order_by("timestamp")[:100]
 
-        logger.info("Frames listed: " + str(len(downlink_frames)))
-        downlink_frames_count = process_frames(parsers, downlink_frames, "downlink", satellites_list)
-        uplink_frames_count = process_frames(parsers, uplink_frames, "uplink", satellites_list)
+        downlink_frames_count = process_frames(parsers, db, downlink_frames, "downlink", satellites_list)
+        uplink_frames_count = process_frames(parsers, db, uplink_frames, "uplink", satellites_list)
         total_processed_frames = downlink_frames_count + uplink_frames_count
-        logger.info("Frames " + str(total_processed_frames))
+
         # if the satellites list is not empty and the scheduler callback is not None
         if satellites_list and callback is not None:
             # report the satellites that have been sending frames
@@ -182,7 +179,7 @@ def process_uplink_and_downlink(invalid_frames: bool = False, callback = None):
         time.sleep(0.2)
 
 
-def process_frames(parsers: SatParsers, frames: QuerySet, link: str, satellites_list: list) -> int:
+def process_frames(parsers: SatParsers, db: influxdb_api, frames: QuerySet, link: str, satellites_list: list) -> int:
     """Try to store frame to influxdb and set the processed flag to True
     if a frame was successfully stored in influxdb.
     Returns the count of successfully processed_frames."""
@@ -191,7 +188,7 @@ def process_frames(parsers: SatParsers, frames: QuerySet, link: str, satellites_
 
     for frame_obj in frames:
         frame_dict = frame_obj.to_dictionary()
-        stored, satellite = store_frame_to_influxdb(parsers, frame_obj.timestamp, frame_dict, link)
+        stored, satellite = store_frame_to_influxdb(parsers, db, frame_obj.timestamp, frame_dict, link)
         frame_obj.processed = True
 
         if stored:
@@ -210,7 +207,7 @@ def process_frames(parsers: SatParsers, frames: QuerySet, link: str, satellites_
     return processed_frames
 
 
-def store_frame_to_influxdb(parsers: SatParsers, timestamp: datetime, frame: dict, link: str) -> tuple:
+def store_frame_to_influxdb(parsers: SatParsers, db: influxdb_api, timestamp: datetime, frame: dict, link: str) -> tuple:
     """Try to store frame to influxdb.
     Returns True if the frame was successfully stored, False otherwise."""
 
@@ -219,7 +216,7 @@ def store_frame_to_influxdb(parsers: SatParsers, timestamp: datetime, frame: dic
     if satellite is None:
         return False, satellite
 
-    stored = save_raw_frame_to_influxdb(satellite, link, timestamp, frame)
+    stored = db.save_raw_frame(satellite, link, timestamp, frame)
 
     return stored, satellite
 

@@ -8,7 +8,7 @@ import requests
 
 from django_logger import logger
 from transmission.processing.satellites import SATELLITES, TIME_FORMAT
-from transmission.processing.influxdb_api import save_raw_frame_to_influxdb
+#from transmission.processing.influxdb_api import save_raw_frame_to_influxdb
 
 SATNOGS_PATH = "https://db.satnogs.org/api/telemetry/"
 SATNOGS_TOKEN_PATH = "tokens/satnogs_token.txt"
@@ -94,7 +94,7 @@ def scrape(satellite: str, save_to_db=True, save_to_file=False) -> None:
             if save_to_db:
                 fields_to_save = ["frame", "timestamp", "observer"]
                 stripped_tlm = strip_tlm_list(telemetry_tmp, fields_to_save)
-                save_raw_frame_to_influxdb(satellite, "downlink", stripped_tlm)
+                #save_raw_frame_to_influxdb(satellite, "downlink", stripped_tlm)
 
                 # if the frame is not stored (due to it being stored in a past scrape) and
                 # the next request retrieves data older than a week -> stop

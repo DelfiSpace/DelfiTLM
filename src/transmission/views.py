@@ -16,7 +16,7 @@ from rest_framework.decorators import permission_classes
 from django_logger import logger
 from members.models import APIKey
 from transmission.forms.forms import SubmitJob
-from transmission.processing.add_dummy_data import add_dummy_downlink_frames
+#from transmission.processing.add_dummy_data import add_dummy_downlink_frames
 from transmission.scheduler import Scheduler, schedule_job
 from .models import Uplink, Downlink, TLE
 from .filters import TelemetryDownlinkFilter, TelemetryUplinkFilter, TLEFilter
@@ -101,13 +101,13 @@ def submit_frame(request):  # pylint:disable=R0911
     # POST is the only supported method, return error
     return JsonResponse({"result": "failure", "message": "Method not allowed"}, status=HTTPStatus.METHOD_NOT_ALLOWED)
 
-
-def add_dummy_downlink(request):
-    """Add dummy frames to Downlink table as admin user."""
-
-    add_dummy_downlink_frames()
-
-    return JsonResponse({"len": len(Downlink.objects.all())})
+# TODO fix this
+#def add_dummy_downlink(request):
+#    """Add dummy frames to Downlink table as admin user."""
+#
+#    add_dummy_downlink_frames()
+#
+#    return JsonResponse({"len": len(Downlink.objects.all())})
 
 
 @login_required(login_url='/login')

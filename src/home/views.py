@@ -11,7 +11,7 @@ from pycrowdsec.client import StreamClient
 from skyfield.api import load, EarthSatellite, wgs84, Topos
 from satellite_tle import fetch_tle_from_celestrak
 from transmission.processing.satellites import SATELLITES, TIME_FORMAT
-from transmission.processing.influxdb_api import get_last_received_frame
+from transmission.processing.influxdb_api import influxdb_api
 from django_logger import logger
 
 #pylint: disable=W0718
@@ -118,10 +118,11 @@ def get_satellite_location_now_api(request, norad_id):
 
 def _get_satellites_status():
     """Method to find satellite status."""
+    db_connection = influxdb_api()
     sats_status = {}
     for sat, info in SATELLITES.items():
         sats_status[str(sat + "_status")] = info["status"]
-        last_rx_time = get_last_received_frame(sat)
+        last_rx_time = db_connection.get_last_received_frame(sat)
         if last_rx_time is not None and isinstance(last_rx_time, datetime):
             sats_status[str(sat + "_last_data")] = last_rx_time
         else:

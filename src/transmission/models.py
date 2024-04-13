@@ -70,3 +70,10 @@ class Uplink(models.Model):
         frame_dict["metadata"] = self.metadata
 
         return frame_dict
+
+class DateTimeMicrosecondsField(models.DateTimeField):
+    def db_type(self, connection):
+        return "timestamp(6) with time zone"
+
+    #def rel_db_type(self, connection):
+    #    return "integer UNSIGNED"

@@ -3,27 +3,12 @@ import string
 import time
 import traceback
 from transmission.processing.XTCEParser import SatParsers, XTCEException
-from transmission.processing.influxdb_api import INFLUX_ORG, commit_frame, \
-    get_influx_db_read_and_query_api, write_frame_to_raw_bucket
+from transmission.processing.influxdb_api import influxdb_api
 from django_logger import logger
 
-write_api, query_api = get_influx_db_read_and_query_api()
 
-def store_raw_frame(satellite: str, timestamp: str, frame: str, observer: str, link: str) -> bool:
-    """Store raw unprocessed frame in influxdb"""
-    frame_fields = {
-        "frame": frame,
-        "observer": observer,
-        "timestamp": timestamp,
-        "processed": False
-    }
-
-    stored = commit_frame(write_api, query_api, satellite, link, frame_fields)
-    return stored
-
-
-def parse_and_store_frame(parsers: SatParsers, satellite: str, timestamp: str, frame: str,
-        observer: str, link: str) -> None:
+def parse_and_store_frame(parsers: SatParsers, db: influxdb_api, satellite: str, timestamp: str, frame: str,
+        link: str) -> None:
     """Store parsed frame in influxdb"""
 
     parser = parsers.parsers[satellite]
@@ -52,83 +37,36 @@ def parse_and_store_frame(parsers: SatParsers, satellite: str, timestamp: str, f
             except ValueError:
                 pass
 
-            try:
-                db_fields["fields"][field] = value
-                db_fields["tags"]["status"] = status
-
-                write_api.write(bucket, INFLUX_ORG, db_fields)
-            except :
-                logger.info(db_fields)
-                raise
+            db.save_processed_frame(bucket, telemetry["frame"], timestamp, {"Status": status}, {field: value})
 
             db_fields["fields"] = {}
             db_fields["tags"] = {}
 
 
-def mark_processed_flag(satellite: str, link: str, timestamp: str, value: bool) -> None:
-    """Write the processed flag to either True or False."""
-    write_frame_to_raw_bucket(write_api, satellite, link, timestamp, {'processed': value})
-
-
-def mark_invalid_flag(satellite: str, link: str, timestamp: str, value: bool) -> None:
-    """Write the invalid flag to either True or False."""
-    write_frame_to_raw_bucket(write_api, satellite, link, timestamp, {'invalid': value})
-
-
-# pylint: disable=R0914
-def process_retrieved_frames(parsers: SatParsers, satellite: str, link: str, start_time: str, end_time: str,
-                             skip_processed: bool = True) -> int:
+def process_retrieved_frames(parsers: SatParsers, db: influxdb_api, satellite: str, link: str) -> int:
     """Parse frames, store the parsed form and mark the raw entry as processed.
     Return the total number of frames attempting to process and
     how many frames were successfully processed.
     Skip_processed=True will skip over the already processed frames."""
 
-    # TODO: we need to still check the frames where processing failed
-
-    get_unprocessed_frames_query = f'''
-        from(bucket: "{satellite + "_raw_data"}")
-        |> range(start: {start_time}, stop: {end_time})
-        |> filter(fn: (r) => r._measurement == "raw")
-        |> filter(fn: (r) => r["_field"] == "processed" or
-                r["_field"] == "frame" or
-                r["_field"] == "user")
-        |> pivot(rowKey:["_time"], columnKey: ["_field"], valueColumn: "_value")
-        '''
-
-    if skip_processed:
-        get_unprocessed_frames_query = get_unprocessed_frames_query + \
-        "|> filter(fn: (r) => r[\"processed\"] == false)"
-
-    # limit the maximum numbr of frames processed per round
-    get_unprocessed_frames_query = get_unprocessed_frames_query + \
-        """
-        |> sort(columns: ["_time"], desc: false)  
-        |> limit(n:100, offset: 0)"""
-
-    # query result as dataframe
-    dataframe = query_api.query_data_frame(query=get_unprocessed_frames_query)
-    dataframe = dataframe.reset_index()
+    frames_list = db.get_raw_frames_to_process(satellite, link)
 
     processed_frames_count = 0
 
     # process each frame
-    for _, row in dataframe.iterrows():
+    for _, row in frames_list.iterrows():
         try:
             # store processed frame
-            parse_and_store_frame(parsers, satellite, row["_time"], row["frame"], row["user"], link)
-            # mark raw frame as processed
-            mark_processed_flag(satellite, link, row["_time"], True)
-            # mark raw frame as valid
-            mark_invalid_flag(satellite, link, row["_time"], False)
+            parse_and_store_frame(parsers, db, satellite, row["_time"], row["frame"], link)
+            # mark raw frame as processed and valid
+            db.update_raw_frame(satellite, link, row["_time"], {'processed': True, 'invalid': False})
             processed_frames_count += 1
 
         except XTCEException as ex:
             logger.error("%s: frame processing error: %s (%s)", satellite, ex, row["frame"])
             logger.error(traceback.format_exc())
-            # mark raw frame as processed
-            mark_processed_flag(satellite, link, row["_time"], True)
-            # mark frame as invalid
-            mark_invalid_flag(satellite, link, row["_time"], True)
+            # mark raw frame as processed and invalid
+            db.update_raw_frame(satellite, link, row["_time"], {'processed': True, 'invalid': True})
 
         # indeed a very broad exception, but it keeps the processor running in case of rogue frames
         except Exception as ex:       # pylint: disable=broad-except
@@ -136,40 +74,36 @@ def process_retrieved_frames(parsers: SatParsers, satellite: str, link: str, sta
             logger.error(traceback.format_exc())
             logger.info("Problematic frame: " + str(row)) 
             logger.info(row)
-            # mark raw frame as processed
-            mark_processed_flag(satellite, link, row["_time"], True)
-            # mark frame as invalid
-            mark_invalid_flag(satellite, link, row["_time"], True)
+            # mark raw frame as processed and invalid
+            db.update_raw_frame(satellite, link, row["_time"], {'processed': True, 'invalid': True})
 
     return processed_frames_count
 
 
 def process_raw_bucket(satellite: str, link: str = None, all_frames: bool = False, failed: bool = False):
-    """Trigger bucket processing or reprocessing given satellite."""
+    """Bucket processing or reprocessing task."""
     # if link is None process both uplink and downlink, otherwise process only specified link
 
     total_processed_frames = 0
     iterations = 0
 
     parsers = SatParsers()
+    db = influxdb_api()
+
+    # TODO handle reprocessing failed frames
 
     # once the last frame has been processed, maintain the task active for
     # at least 10 seconds while looking for more frames to process
     while iterations < 50:
-        time.sleep(0.2)
-
         total_processed_frames = 0
 
         if link in ["uplink", "downlink"]:
-            processed_frames_count = _process_raw_bucket(parsers, satellite,
-                    link, all_frames, failed)
+            processed_frames_count = process_retrieved_frames(parsers, db, satellite, link)
             total_processed_frames += processed_frames_count
         else:
-            processed_frames_count = _process_raw_bucket(parsers, satellite, \
-                    "uplink", all_frames, failed)
-            total_processed_frames += processed_frames_count
-            processed_frames_count = _process_raw_bucket(parsers, satellite, \
-                    "downlink", all_frames, failed)
+            #processed_frames_count = process_retrieved_frames(parsers, db, satellite, "uplink")
+            #total_processed_frames += processed_frames_count
+            processed_frames_count = process_retrieved_frames(parsers, db, satellite, "downlink")
             total_processed_frames += processed_frames_count
 
         # one more iteration
@@ -179,14 +113,5 @@ def process_raw_bucket(satellite: str, link: str = None, all_frames: bool = Fals
             # frames were processed in this iteration, reset the iteration counter
             iterations = 0
 
-
-def _process_raw_bucket(parsers: SatParsers, satellite: str, link: str, all_frames: bool, failed: bool) -> int:
-    """Trigger bucket processing given satellite and link.
-    all_frames=True will process the entire bucket and failed=True will process only failed frames.
-    When both flags are True all frames will be processed."""
-
-    # process the entire bucket
-    if all_frames:
-        return process_retrieved_frames(parsers, satellite, link, "0", "now()", skip_processed=False)
-
-    return process_retrieved_frames(parsers, satellite, link, "0", "now()", skip_processed=True)
+        # maintain the thread alive and re-check if new frames have been received
+        time.sleep(0.2)

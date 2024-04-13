@@ -16,8 +16,8 @@ urlpatterns = [
 ]
 
 # add path only in debug mode
-dummy_data_path = path('add/', views.add_dummy_downlink_frames, name='add_dummy_downlink_frames')
-DEBUG = bool(int(os.environ.get('DEBUG', 1)))
+#dummy_data_path = path('add/', views.add_dummy_downlink_frames, name='add_dummy_downlink_frames')
+#DEBUG = bool(int(os.environ.get('DEBUG', 1)))
 
-if DEBUG:
-    urlpatterns.append(dummy_data_path)
+#if DEBUG:
+#    urlpatterns.append(dummy_data_path)
