@@ -10,4 +10,4 @@ datasources:
       token: $GF_INFLUXDB_V2_TOKEN
     jsonData:
       version: Flux
-      organization: $INFLUXDB_V2_ORG
+      organization: downlink

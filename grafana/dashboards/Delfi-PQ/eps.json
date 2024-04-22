@@ -24,6 +24,7 @@
   "editable": true,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 0,
+  "id": 1,
   "links": [],
   "liveNow": false,
   "panels": [
@@ -316,7 +317,7 @@
         "overrides": []
       },
       "gridPos": {
-        "h": 8,
+        "h": 10,
         "w": 24,
         "x": 0,
         "y": 18
@@ -324,8 +325,11 @@
       "id": 10,
       "options": {
         "legend": {
-          "calcs": [],
-          "displayMode": "list",
+          "calcs": [
+            "min",
+            "max"
+          ],
+          "displayMode": "table",
           "placement": "bottom",
           "showLegend": true
         },
@@ -412,7 +416,7 @@
         "h": 9,
         "w": 12,
         "x": 0,
-        "y": 26
+        "y": 28
       },
       "id": 6,
       "options": {
@@ -505,7 +509,7 @@
         "h": 9,
         "w": 12,
         "x": 12,
-        "y": 26
+        "y": 28
       },
       "id": 7,
       "options": {
@@ -598,7 +602,7 @@
         "h": 9,
         "w": 12,
         "x": 0,
-        "y": 35
+        "y": 37
       },
       "id": 2,
       "options": {
@@ -691,7 +695,7 @@
         "h": 9,
         "w": 12,
         "x": 12,
-        "y": 35
+        "y": 37
       },
       "id": 3,
       "options": {
@@ -725,7 +729,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 44
+        "y": 46
       },
       "id": 17,
       "panels": [],
@@ -798,7 +802,7 @@
         "h": 9,
         "w": 24,
         "x": 0,
-        "y": 45
+        "y": 47
       },
       "id": 20,
       "options": {
@@ -809,7 +813,7 @@
           "showLegend": true
         },
         "tooltip": {
-          "mode": "single",
+          "mode": "multi",
           "sort": "none"
         }
       },
@@ -891,7 +895,7 @@
         "h": 9,
         "w": 24,
         "x": 0,
-        "y": 54
+        "y": 56
       },
       "id": 21,
       "options": {
@@ -902,7 +906,7 @@
           "showLegend": true
         },
         "tooltip": {
-          "mode": "single",
+          "mode": "multi",
           "sort": "none"
         }
       },
@@ -981,16 +985,19 @@
         "overrides": []
       },
       "gridPos": {
-        "h": 9,
+        "h": 10,
         "w": 24,
         "x": 0,
-        "y": 63
+        "y": 65
       },
       "id": 22,
       "options": {
         "legend": {
-          "calcs": [],
-          "displayMode": "list",
+          "calcs": [
+            "min",
+            "max"
+          ],
+          "displayMode": "table",
           "placement": "bottom",
           "showLegend": true
         },
@@ -1074,16 +1081,19 @@
         "overrides": []
       },
       "gridPos": {
-        "h": 8,
+        "h": 10,
         "w": 24,
         "x": 0,
-        "y": 72
+        "y": 75
       },
       "id": 23,
       "options": {
         "legend": {
-          "calcs": [],
-          "displayMode": "list",
+          "calcs": [
+            "min",
+            "max"
+          ],
+          "displayMode": "table",
           "placement": "bottom",
           "showLegend": true
         },
@@ -1111,7 +1121,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 80
+        "y": 85
       },
       "id": 18,
       "panels": [],
@@ -1183,7 +1193,7 @@
         "h": 8,
         "w": 24,
         "x": 0,
-        "y": 81
+        "y": 86
       },
       "id": 24,
       "options": {
@@ -1276,7 +1286,7 @@
         "h": 8,
         "w": 24,
         "x": 0,
-        "y": 89
+        "y": 94
       },
       "id": 25,
       "options": {
@@ -1369,18 +1379,21 @@
         "h": 8,
         "w": 24,
         "x": 0,
-        "y": 97
+        "y": 102
       },
       "id": 26,
       "options": {
         "legend": {
-          "calcs": [],
-          "displayMode": "list",
+          "calcs": [
+            "min",
+            "max"
+          ],
+          "displayMode": "table",
           "placement": "bottom",
           "showLegend": true
         },
         "tooltip": {
-          "mode": "single",
+          "mode": "multi",
           "sort": "none"
         }
       },
@@ -1463,18 +1476,21 @@
         "h": 9,
         "w": 24,
         "x": 0,
-        "y": 105
+        "y": 110
       },
       "id": 27,
       "options": {
         "legend": {
-          "calcs": [],
-          "displayMode": "list",
+          "calcs": [
+            "logmin",
+            "max"
+          ],
+          "displayMode": "table",
           "placement": "bottom",
           "showLegend": true
         },
         "tooltip": {
-          "mode": "single",
+          "mode": "multi",
           "sort": "none"
         }
       },
@@ -1497,7 +1513,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 114
+        "y": 119
       },
       "id": 19,
       "panels": [],
@@ -1569,7 +1585,7 @@
         "h": 9,
         "w": 24,
         "x": 0,
-        "y": 115
+        "y": 120
       },
       "id": 15,
       "options": {
@@ -1580,7 +1596,7 @@
           "showLegend": true
         },
         "tooltip": {
-          "mode": "single",
+          "mode": "multi",
           "sort": "none"
         }
       },
@@ -1644,8 +1660,7 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green",
-                "value": null
+                "color": "green"
               },
               {
                 "color": "red",
@@ -1662,7 +1677,7 @@
         "h": 8,
         "w": 24,
         "x": 0,
-        "y": 124
+        "y": 129
       },
       "id": 12,
       "options": {
@@ -1673,7 +1688,7 @@
           "showLegend": true
         },
         "tooltip": {
-          "mode": "single",
+          "mode": "multi",
           "sort": "none"
         }
       },
@@ -1737,8 +1752,7 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green",
-                "value": null
+                "color": "green"
               },
               {
                 "color": "red",
@@ -1754,7 +1768,7 @@
         "h": 8,
         "w": 24,
         "x": 0,
-        "y": 132
+        "y": 137
       },
       "id": 11,
       "options": {
@@ -1765,7 +1779,7 @@
           "showLegend": true
         },
         "tooltip": {
-          "mode": "single",
+          "mode": "multi",
           "sort": "none"
         }
       },
@@ -1795,8 +1809,8 @@
   },
   "timepicker": {},
   "timezone": "utc",
-  "title": "DelfiPQ",
+  "title": "EPS",
   "uid": "_j9ikmi4z",
-  "version": 8,
+  "version": 15,
   "weekStart": ""
 }
