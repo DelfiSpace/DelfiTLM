@@ -17,13 +17,6 @@ def parse_and_store_frame(parsers: SatParsers, db: influxdb_api, satellite: str,
     bucket = satellite + "_" + link
 
     if "frame" in telemetry:
-        db_fields = {
-            "measurement": telemetry["frame"],
-            "time": timestamp,
-            "tags": {},
-            "fields": {}
-        }
-
         for field, value_and_status in telemetry.items():
             # skip frame field
             if field == "frame":
@@ -37,10 +30,7 @@ def parse_and_store_frame(parsers: SatParsers, db: influxdb_api, satellite: str,
             except ValueError:
                 pass
 
-            db.save_processed_frame(bucket, telemetry["frame"], timestamp, {"Status": status}, {field: value})
-
-            db_fields["fields"] = {}
-            db_fields["tags"] = {}
+            db.save_processed_frame(satellite, link, telemetry["frame"], timestamp, {"status": status}, {field: value})
 
 
 def process_retrieved_frames(parsers: SatParsers, db: influxdb_api, satellite: str, link: str) -> int:
@@ -101,8 +91,8 @@ def process_raw_bucket(satellite: str, link: str = None, all_frames: bool = Fals
             processed_frames_count = process_retrieved_frames(parsers, db, satellite, link)
             total_processed_frames += processed_frames_count
         else:
-            #processed_frames_count = process_retrieved_frames(parsers, db, satellite, "uplink")
-            #total_processed_frames += processed_frames_count
+            processed_frames_count = process_retrieved_frames(parsers, db, satellite, "uplink")
+            total_processed_frames += processed_frames_count
             processed_frames_count = process_retrieved_frames(parsers, db, satellite, "downlink")
             total_processed_frames += processed_frames_count
 
@@ -112,6 +102,7 @@ def process_raw_bucket(satellite: str, link: str = None, all_frames: bool = Fals
         if total_processed_frames != 0:
             # frames were processed in this iteration, reset the iteration counter
             iterations = 0
+            logger.info("Processed " + str(total_processed_frames) + " frames")
 
         # maintain the thread alive and re-check if new frames have been received
         time.sleep(0.2)

@@ -197,7 +197,6 @@ INFLUXDB = {
     'HOST' : "http://influxdb",
     'PORT' : 8086,
     'TOKEN' : os.environ.get('INFLUXDB_V2_TOKEN'),
-    'ORGANIZATION' : os.environ.get('INFLUXDB_V2_ORG')
 }
 
 # Password validation

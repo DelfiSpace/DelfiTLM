@@ -2,7 +2,6 @@
 from django.db import models
 from django.db.models.deletion import DO_NOTHING
 from django.utils import timezone
-from transmission.processing.telemetry_scraper import TIME_FORMAT
 
 
 class Satellite(models.Model):
@@ -71,9 +70,9 @@ class Uplink(models.Model):
 
         return frame_dict
 
-class DateTimeMicrosecondsField(models.DateTimeField):
-    def db_type(self, connection):
-        return "timestamp(6) with time zone"
-
-    #def rel_db_type(self, connection):
-    #    return "integer UNSIGNED"
+#class DateTimeMicrosecondsField(models.DateTimeField):
+#    def db_type(self, connection):
+#        return "timestamp(6) with time zone"
+#
+#    #def rel_db_type(self, connection):
+#    #    return "integer UNSIGNED"

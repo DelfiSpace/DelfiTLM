@@ -149,7 +149,7 @@ class Scheduler(metaclass=Singleton):
 
             Scheduler.__instance = self
 
-            # TODO not very nice to start it here, but this class is a singleton and 
+            # TODO not very nice to start it here, but this class is a singleton and
             # in ensures the gateway is loaded only once
             XTCEParser.loadGateway()
 
@@ -188,11 +188,8 @@ class Scheduler(metaclass=Singleton):
         logger.info("Started job: %s", event.job_id)
         self.running_jobs.add(event.job_id)
 
-        # TODO: add callback to force buffer processing when scraper is done
-        #elif "scraper" in event.job_id:
-        #    for sat in SATELLITES:
-        #        if sat in event.job_id:
-        #            schedule_job("raw_bucket_processing", sat, "downlink")
+        if "scraper" in event.job_id:
+            schedule_job("buffer_processing")
 
     def get_pending_jobs(self) -> set:
         """Get the ids of the currently scheduled jobs."""

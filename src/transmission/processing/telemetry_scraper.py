@@ -91,9 +91,9 @@ def scrape(satellite: str, save_to_db=True, save_to_file=False) -> None:
             next_time = last_time - timedelta(seconds=1)
             logger.info("Next: %s", next_time.strftime(TIME_FORMAT))
 
-            if save_to_db:
-                fields_to_save = ["frame", "timestamp", "observer"]
-                stripped_tlm = strip_tlm_list(telemetry_tmp, fields_to_save)
+            #if save_to_db:
+                #fields_to_save = ["frame", "timestamp", "observer"]
+                #stripped_tlm = strip_tlm_list(telemetry_tmp, fields_to_save)
                 #save_raw_frame_to_influxdb(satellite, "downlink", stripped_tlm)
 
                 # if the frame is not stored (due to it being stored in a past scrape) and

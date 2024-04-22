@@ -2,6 +2,7 @@
 from datetime import datetime, timedelta
 import json
 import os
+import sys
 import traceback
 from django.core.exceptions import PermissionDenied
 from django.core.serializers.json import DjangoJSONEncoder
@@ -118,11 +119,21 @@ def get_satellite_location_now_api(request, norad_id):
 
 def _get_satellites_status():
     """Method to find satellite status."""
-    db_connection = influxdb_api()
+    try:
+        db = influxdb_api()
+    except :
+        db = None
+    logger.info("before list " + str(db))
     sats_status = {}
     for sat, info in SATELLITES.items():
         sats_status[str(sat + "_status")] = info["status"]
-        last_rx_time = db_connection.get_last_received_frame(sat)
+        if db is None:
+            last_rx_time = None
+        else:
+            try:
+                last_rx_time = db.get_last_received_frame(sat)
+            except:
+                last_rx_time = None
         if last_rx_time is not None and isinstance(last_rx_time, datetime):
             sats_status[str(sat + "_last_data")] = last_rx_time
         else:
