@@ -18,6 +18,7 @@
   "editable": true,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 0,
+  "id": 10,
   "links": [
     {
       "asDropdown": false,
@@ -64,8 +65,8 @@
         "uid": "3ap6QYRVz"
       },
       "gridPos": {
-        "h": 10,
-        "w": 9,
+        "h": 9,
+        "w": 8,
         "x": 0,
         "y": 0
       },
@@ -109,16 +110,16 @@
               "viz": false
             }
           },
-          "displayName": "${__field.labels.__values}"
+          "displayName": "${__field.labels.__values}",
           "mappings": [],
           "unitScale": true
         },
         "overrides": []
       },
       "gridPos": {
-        "h": 10,
-        "w": 7,
-        "x": 9,
+        "h": 9,
+        "w": 6,
+        "x": 8,
         "y": 0
       },
       "id": 2,
@@ -155,6 +156,71 @@
       ],
       "title": "Data Source",
       "type": "piechart"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "3ap6QYRVz"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unitScale": true
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 9,
+        "x": 14,
+        "y": 0
+      },
+      "id": 3,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "10.3.1",
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "3ap6QYRVz"
+          },
+          "query": "from(bucket: \"delfi_pq\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r[\"_measurement\"] == \"_raw\")\n  |> filter(fn: (r) => r[\"_field\"] == \"user\")\n  |> aggregateWindow(every: v.windowPeriod, fn: count)\n  |> cumulativeSum(columns: [\"_value\"]) ",
+          "refId": "A"
+        }
+      ],
+      "title": "Frame Count",
+      "type": "stat"
     }
   ],
   "refresh": "",
@@ -171,6 +237,6 @@
   "timezone": "",
   "title": "Overview",
   "uid": "f4c5128b-0826-4503-9848-b59ddb4cae00",
-  "version": 3,
+  "version": 5,
   "weekStart": ""
 }
