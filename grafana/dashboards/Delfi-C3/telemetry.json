@@ -18,7 +18,32 @@
   "editable": true,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 0,
-  "links": [],
+  "links": [
+    {
+      "asDropdown": false,
+      "icon": "dashboard",
+      "includeVars": false,
+      "keepTime": true,
+      "tags": [],
+      "targetBlank": false,
+      "title": "Overview",
+      "tooltip": "Delfi-C3 Overview",
+      "type": "link",
+      "url": "https://delfispace.tudelft.nl/grafana/d/Delfi-C3_Overview"
+    },
+    {
+      "asDropdown": false,
+      "icon": "dashboard",
+      "includeVars": false,
+      "keepTime": true,
+      "tags": [],
+      "targetBlank": false,
+      "title": "Payload",
+      "tooltip": "Delfi-C3 Payload",
+      "type": "link",
+      "url": "https://delfispace.tudelft.nl/grafana/d/Delfi-C3_Payload"
+    }
+  ],
   "liveNow": false,
   "panels": [
     {
@@ -82,8 +107,8 @@
         "overrides": []
       },
       "gridPos": {
-        "h": 8,
-        "w": 12,
+        "h": 10,
+        "w": 24,
         "x": 0,
         "y": 0
       },
@@ -106,7 +131,7 @@
             "type": "influxdb",
             "uid": "3ap6QYRVz"
           },
-          "query": "from(bucket: \"delfi_c3_downlink\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r[\"_measurement\"] == \"Housekeeping\")\n  |> filter(fn: (r) => r[\"_field\"] == \"RAP1_Rx_I\")\n  |> aggregateWindow(every: v.windowPeriod, fn: mean, createEmpty: false)\n  |> yield(name: \"mean\")",
+          "query": "from(bucket: \"delfi_c3\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r[\"_measurement\"] == \"Housekeeping\")\n  |> filter(fn: (r) => r[\"_field\"] == \"RAP1_Rx_I\")\n  |> aggregateWindow(every: v.windowPeriod, fn: mean, createEmpty: false)\n  |> yield(name: \"mean\")",
           "refId": "A"
         }
       ],
@@ -139,7 +164,7 @@
               "viz": false
             },
             "insertNulls": false,
-            "lineInterpolation": "linear",
+            "lineInterpolation": "smooth",
             "lineWidth": 1,
             "pointSize": 5,
             "scaleDistribution": {
@@ -174,21 +199,24 @@
         "overrides": []
       },
       "gridPos": {
-        "h": 8,
-        "w": 12,
+        "h": 9,
+        "w": 24,
         "x": 0,
-        "y": 8
+        "y": 10
       },
       "id": 2,
       "options": {
         "legend": {
-          "calcs": [],
-          "displayMode": "list",
+          "calcs": [
+            "min",
+            "max"
+          ],
+          "displayMode": "table",
           "placement": "bottom",
           "showLegend": true
         },
         "tooltip": {
-          "mode": "single",
+          "mode": "multi",
           "sort": "none"
         }
       },
@@ -198,11 +226,11 @@
             "type": "influxdb",
             "uid": "3ap6QYRVz"
           },
-          "query": "from(bucket: \"delfi_c3_downlink\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r[\"_measurement\"] == \"Housekeeping\")\n  |> filter(fn: (r) => r[\"_field\"] == \"OBC_T\"\n)  |> aggregateWindow(every: v.windowPeriod, fn: mean, createEmpty: false)\n  |> yield(name: \"mean\")",
+          "query": "from(bucket: \"delfi_c3\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r[\"_measurement\"] == \"Housekeeping\")\n  |> filter(fn: (r) => r[\"_field\"] == \"OBC_T\" or r[\"_field\"] == \"RAP1_T\" or r[\"_field\"] == \"RAP2_T\")\n  |> filter(fn: (r) => r[\"status\"] == \"Valid\")\n  |> group(columns:[\"_field\"])\n  |> aggregateWindow(every: v.windowPeriod, fn: mean, createEmpty: false)\n  |> yield(name: \"mean\")",
           "refId": "A"
         }
       ],
-      "title": "OBC Temperature",
+      "title": "Temperature",
       "type": "timeseries"
     },
     {
@@ -266,10 +294,10 @@
         "overrides": []
       },
       "gridPos": {
-        "h": 8,
-        "w": 12,
+        "h": 9,
+        "w": 24,
         "x": 0,
-        "y": 16
+        "y": 19
       },
       "id": 1,
       "options": {
@@ -277,7 +305,7 @@
           "calcs": [],
           "displayMode": "list",
           "placement": "bottom",
-          "showLegend": true
+          "showLegend": false
         },
         "tooltip": {
           "mode": "single",
@@ -290,7 +318,7 @@
             "type": "influxdb",
             "uid": "3ap6QYRVz"
           },
-          "query": "from(bucket: \"delfi_c3_downlink\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r[\"_measurement\"] == \"Housekeeping\")\n  |> filter(fn: (r) => r[\"_field\"] == \"BootCounter\")\n  |> aggregateWindow(every: v.windowPeriod, fn: mean, createEmpty: false)\n  |> yield(name: \"mean\")",
+          "query": "from(bucket: \"delfi_c3\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r[\"_measurement\"] == \"Housekeeping\")\n  |> filter(fn: (r) => r[\"_field\"] == \"BootCounter\")\n  |> aggregateWindow(every: v.windowPeriod, fn: mean, createEmpty: false)\n  |> yield(name: \"mean\")",
           "refId": "A"
         }
       ],
@@ -298,7 +326,7 @@
       "type": "timeseries"
     }
   ],
-  "refresh": "",
+  "refresh": false,
   "schemaVersion": 39,
   "tags": [],
   "templating": {
@@ -306,12 +334,12 @@
   },
   "time": {
     "from": "2008-04-28T00:00:00.000Z",
-    "to": "2023-11-14T23:59:59.999Z"
+    "to": "2024-11-14T23:59:59.000Z"
   },
   "timepicker": {},
-  "timezone": "",
-  "title": "Delfi-C3",
-  "uid": "ec0b906e-c704-41d9-a063-645b803db188",
-  "version": 10,
+  "timezone": "utc",
+  "title": "Telemetry",
+  "uid": "Delfi-C3_Telemetry",
+  "version": 5,
   "weekStart": ""
 }

@@ -25,7 +25,44 @@
   "fiscalYearStartMonth": 0,
   "graphTooltip": 0,
   "id": 1,
-  "links": [],
+  "links": [
+    {
+      "asDropdown": false,
+      "icon": "dashboard",
+      "includeVars": false,
+      "keepTime": false,
+      "tags": [],
+      "targetBlank": false,
+      "title": "Overview",
+      "tooltip": "Delfi-PQ Overview",
+      "type": "link",
+      "url": "https://delfispace.tudelft.nl/grafana/d/Delfi-PQ_Overview"
+    },
+    {
+      "asDropdown": false,
+      "icon": "dashboard",
+      "includeVars": false,
+      "keepTime": false,
+      "tags": [],
+      "targetBlank": false,
+      "title": "COMMS",
+      "tooltip": "COMMS Telemetry",
+      "type": "link",
+      "url": "https://delfispace.tudelft.nl/grafana/d/Delfi-PQ_COMMS"
+    },
+    {
+      "asDropdown": false,
+      "icon": "dashboard",
+      "includeVars": false,
+      "keepTime": false,
+      "tags": [],
+      "targetBlank": false,
+      "title": "OBC",
+      "tooltip": "OBC Telemetry",
+      "type": "link",
+      "url": "https://delfispace.tudelft.nl/grafana/d/Delfi-PQ_OBC"
+    }
+  ],
   "liveNow": false,
   "panels": [
     {
@@ -1810,7 +1847,7 @@
   "timepicker": {},
   "timezone": "utc",
   "title": "EPS",
-  "uid": "_j9ikmi4z",
-  "version": 15,
+  "uid": "Delfi-PQ_EPS",
+  "version": 16,
   "weekStart": ""
 }
