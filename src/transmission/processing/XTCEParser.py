@@ -50,13 +50,12 @@ class XTCEParser:
             entries = model.getContentList()
             telemetry = {"frame": model.getName()}
 
-            #logger.debug("TMFrame entries: %s", entries)
-            # thriwn an error if the frame is found but empty
+            # throw an error if the frame is found but empty
             for entry in entries:
                 val = entry.getValue()
                 name = entry.getName()
 
-                if val:
+                if val and entry.getParameter().getAncillaryData("Ignore").isEmpty():
                     telemetry[name] = {"value": val.getCalibratedValue(), "status": self.isFieldValid(entry)}
 
             return telemetry
