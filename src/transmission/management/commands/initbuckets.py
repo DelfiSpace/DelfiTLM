@@ -9,7 +9,7 @@ class Command(BaseCommand):
     """Django command class"""
 
     def handle(self, *args, **options):
-         """Initialize the database for each satellite, uplink and downlink"""
+        """Initialize the database for each satellite, uplink and downlink"""
 
         db = influxdb_api()
         

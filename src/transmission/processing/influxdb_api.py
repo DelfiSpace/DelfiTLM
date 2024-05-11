@@ -4,13 +4,15 @@ from influxdb_client import InfluxDBClient
 from influxdb_client.client.write_api import SYNCHRONOUS
 from influxdb_client.rest import ApiException
 from influxdb_client.domain.bucket import Bucket
-from django_logger import logger
 from django.conf import settings
+from django_logger import logger
 
 RAW_MEASUREMENT = "_raw"
 DATETIME_FORMAT_STRING = "%Y-%m-%dT%H:%M:%S.%fZ"
 
 class influxdb_api:
+    """Class interfcing with InfluxDB"""
+
     def __init__(self):
         self.url = settings.INFLUXDB['HOST'] + ":" + str(settings.INFLUXDB['PORT'])
         self.token = settings.INFLUXDB['TOKEN']
@@ -51,40 +53,22 @@ class influxdb_api:
         try:
             orgs = self._get_organizations_api().find_organizations(org="downlink")
         except ApiException:
-            logger.info("Adding downlink")
             self._get_organizations_api().create_organization('downlink')
-            logger.info("Downlink added")
 
         try:
             orgs = self._get_organizations_api().find_organizations(org="uplink")
         except ApiException:
-            logger.info("Adding uplink")
             self._get_organizations_api().create_organization('uplink')
-            logger.info("Uplink added")
 
         for sat in satellites:
             try:
-                logger.info("Looking for " + sat + " in downlibnk")
                 self._get_buckets_api().find_buckets(name=sat, org="downlink")
             except ApiException:
-                logger.info(sat + " downlink not found")
-                new_bucket = Bucket(
-                    name=sat,
-                    retention_rules=[],
-                    org_id="downlink"
-                )
                 self._get_buckets_api().create_bucket(bucket_name=sat, org="downlink")
-                logger.info("bucket added")
 
             try:
                 self._get_buckets_api().find_buckets(name=sat, org="uplink")
-            except ApiException: 
-                logger.info(sat + " uplink not found")
-                new_bucket = Bucket(
-                    name=sat,
-                    retention_rules=[],
-                    org_id="uplink"
-                )
+            except ApiException:
                 self._get_buckets_api().create_bucket(bucket_name=sat, org="uplink")
 
     def get_last_received_frame(self, satellite: str):

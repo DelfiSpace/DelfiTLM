@@ -5,8 +5,6 @@ import json
 from typing import Union
 import time
 from datetime import datetime, timezone
-from django_logger import logger
-
 from django.forms import ValidationError
 from django.core.exceptions import PermissionDenied
 from django.db import models
