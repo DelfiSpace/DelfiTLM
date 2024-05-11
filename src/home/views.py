@@ -123,7 +123,6 @@ def _get_satellites_status():
         db = influxdb_api()
     except :
         db = None
-    logger.info("before list " + str(db))
     sats_status = {}
     for sat, info in SATELLITES.items():
         sats_status[str(sat + "_status")] = info["status"]
