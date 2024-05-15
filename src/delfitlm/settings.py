@@ -81,6 +81,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'django_filters',
+    'axes', # Django Axes
     'channels',
     'rest_framework',
     'rest_framework_api_key',
@@ -105,6 +106,7 @@ INSTALLED_APPS = [
 API_KEY_CUSTOM_HEADER = "HTTP_AUTHORIZATION"
 
 MIDDLEWARE = [
+    'axes.middleware.AxesMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -114,8 +116,14 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-if DEBUG == 0:
-    MIDDLEWARE.append("pycrowdsec.django.crowdsec_middleware")
+# Force the CSRT TRUSTED ORIGINS to the hostname plus the scheme
+MY_HOST = os.environ.get('MY_HOST', 'localhost')
+CSRF_TRUSTED_ORIGINS = ["https://" + MY_HOST, "http://" + MY_HOST]
+
+AUTHENTICATION_BACKENDS = [
+   'axes.backends.AxesBackend', # Axes must be first
+   'django.contrib.auth.backends.ModelBackend',
+]
 
 ROOT_URLCONF = 'delfitlm.urls'
 
@@ -146,17 +154,26 @@ ASGI_APPLICATION = 'delfitlm.asgi.application'
 WSGI_APPLICATION = 'delfitlm.wsgi.application'
 
 # Crowdsec bouncer: https://github.com/crowdsecurity/pycrowdsec
+# only enable it if the API KEY is provided, otherwise skip
+if "CROWDSEC_LAPI" in os.environ:
+    PYCROWDSEC_LAPI_KEY = os.environ.get('CROWDSEC_LAPI')
+    PYCROWDSEC_LAPI_URL = os.environ.get('CROWDSEC_URL')
 
-PYCROWDSEC_LAPI_KEY = os.environ.get('CROWDSEC_LAPI')
-PYCROWDSEC_LAPI_URL = os.environ.get('CROWDSEC_URL')
+    PYCROWDSEC_ACTIONS = {
+        "ban": lambda request: redirect(reverse("ban_view")),
+    }
+    # IMPORTANT: If any action is doing a redirect to some view, always exclude it for pycrowdsec. Otherwise the middleware will trigger the redirect on the action view too.
+    PYCROWDSEC_EXCLUDE_VIEWS = {"ban_view"}
+    PYCROWDSEC_POLL_INTERVAL = 10
 
-PYCROWDSEC_ACTIONS = {
-    "ban": lambda request: redirect(reverse("ban_view")),
-}
-# IMPORTANT: If any action is doing a redirect to some view, always exclude it for pycrowdsec. Otherwise the middleware will trigger the redirect on the action view too.
-PYCROWDSEC_EXCLUDE_VIEWS = {"ban_view"}
+    if DEBUG == 0:
+        MIDDLEWARE.append("pycrowdsec.django.crowdsec_middleware")
 
-PYCROWDSEC_POLL_INTERVAL = 10
+# Improved security settings
+# Close the session when user closes the browser
+SESSION_EXPIRE_AT_BROWSER_CLOSE = True
+# Sessions expires after a period of inactivity
+SESSION_COOKIE_AGE = 5 * 60
 
 # Database
 # https://docs.djangoproject.com/en/3.2/ref/settings/#databases
@@ -217,6 +234,14 @@ USE_L10N = True
 
 USE_TZ = True
 
+# Django Axes settings
+# monitor user login attempts and block brute-forcing attacks
+AXES_FAILURE_LIMIT = 6                 # maximum number of attempts before locking triggers
+AXES_COOLOFF_TIME = 2                  # cool-off for 2 hours
+# Lockout custom template
+AXES_LOCKOUT_URL = "/login/"
+AXES_LOCKOUT_TEMPLATE = "registration/login.html"
+
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/3.2/howto/static-files/
 
@@ -241,79 +266,106 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 if DEBUG and os.environ.get('RUN_MAIN', None) != 'true':
     LOGGING = {}
 
-LOGGING = {
-    'version': 1,
-    'disable_existing_loggers': False,
-    'loggers': {
-        'django_logger': {
-            'handlers': ['docker_logger', 'debug', 'info', 'warning', 'error', 'mail_admin'],
-            'level': 1
-        }
-    },
-    'filters': {
-        'require_debug_false': {
-            '()': 'django.utils.log.RequireDebugFalse',
-        },
-        'require_debug_true': {
-            '()': 'django.utils.log.RequireDebugTrue',
-        },
-    },
-    'handlers': {
-        'std_err': {
-            'class': 'logging.StreamHandler'
-        },
-        'docker_logger': {
-            'class': 'logging.StreamHandler',
-            'level': 'WARNING',
-            'formatter': 'default',
-            'filters': ['require_debug_false'],
-        },
-        'debug': {
-            'class': 'logging.handlers.RotatingFileHandler',
-            'filename': 'logs/debug.log',
-            'level': 'DEBUG',
-            'formatter': 'default',
-            'backupCount': 2,
-            'maxBytes': 5 * 1024 * 1024,  # bytes (5MB)
-            'filters': ['require_debug_true'],
+full_log_path = "/var/log/django"
 
+# have a specific logging profile for testing and one for production
+if (len(sys.argv) > 1 and sys.argv[1] == 'test') or DEBUG:
+    LOGGING = {
+        'version': 1,
+        'disable_existing_loggers': False,
+        'loggers': {
+            'django_logger': {
+                'handlers': ['debug'],
+                'level': 1
+            }
         },
-        'info': {
-            'class': 'logging.handlers.RotatingFileHandler',
-            'filename': 'logs/info.log',
-            'level': 'INFO',
-            'formatter': 'default',
-            'backupCount': 2,
-            'maxBytes': 5 * 1024 * 1024,
+        'handlers': {
+            'debug': {
+                'class': 'logging.StreamHandler',
+                'level': 'DEBUG',
+                'formatter': 'default',
+            }
         },
-        'warning': {
-            'class': 'logging.handlers.RotatingFileHandler',
-            'filename': 'logs/warning.log',
-            'level': 'WARNING',
-            'formatter': 'default',
-            'backupCount': 2,
-            'maxBytes': 5 * 1024 * 1024,
-        },
-        'error': {
-            'class': 'logging.handlers.RotatingFileHandler',
-            'filename': 'logs/error.log',
-            'level': 'ERROR',
-            'formatter': 'error',
-            'backupCount': 2,
-            'maxBytes': 5 * 1024 * 1024,
-        },
-        'mail_admin': {
-            'level': 'ERROR',
-            'filters': ['require_debug_false'],
-            'class': 'django.utils.log.AdminEmailHandler'
+        'formatters': {
+            'default': {
+                'format': '%(asctime)s [%(module)s | %(levelname)s] %(message)s',
+            }
         }
-    },
-    'formatters': {
-        'default': {
-            'format': '%(asctime)s [%(module)s | %(levelname)s] %(message)s',
+    }
+else:
+    LOGGING = {
+        'version': 1,
+        'disable_existing_loggers': False,
+        'loggers': {
+            'django_logger': {
+                'handlers': ['docker_logger', 'debug', 'info', 'warning', 'error', 'mail_admin'],
+                'level': 1
+            }
         },
-        'error': {
-            'format': '%(asctime)s [%(module)s | %(levelname)s] %(message)s @ %(pathname)s : %(lineno)d : %(funcName)s',
+        'filters': {
+            'require_debug_false': {
+                '()': 'django.utils.log.RequireDebugFalse',
+            },
+            'require_debug_true': {
+                '()': 'django.utils.log.RequireDebugTrue',
+            },
         },
-    },
-}
+        'handlers': {
+            'std_err': {
+                'class': 'logging.StreamHandler'
+            },
+            'docker_logger': {
+                'class': 'logging.StreamHandler',
+                'level': 'WARNING',
+                'formatter': 'default',
+                'filters': ['require_debug_false'],
+            },
+            'debug': {
+                'class': 'logging.handlers.RotatingFileHandler',
+                'filename': full_log_path + '/debug.log',
+                'level': 'DEBUG',
+                'formatter': 'default',
+                'backupCount': 2,
+                'maxBytes': 5 * 1024 * 1024,  # bytes (5MB)
+                'filters': ['require_debug_true'],
+            },
+            'info': {
+                'class': 'logging.handlers.RotatingFileHandler',
+                'filename': full_log_path + '/info.log',
+                'level': 'INFO',
+                'formatter': 'default',
+                'backupCount': 2,
+                'maxBytes': 5 * 1024 * 1024,
+            },
+            'warning': {
+                'class': 'logging.handlers.RotatingFileHandler',
+                'filename': full_log_path + '/warning.log',
+                'level': 'WARNING',
+                'formatter': 'default',
+                'backupCount': 2,
+                'maxBytes': 5 * 1024 * 1024,
+            },
+            'error': {
+                'class': 'logging.handlers.RotatingFileHandler',
+                'filename': full_log_path + '/error.log',
+                'level': 'ERROR',
+                'formatter': 'error',
+                'backupCount': 2,
+                'maxBytes': 5 * 1024 * 1024,
+            },
+            'mail_admin': {
+                'level': 'ERROR',
+                'filters': ['require_debug_false'],
+                'class': 'django.utils.log.AdminEmailHandler'
+            }
+        },
+        'formatters': {
+            'default': {
+                'format': '%(asctime)s [%(module)s | %(levelname)s] %(message)s',
+            },
+            'error': {
+                'format': '%(asctime)s [%(module)s | %(levelname)s] %(message)s @ %(pathname)s : %(lineno)d : %(funcName)s',
+            },
+        },
+    }
+

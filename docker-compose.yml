@@ -25,7 +25,6 @@ services:
     volumes:
       - ./src/transmission/processing/temp/:/app/transmission/processing/temp/
       - ./src/home/temp/:/app/home/temp/
-      - ./src/de421.bsp:/app/de421.bsp
     environment:
         - ALLOWED_HOSTS=${ALLOWED_HOSTS:-localhost,127.0.0.1}
         - POSTGRES_DB=${POSTGRES_DB:-delfitlm}
@@ -76,7 +75,7 @@ services:
      --force'
 
   grafana:
-    image: grafana/grafana:10.2.3
+    image: grafana/grafana:10.3.1
     ports:
       - '3000:3000'
     volumes:

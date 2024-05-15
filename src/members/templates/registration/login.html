@@ -62,7 +62,7 @@
                 {{ form.password.errors }}
             </div>
         </div>
-
+        <input type="hidden" name="next" value="{{ request.GET.next }}" />
         <input type="submit" class="btn btn-custom-primary btn-block" value="Login"></input>
     </form>
 

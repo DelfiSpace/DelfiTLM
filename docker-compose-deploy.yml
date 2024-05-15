@@ -4,19 +4,19 @@ services:
     app:
         volumes:
             - static_data:/vol/web
-            - app_logs:/app/logs
+            - app_logs:/var/log/django
         environment:
-            # TODO: change the key
             # could also add database config here and remove it from settings.py
             - DEBUG=0
             - SECRET_KEY=${SECRET_KEY:-qwerty}
+            - MY_HOST=${MY_HOST:-localhost}
             - ALLOWED_HOSTS=${MY_HOST:-localhost,127.0.0.1}
             - SMTP_HOST=${SMTP_HOST}
             - SMTP_PORT=${SMTP_PORT}
             - FROM_EMAIL=${FROM_EMAIL:-webmaster@localhost}
             - SATNOGS_TOKEN=${SATNOGS_TOKEN}
-            - CROWDSEC_LAPI=${CROWDSEC_LAPI:-6a601f2baf982825d472200826fb44b5}
-            - CROWDSEC_URL=${CROWDSEC_URL:-http://crowdsec:8080/}
+            - CROWDSEC_LAPI
+            - CROWDSEC_URL
         restart: always
         logging:
             driver: "json-file"
@@ -51,7 +51,7 @@ services:
 
     pgadmin:
         container_name: pgadmin4_container
-        image: dpage/pgadmin4:latest
+        image: dpage/pgadmin4:8.3
         restart: always
         environment:
             - PGADMIN_DEFAULT_EMAIL=${PGADMIN_DEFAULT_EMAIL:-admin@admin.com}
@@ -68,19 +68,26 @@ services:
 
 
     crowdsec:
-        image: crowdsecurity/crowdsec:latest
+        image: crowdsecurity/crowdsec:v1.6.0-1
         restart: always
         ports:
             - "8080:8080"
         environment:
             #this is the list of collections we want to install
             #https://hub.crowdsec.net/author/crowdsecurity/collections/nginx
-            COLLECTIONS: "crowdsecurity/nginx"
+            COLLECTIONS: "crowdsecurity/nginx crowdsecurity/base-http-scenarios crowdsecurity/http-cve crowdsecurity/whitelist-good-actors"
             GID: "${GID-1000}"
+            SMTP_HOST: "${SMTP_HOST}"
+            SMTP_PORT: "${SMTP_PORT}"
+            FROM_EMAIL: "${FROM_EMAIL}"
+            ADMIN_EMAIL: "${ADMIN_EMAIL}"
+            CUSTOM_HOSTNAME: "${MY_HOST}"
         depends_on:
             - 'proxy'
         volumes:
             - ./crowdsec/acquis.yaml:/etc/crowdsec/acquis.yaml
+            - ./crowdsec/email.yaml:/etc/crowdsec/notifications/email.yaml
+            - ./crowdsec/profiles.yaml:/etc/crowdsec/profiles.yaml
             - logs:/var/log/nginx/:ro
             - crowdsec_db:/var/lib/crowdsec/data/
             - crowdsec_config:/etc/crowdsec/

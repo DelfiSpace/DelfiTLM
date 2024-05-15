@@ -32,7 +32,6 @@ def get_job_id(satellite: str, job_description: str) -> str:
 
     return satellite + "_" + job_description
 
-
 def schedule_job(job_type: str, satellite: str = None, link: str = None,
                  date: datetime = None, interval: int = None) -> None:
     """Schedule job for a specified satellite and/or link.

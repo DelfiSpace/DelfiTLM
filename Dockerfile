@@ -7,8 +7,9 @@ ENV PATH="/scripts:${PATH}"
 ENV PYTHONBUFFERED=1
 
 # Install Java
-RUN apt-get update && \
-    apt install -y default-jdk && \
+RUN echo "deb https://deb.debian.org/debian/ bullseye main" >> /etc/apt/sources.list && \
+    apt-get update && \
+    apt install -y --no-install-recommends openjdk-11-jre-headless && \
     apt-get clean;
 
 # install dependencies
@@ -35,10 +36,20 @@ RUN adduser user
 RUN chown -R user:user /vol
 RUN chmod -R 755 /vol/web
 
-RUN chmod -R 755 /app/logs
-RUN chmod -R 666 /app/transmission/processing/temp
-RUN chmod -R 666 /app/home/temp
-RUN chmod -R 666 /app/de421.bsp
+RUN mkdir /var/log/django
+RUN chown -R user:user /app
+RUN chmod -R 755 /var/log/django
+
+RUN chown -R user:user /app/transmission/processing/temp
+RUN chmod -R 755 /app/transmission/processing/temp
+RUN chown -R user:user /app/home/temp
+RUN chmod -R 755 /app/home/temp
+
+# download the solar system latest ephemeris from JPL SSD  ftp server
+ADD https://ssd.jpl.nasa.gov/ftp/eph/planets/bsp/de421.bsp /app/de421.bsp
+RUN chown user:user /app/de421.bsp
+RUN chmod -R 744 /app/de421.bsp
+
 # switch to unprivileged user
 USER user
 

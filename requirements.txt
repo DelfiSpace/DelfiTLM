@@ -20,6 +20,7 @@ django-filter==23.5
 django-pandas==0.6.6
 django-revproxy==0.12.0
 django-tables2==2.7.0
+django-axes==6.3.0
 djangorestframework==3.14.0
 djangorestframework-api-key==3.0.0
 hyperlink==21.0.0

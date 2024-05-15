@@ -163,4 +163,4 @@ The django admin page can be used to elevate user permissions, assign roles or b
 
 ### Satellites status
 
-The file `src/transmission/processing/satellites.py` maintains the satellites we are operating. It contains the NoradID and activity status used for map tracking and other monitoring purposes. When new satellites are launched or decommissioned, the status in this file should be updated accordingly. `Status: Operational` means the location of the satellite will be tracked, while the other statuses are simply displayed on the front page.
+The file `src/transmission/processing/satellites.py` maintains the satellites we are operating. It contains the NoradID and activity status used for map tracking and other monitoring purposes. When new satellites are launched or decommissioned, the status in this file should be updated accordingly. `Status: Operational` (functional satellite in orbit) and `Status: Non Operational` (orbiting satellite no more functional) mean the location of the satellite will be tracked, while the other statuses are simply displayed on the front page.

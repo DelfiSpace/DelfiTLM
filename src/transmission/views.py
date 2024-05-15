@@ -182,7 +182,7 @@ def paginate_telemetry_table(request, telemetry_filter, table_name):
     context = {'telemetry_filter': telemetry_filter, 'page_obj': page_obj, 'table_name': table_name}
     return render(request, "transmission/table.html", context)
 
-
+@login_required(login_url='/login')
 def get_frames_table(request, link):
     """Queries and filters the uplink/downlink table"""
 
