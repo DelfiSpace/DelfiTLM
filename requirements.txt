@@ -29,7 +29,7 @@ incremental==22.10.0
 influxdb==5.3.1
 influxdb-client==1.42.0
 isort==5.13.2
-jplephem==2.21
+jplephem==2.22
 lazy-object-proxy==1.10.0
 mccabe==0.7.0
 msgpack==1.0.7
