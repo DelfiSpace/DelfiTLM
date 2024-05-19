@@ -78,8 +78,9 @@ class influxdb_api:
         query = f'''from(bucket: "{satellite}")
             |> range(start: 0)
             |> filter(fn: (r) => r["_measurement"] == "{RAW_MEASUREMENT}")
-            |> keep(columns: ["_time"])
-            |> tail(n: 1)
+            |> filter(fn: (r) => r["_field"] == "processed")
+            |> group()
+            |> last()
             '''
 
         ret = self._get_query_api().query(query=query, org="downlink")
@@ -137,7 +138,7 @@ class influxdb_api:
         db_fields = {
             "measurement": RAW_MEASUREMENT,
             "time": timestamp,
-            "tags": {},
+            "tags": {"user": tlm.pop("user"), "application": tlm.pop("application")},
             "fields": tlm
         }
 
@@ -189,16 +190,19 @@ class influxdb_api:
         query = f'''from(bucket: "{satellite}")
             |> range(start: {time_range_start}, stop: {time_range_stop})
             |> filter(fn: (r) => r._measurement == "{RAW_MEASUREMENT}")
+            |> pivot(rowKey:["_time"], columnKey: ["_field"], valueColumn: "_value")
             '''
 
         # update frame only if already present
-        if len(self._get_query_api().query(query=query, org=link)) != 0:
+        frames = self._get_query_api().query(query=query, org=link)
+        if len(frames) != 0:
+            frame = frames[0].records[0]
             bucket = satellite
 
             db_fields = {
                 "measurement": RAW_MEASUREMENT,
                 "time": timestamp,
-                "tags": {},
+                "tags": {"user": frame["user"], "application": frame["application"]},
                 "fields": tlm
             }
 
