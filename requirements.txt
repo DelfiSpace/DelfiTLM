@@ -26,7 +26,7 @@ djangorestframework-api-key==3.0.0
 hyperlink==21.0.0
 idna==3.7
 incremental==22.10.0
-influxdb==5.3.1
+influxdb==5.3.2
 influxdb-client==1.42.0
 isort==5.13.2
 jplephem==2.22
