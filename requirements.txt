@@ -17,7 +17,7 @@ Django==4.2.11
 django-bootstrap-v5==1.0.11
 djecrety
 django-filter==23.5
-django-pandas==0.6.6
+django-pandas==0.6.7
 django-revproxy==0.12.0
 django-tables2==2.7.0
 django-axes==6.3.0
