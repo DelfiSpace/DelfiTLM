@@ -34,7 +34,7 @@ lazy-object-proxy==1.10.0
 mccabe==0.7.0
 msgpack==1.0.7
 numpy==1.26.4
-pandas==2.2.0
+pandas==2.2.2
 platformdirs==4.2.0
 psycopg2==2.9.9
 py4j==0.10.9.7
