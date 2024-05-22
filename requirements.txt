@@ -67,4 +67,4 @@ tzlocal==5.2
 urllib3==2.2.0
 uWSGI==2.0.24
 wrapt==1.16.0
-zope.interface==6.1
+zope.interface==6.4
