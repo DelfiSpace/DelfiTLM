@@ -32,7 +32,7 @@ isort==5.13.2
 jplephem==2.22
 lazy-object-proxy==1.10.0
 mccabe==0.7.0
-msgpack==1.0.7
+msgpack==1.0.8
 numpy==1.26.4
 pandas==2.2.2
 platformdirs==4.2.0
