@@ -1,5 +1,5 @@
 APScheduler==3.10.4
-asgiref==3.7.2
+asgiref==3.8.1
 astroid==3.0.3
 attrs==23.2.0
 autobahn==23.6.2
