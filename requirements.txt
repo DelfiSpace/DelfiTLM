@@ -35,7 +35,7 @@ mccabe==0.7.0
 msgpack==1.0.8
 numpy==1.26.4
 pandas==2.2.2
-platformdirs==4.2.0
+platformdirs==4.2.2
 psycopg2==2.9.9
 py4j==0.10.9.7
 pyasn1==0.5.1
