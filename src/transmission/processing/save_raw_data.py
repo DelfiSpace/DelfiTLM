@@ -173,8 +173,6 @@ def mark_frame_as_invalid(frame: str, link: str) -> None:
         Downlink.objects.filter(frame=frame).update(invalid=True)
     elif link == "uplink":
         Uplink.objects.filter(frame=frame).update(invalid=True)
-    else:
-        return
 
 
 def store_frame_to_influxdb(frame: dict, link: str) -> tuple:
