@@ -43,7 +43,7 @@ pyasn1-modules==0.3.0
 pycodestyle==2.11.1
 pycparser==2.22
 pycrowdsec==0.0.5
-pylint==3.0.3
+pylint==3.2.2
 pylint-django==2.5.5
 pylint-plugin-utils==0.8.2
 pyOpenSSL==24.1.0
