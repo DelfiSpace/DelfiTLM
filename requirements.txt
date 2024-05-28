@@ -38,7 +38,7 @@ pandas==2.2.2
 platformdirs==4.2.2
 psycopg2==2.9.9
 py4j==0.10.9.7
-pyasn1==0.5.1
+pyasn1==0.6.0
 pyasn1-modules==0.4.0
 pycodestyle==2.11.1
 pycparser==2.22
