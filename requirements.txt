@@ -27,7 +27,7 @@ hyperlink==21.0.0
 idna==3.7
 incremental==22.10.0
 influxdb==5.3.2
-influxdb-client==1.43.0
+influxdb-client==1.44.0
 isort==5.13.2
 jplephem==2.22
 lazy-object-proxy==1.10.0
