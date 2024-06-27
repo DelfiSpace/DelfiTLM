@@ -11,7 +11,7 @@ Afgter registration, it is required to enroll the search engine in the online co
 
 1. Access the container for cscli: `docker exec -it delfitlm_crowdsec_1 /bin/bash`.
 
-2. Enroll the Search Engine: `sudo cscli console enroll <API_KEY>`. 
+2. Enroll the Search Engine: `cscli console enroll <API_KEY>`. 
 
 ## Install collections 
 
@@ -83,7 +83,11 @@ iptables_chains:
   - DOCKER-USER
 ```
 
-4. Run `sudo systemctl start crowdsec-firewall-bouncer.service` to start the firewall bouncer. Poll requests should be visible in the CrowSec logs.
+4. Run `sudo systemctl start crowdsec-firewall-bouncer.service` to start the firewall bouncer. 
+
+5. Restart the crowdsec image `docker restart delfitlm_crowdsec_1`.
+ 
+6. Poll requests should be visible in the CrowSec logs and in the web console.
 
 
 ### Pycrowdsec bouncer setup
@@ -96,7 +100,7 @@ GitHub and instructions: https://github.com/crowdsecurity/pycrowdsec
 
 3. Write down the API KEY that has been generated.
 
-This bouncer doesn't require any installs outside docker and can be configured for Django from `settings.py`. Make sure to set the url and the key to the LAPI in the environment variables. Banned IP addresses will be redirected to a `Forbidden 403` view.
+4. Configure the bouncer from `settings.py`. Make sure to set the url and the key to the LAPI in the environment variables. Banned IP addresses will be redirected to a `Forbidden 403` view.
 
 ```
 PYCROWDSEC_LAPI_KEY = os.environ.get('CROWDSEC_LAPI')
@@ -110,6 +114,11 @@ PYCROWDSEC_EXCLUDE_VIEWS = {"ban_view"}
 
 PYCROWDSEC_POLL_INTERVAL = 10
 ```
+
+5. Restart the crowdsec image `docker restart delfitlm_crowdsec_1`.
+
+6. Poll requests should be visible in the CrowSec logs and in the web console.
+
 ## Whitelists
 
 Whitelista are used to ignore machines considered to be safe (such as security scanners) and avoid them to trigger a ban. A guide is available [here](https://docs.crowdsec.net/docs/whitelist/create/). It is reccommended to use the PostOverflows whitelist to limit the amount of events.
