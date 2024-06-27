@@ -99,7 +99,7 @@ CROWDSEC_LAPI=
 `docker compose -f docker-compose.yml -f docker-compose-deploy.yml up --build`
 
 5. Access the container to initialize Django (only required the first time):
-`docker exec -it delfitlm_app_1 /bin/bash`
+`docker exec -it delfitlm-app-1 /bin/bash`
 
 6. Run the database migration to create the tables (only required the first time): `python manage.py migrate`
 
@@ -124,25 +124,25 @@ Note: remove `--build` to skip building the container, will use the cached one (
 
 To backup the database run: `docker exec -t your-db-container pg_dumpall -c -U your-db-user > dump.sql`
 
-For this project: `docker exec -t delfitlm_db_1 pg_dumpall -c -U postgres > dump.sql`
+For this project: `docker exec -t delfitlm-db-1 pg_dumpall -c -U postgres > dump.sql`
 
 #### Restore
 
 To restore the database run: `cat dump.sql | docker exec -i your-db-container psql -U your-db-user -d your-db-name`
 
-For this project: `cat dump.sql | docker exec -i delfitlm_db_1 psql -U postgres -d delfitlm`
+For this project: `cat dump.sql | docker exec -i delfitlm-db-1 psql -U postgres -d delfitlm`
 
 #### Changing the password
 
 To change the password of the postgres user:
 1. Update `reset_postgres_password.sql` with the new password.
-2. Run: `cat reset_postgres_password.sql | docker exec -i delfitlm_db_1 psql -U postgres`
+2. Run: `cat reset_postgres_password.sql | docker exec -i delfitlm-db-1 psql -U postgres`
 
 ### InfluxDB
 
 #### Changing the admin password
 
-1. Enter the container exec `docker exec -it delfitlm_influxdb_1 /bin/bash`
+1. Enter the container exec `docker exec -it delfitlm-influxdb-1 /bin/bash`
 2. Change the password using: `influx user password -n admin -t INFLUXDB_V2_TOKEN`
 
 ##### Updating the INFLUXDB_TOKEN
@@ -155,7 +155,7 @@ To change the password of the postgres user:
 
 #### Changing the admin password
 
-To change the admin password: `docker exec -it delfitlm_grafana_1 grafana-cli admin reset-admin-password newpassword`
+To change the admin password: `docker exec -it delfitlm-grafana-1 grafana-cli admin reset-admin-password newpassword`
 
 ## Info about website administration
 
