@@ -10,7 +10,7 @@ nav_order: 5
 
 - Python3 and Java 11 or higher
 - For local running/development: The postgres client library (For apt users: `apt install libpq-dev`)
-- Docker and docker-compose if running the system or the database from a container
+- Docker and Docker Compose if running the system or the database from a container
 - For running without docker: Set up a Postgres instance on port 5432
 
 ## Setup (Run locally/on host machine)
@@ -25,7 +25,7 @@ nav_order: 5
 `pip install -r requirements.txt`
 
 4. Set up the database via docker or connect your own Postgres instance
-`docker-compose up db`
+`docker compose up db`
 
 5. Run the migrations from the root folder:
 `python src/manage.py migrate`
@@ -42,7 +42,7 @@ nav_order: 5
 ## Setup (Run via docker)
 
 This method should be sufficient for most development tasks as any (file) changes you make are monitored by StatReloader. To start the environment, run:
-`docker-compose up --build`
+`docker compose up --build`
 
 Note: remove `--build` to skip building the container, will use the cached one (last build)
 
@@ -96,7 +96,7 @@ CROWDSEC_LAPI=
 ```
 
 4. Build and run Docker deployment script (runs on port 80 - default web port):
-`docker-compose -f docker-compose.yml -f docker-compose-deploy.yml up --build`
+`docker compose -f docker-compose.yml -f docker-compose-deploy.yml up --build`
 
 5. Access the container to initialize Django (only required the first time):
 `docker exec -it delfitlm_app_1 /bin/bash`
