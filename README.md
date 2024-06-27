@@ -22,7 +22,7 @@
 `pip install -r requirements.txt`
 
 4. Set up the database via docker or connect your own Postgres instance
-`docker-compose up db`
+`docker compose up db`
 
 5. Run the migrations from the root folder:
 `python src/manage.py migrate`
