@@ -52,27 +52,19 @@ services:
       - 8086:8086
     volumes:
       - influxdb_storage:/var/lib/influxdb2
+    environment:
+      - DOCKER_INFLUXDB_INIT_MODE=setup
+      - DOCKER_INFLUXDB_INIT_USERNAME=${INFLUX_USERNAME:-admin}
+      - DOCKER_INFLUXDB_INIT_PASSWORD=${INFLUX_PASSWORD:-adminpwd}
+      - DOCKER_INFLUXDB_INIT_ORG=${INFLUXDB_V2_ORG:-DelfiSpace}
+      - DOCKER_INFLUXDB_INIT_BUCKET=${INFLUX_BUCKET:-default}
+      - DOCKER_INFLUXDB_INIT_ADMIN_TOKEN="${INFLUXDB_V2_TOKEN:-adminpwd}
     restart: always
     logging:
       driver: "json-file"
       options:
         max-file: "5"   # file count
         max-size: "10m" # file size
-
-
-  influx-cli:
-    #  initializes influxdb user/password/bucket...
-    image: influxdb:2.7
-    depends_on:
-      - influxdb
-    command: sh -c 'sleep 5; influx setup
-     --bucket "${INFLUX_BUCKET:-default}"
-     --token "${INFLUXDB_V2_TOKEN:-adminpwd}"
-     --org "${INFLUXDB_V2_ORG:-Delfi Space}"
-     --username=${INFLUX_USERNAME:-"admin"}
-     --password=${INFLUX_PASSWORD:-"adminpwd"}
-     --host=http://influxdb:8086
-     --force'
 
   grafana:
     image: grafana/grafana:10.3.1
