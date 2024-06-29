@@ -1,4 +1,4 @@
-FROM  ubuntu:20.04
+FROM  ubuntu:24.04
 FROM  python:3.12
 
 ENV PATH="/scripts:${PATH}"
@@ -39,6 +39,7 @@ RUN chmod -R 755 /vol/web
 RUN mkdir /var/log/django
 RUN chown -R user:user /app
 RUN chmod -R 755 /var/log/django
+RUN chown -R user:user /var/log/django
 
 RUN chown -R user:user /app/home/temp
 RUN chmod -R 755 /app/home/temp
