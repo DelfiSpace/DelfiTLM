@@ -110,7 +110,7 @@ CROWDSEC_LAPI=
 
 8. Generate a django keys with `python manage.py djecrety` and copy it to the .env file.
 
-9. Create the InfluxDB buckets: `python src/manage.py initbuckets`
+9. Create the InfluxDB buckets: `python manage.py initbuckets`
 
 Note: remove `--build` to skip building the container, will use the cached one (last build)
 
