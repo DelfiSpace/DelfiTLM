@@ -21,22 +21,25 @@
 3. Install the requirements (one time instruction):
 `pip install -r requirements.txt`
 
-4. Set up the database via docker or connect your own Postgres instance
+4. Set up the database via docker
 `docker compose up db`
 
 5. Run the migrations from the root folder:
 `python src/manage.py migrate`
 
-6. Create the InfluxDB buckets:
+6. Set up InfluxDB via docker 
+`docker compose up influxdb`
+
+7. Create the InfluxDB buckets:
 `python src/manage.py initbuckets`
 
-7. Run the server from the root folder:
+8. Run the server from the root folder:
 `python src/manage.py runserver` The server runs on http://127.0.0.1:8000/
 
-8. To run the tests:
+9. To run the tests:
 `python src/manage.py test`
 
-9. To run pylint:
+10. To run pylint:
 `find src -name "*.py" | xargs pylint`
 
 ## Setup (Run via docker)
