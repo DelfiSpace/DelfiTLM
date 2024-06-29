@@ -30,13 +30,16 @@ nav_order: 5
 5. Run the migrations from the root folder:
 `python src/manage.py migrate`
 
-6. Run the server from the root folder:
+6. Create the InfluxDB buckets:
+`python src/manage.py initbuckets`
+
+7. Run the server from the root folder:
 `python src/manage.py runserver` The server runs on http://127.0.0.1:8000/
 
-7. To run the tests:
+8. To run the tests:
 `python src/manage.py test`
 
-8. To run pylint:
+9. To run pylint:
 `find src -name "*.py" | xargs pylint`
 
 ## Setup (Run via docker)
@@ -106,6 +109,8 @@ CROWDSEC_LAPI=
 7. Create a superuser (admin user) (only required the first time): `python manage.py createsuperuser`
 
 8. Generate a django keys with `python manage.py djecrety` and copy it to the .env file.
+
+9. Create the InfluxDB buckets: `python src/manage.py initbuckets`
 
 Note: remove `--build` to skip building the container, will use the cached one (last build)
 
