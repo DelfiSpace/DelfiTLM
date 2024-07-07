@@ -31,7 +31,6 @@ services:
         - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-postgres}
         - POSTGRES_HOST=${POSTGRES_HOST:-db}
         - POSTGRES_PORT=${POSTGRES_PORT:-5432}
-        - INFLUXDB_V2_ORG=${INFLUXDB_V2_ORG:-DelfiSpace}
         - INFLUXDB_V2_TOKEN=${INFLUXDB_V2_TOKEN:-adminpwd}
     restart: always
     depends_on:
@@ -55,8 +54,8 @@ services:
       - DOCKER_INFLUXDB_INIT_MODE=setup
       - DOCKER_INFLUXDB_INIT_USERNAME=${INFLUX_USERNAME:-admin}
       - DOCKER_INFLUXDB_INIT_PASSWORD=${INFLUX_PASSWORD:-adminpwd}
-      - DOCKER_INFLUXDB_INIT_ORG=${INFLUXDB_V2_ORG:-DelfiSpace}
-      - DOCKER_INFLUXDB_INIT_BUCKET=${INFLUX_BUCKET:-default}
+      - DOCKER_INFLUXDB_INIT_ORG=default
+      - DOCKER_INFLUXDB_INIT_BUCKET=default
       - DOCKER_INFLUXDB_INIT_ADMIN_TOKEN=${INFLUXDB_V2_TOKEN:-adminpwd}
     restart: always
     logging:
