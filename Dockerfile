@@ -15,7 +15,7 @@ RUN echo "deb https://deb.debian.org/debian/ bullseye main" >> /etc/apt/sources.
 # install dependencies
 COPY ./requirements.txt /requirements.txt
 
-RUN pip3 install -r /requirements.txt
+RUN pip3 install --no-cache-dir -r /requirements.txt
 
 # add the code to the docker image
 RUN mkdir /app
