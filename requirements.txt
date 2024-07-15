@@ -13,7 +13,7 @@ asgiref==3.8.1
     #   django-axes
 attrs==23.2.0
     # via rush
-certifi==2024.6.2
+certifi==2024.7.4
     # via
     #   influxdb-client
     #   requests
@@ -71,7 +71,7 @@ python-dateutil==2.9.0.post0
     # via
     #   influxdb-client
     #   spacetrack
-pytz==2021.3
+pytz==2024.1
     # via apscheduler
 reactivex==4.0.4
     # via influxdb-client
