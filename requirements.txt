@@ -27,12 +27,21 @@ django==5.0.7
     #   -r requirements.in
     #   channels
     #   django-axes
+    #   django-bootstrap5
+    #   django-filter
     #   djangorestframework
+    #   djecrety
 django-axes==6.5.1
+    # via -r requirements.in
+django-bootstrap5==24.2
+    # via -r requirements.in
+django-filter==24.2
     # via -r requirements.in
 djangorestframework==3.15.2
     # via -r requirements.in
 djangorestframework-api-key==3.0.0
+    # via -r requirements.in
+djecrety==1.0.17
     # via -r requirements.in
 idna==3.7
     # via requests
@@ -52,6 +61,8 @@ numpy==2.0.0
     #   skyfield
 packaging==24.1
     # via djangorestframework-api-key
+psycopg2==2.9.9
+    # via -r requirements.in
 py4j==0.10.9.7
     # via -r requirements.in
 pycrowdsec==0.0.5
@@ -100,6 +111,8 @@ urllib3==2.2.2
     # via
     #   influxdb-client
     #   requests
+uwsgi==2.0.26
+    # via -r requirements.in
 zipp==3.19.2
     # via importlib-metadata
 
