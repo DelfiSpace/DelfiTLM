@@ -21,6 +21,5 @@ jobs:
       run: |
         cd src
         coverage run --source='.' manage.py test members 
-        coverage combine
         coverage html
         coverage erase
