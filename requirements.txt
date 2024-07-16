@@ -57,7 +57,7 @@ service-identity==24.1.0
 sgp4==2.23
 six==1.16.0
 skyfield==1.49
-sqlparse==0.5.0
+sqlparse==0.5.1
 toml==0.10.2
 Twisted==24.3.0
 txaio==23.1.1
