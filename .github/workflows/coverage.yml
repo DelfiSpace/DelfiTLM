@@ -1,6 +1,10 @@
 name: Coverage
 
-on: [push]
+on:
+  pull_request:
+    types: [opened]
+    branches:
+      - master  
 
 jobs:
   build:
@@ -21,5 +25,9 @@ jobs:
       run: |
         cd src
         coverage run --source='.' manage.py test members 
-        coverage html
+        coverage xml
         coverage erase
+    - name: Report
+      uses: 5monkeys/cobertura-action@master
+      with:
+        path: src/coverage.xml
