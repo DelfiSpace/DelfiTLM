@@ -1,5 +1,3 @@
--r requirements.in
-    # Also add production requirements
 coverage>=7.6.0
     # verify the unit test coverage
 autopep8>=2.3.1
