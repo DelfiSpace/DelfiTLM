@@ -99,7 +99,7 @@ skyfield==1.49
     # via -r requirements.in
 spacetrack==0.16.0
     # via satellitetle
-sqlparse==0.5.0
+sqlparse==0.5.1
     # via django
 typing-extensions==4.12.2
     # via

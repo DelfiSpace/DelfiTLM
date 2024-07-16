@@ -123,7 +123,7 @@ skyfield==1.49
     # via -r requirements.in
 spacetrack==0.16.0
     # via satellitetle
-sqlparse==0.5.0
+sqlparse==0.5.1
     # via django
 tomli==2.0.1
     # via
