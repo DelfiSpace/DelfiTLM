@@ -759,7 +759,7 @@ class TestAccountDeletion(TestCase):
         self.assertEqual(len(Uplink.objects.all()), 3)
 
         for frame in Downlink.objects.all():
-            self.assertEqual(frame.observer, str(self.user.UUID))
+            self.assertEqual(frame.observer, str(self.user.username))
 
         for frame in Uplink.objects.all():
             self.assertEqual(frame.operator, 'user')
