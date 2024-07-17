@@ -1,3 +1,5 @@
+# More information on the action can be found here:
+# https://github.com/marketplace/actions/cobertura-report
 name: Coverage
 
 on: [push]
