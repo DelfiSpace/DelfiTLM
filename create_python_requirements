@@ -1,0 +1,6 @@
+#!/bin/bash
+# generate the requirements.txt file
+pip-compile -U requirements.in
+
+# generate the requirements_dev.txt file
+pip-compile -U --output-file requirements_dev.txt requirements_dev.in
