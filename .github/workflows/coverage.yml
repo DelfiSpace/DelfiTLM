@@ -22,7 +22,7 @@ jobs:
     - name: Coverage
       run: |
         cd src
-        coverage run --source='.' manage.py test members 
+        coverage run --source='.' --rcfile='../.coveragerc' manage.py test members 
         coverage xml
         coverage erase
     - name: Report
