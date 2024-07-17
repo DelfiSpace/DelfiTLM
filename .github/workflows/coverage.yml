@@ -30,3 +30,4 @@ jobs:
         minimum_coverage: 75
         show_missing: true
         link_missing_lines: true
+        link_missing_lines_source_dir: src
