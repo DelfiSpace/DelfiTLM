@@ -85,7 +85,7 @@ requests==2.32.3
     #   spacetrack
 rush==2021.4.0
     # via spacetrack
-satellitetle==0.15.1
+satellitetle==0.16.1
     # via -r requirements.in
 sgp4==2.23
     # via
