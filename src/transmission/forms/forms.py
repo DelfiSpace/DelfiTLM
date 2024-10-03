@@ -12,6 +12,7 @@ satellites = [
 jobs = [
     (None, '-'),
     ('buffer_processing', 'Frame Buffer Processing'),
+    ('buffer_reprocessing', 'Frame Buffer Reprocessing'),
     ('scraper', 'Scrape'),
     ('raw_bucket_processing', 'Bucket Processing (new frames)'),
     ('reprocess_failed_raw_bucket', 'Bucket Reprocessing (failed frames)'),

@@ -22,7 +22,7 @@ services:
             driver: "json-file"
             options:
                 max-file: "5"   # file count
-                max-size: "10m" # file size
+                max-size: "1m"  # file size
 
 
     proxy:
@@ -68,7 +68,7 @@ services:
 
 
     crowdsec:
-        image: crowdsecurity/crowdsec:v1.6.0-1
+        image: crowdsecurity/crowdsec:v1.6.2
         restart: always
         ports:
             - "8080:8080"
