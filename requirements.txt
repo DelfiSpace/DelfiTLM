@@ -22,7 +22,7 @@ channels==4.1.0
     # via -r requirements.in
 charset-normalizer==3.3.2
     # via requests
-django==5.0.7
+django==5.1.1
     # via
     #   -r requirements.in
     #   channels
@@ -31,9 +31,9 @@ django==5.0.7
     #   django-filter
     #   djangorestframework
     #   djecrety
-django-axes==6.5.1
+django-axes==7.0.0
     # via -r requirements.in
-django-bootstrap5==24.2
+django-bootstrap5==24.3
     # via -r requirements.in
 django-filter==24.3
     # via -r requirements.in
@@ -49,7 +49,7 @@ importlib-metadata==8.0.0
     # via
     #   pycrowdsec
     #   satellitetle
-influxdb-client==1.44.0
+influxdb-client==1.46.0
     # via -r requirements.in
 jplephem==2.22
     # via skyfield
@@ -85,7 +85,7 @@ requests==2.32.3
     #   spacetrack
 rush==2021.4.0
     # via spacetrack
-satellitetle==0.15.1
+satellitetle==0.16.1
     # via -r requirements.in
 sgp4==2.23
     # via
@@ -111,7 +111,7 @@ urllib3==2.2.2
     # via
     #   influxdb-client
     #   requests
-uwsgi==2.0.26
+uwsgi==2.0.27
     # via -r requirements.in
 zipp==3.19.2
     # via importlib-metadata
