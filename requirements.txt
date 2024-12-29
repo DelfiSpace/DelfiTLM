@@ -4,7 +4,7 @@
 #
 #    pip-compile requirements.in
 #
-apscheduler==3.10.4
+apscheduler==3.11.0
     # via -r requirements.in
 asgiref==3.8.1
     # via
@@ -18,11 +18,11 @@ certifi==2024.7.4
     #   influxdb-client
     #   requests
     #   skyfield
-channels==4.1.0
+channels==4.2.0
     # via -r requirements.in
 charset-normalizer==3.3.2
     # via requests
-django==5.1.1
+django==5.1.4
     # via
     #   -r requirements.in
     #   channels
@@ -31,7 +31,7 @@ django==5.1.1
     #   django-filter
     #   djangorestframework
     #   djecrety
-django-axes==7.0.0
+django-axes==7.0.1
     # via -r requirements.in
 django-bootstrap5==24.3
     # via -r requirements.in
@@ -49,7 +49,7 @@ importlib-metadata==8.0.0
     # via
     #   pycrowdsec
     #   satellitetle
-influxdb-client==1.46.0
+influxdb-client==1.48.0
     # via -r requirements.in
 jplephem==2.22
     # via skyfield
@@ -61,7 +61,7 @@ numpy==2.0.0
     #   skyfield
 packaging==24.1
     # via djangorestframework-api-key
-psycopg2==2.9.9
+psycopg2==2.9.10
     # via -r requirements.in
 py4j==0.10.9.7
     # via -r requirements.in
@@ -71,8 +71,6 @@ python-dateutil==2.9.0.post0
     # via
     #   influxdb-client
     #   spacetrack
-pytz==2024.1
-    # via apscheduler
 reactivex==4.0.4
     # via influxdb-client
 represent==2.1
@@ -92,9 +90,7 @@ sgp4==2.23
     #   satellitetle
     #   skyfield
 six==1.16.0
-    # via
-    #   apscheduler
-    #   python-dateutil
+    # via python-dateutil
 skyfield==1.49
     # via -r requirements.in
 spacetrack==0.16.0
@@ -111,7 +107,7 @@ urllib3==2.2.2
     # via
     #   influxdb-client
     #   requests
-uwsgi==2.0.27
+uwsgi==2.0.28
     # via -r requirements.in
 zipp==3.19.2
     # via importlib-metadata

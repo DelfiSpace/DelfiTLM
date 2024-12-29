@@ -8,7 +8,7 @@ astroid==3.2.3
     # via pylint
 autopep8==2.3.1
     # via -r requirements_dev.in
-coverage==7.6.1
+coverage==7.6.10
     # via -r requirements_dev.in
 dill==0.3.8
     # via pylint
@@ -24,7 +24,7 @@ pylint==3.2.5
     # via
     #   pylint-django
     #   pylint-plugin-utils
-pylint-django==2.5.5
+pylint-django==2.6.1
     # via -r requirements_dev.in
 pylint-plugin-utils==0.8.2
     # via pylint-django
