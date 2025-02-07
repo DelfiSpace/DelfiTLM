@@ -78,7 +78,7 @@ packaging==24.1
     # via djangorestframework-api-key
 psycopg2==2.9.10
     # via -r requirements.in
-py4j==0.10.9.8
+py4j==0.10.9.9
     # via -r requirements.in
 pycrowdsec==0.0.5
     # via -r requirements.in
