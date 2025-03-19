@@ -37,7 +37,7 @@ django==5.1.6
     #   djecrety
 django-axes==7.0.2
     # via -r requirements.in
-django-bootstrap5==24.3
+django-bootstrap5==25.1
     # via -r requirements.in
 django-filter==25.1
     # via -r requirements.in
