@@ -4,7 +4,6 @@ from django.test import Client, TestCase, RequestFactory, tag
 from django.contrib.messages.storage.fallback import FallbackStorage
 
 from transmission.models import Downlink, Satellite, Uplink
-from transmission.processing.bookkeep_new_data_time_range import combine_time_ranges
 from transmission.processing.satellites import SATELLITES
 from transmission.processing.save_raw_data import process_uplink_and_downlink, store_frames
 from transmission.views import delete_processed_frames, process
@@ -24,11 +23,6 @@ class TestFrameSubmission(TestCase):
 
         self.user.save()
         Satellite.objects.create(sat='delfipq', norad_id=1).save()
-
-    def tearDown(self) -> None:
-        for sat in SATELLITES:
-            combine_time_ranges(sat, 'uplink')
-            combine_time_ranges(sat, 'downlink')
 
     def testSubmitFramesBatch(self):
         # add 3 valid frames from delfi_pq
@@ -91,10 +85,6 @@ class TestFramesProcessing(TestCase):
             store_frames(f, "user")
 
     def tearDown(self):
-        for sat in SATELLITES:
-            combine_time_ranges(sat, 'uplink')
-            combine_time_ranges(sat, 'downlink')
-
         self.client.logout()
 
 

@@ -6,6 +6,7 @@ providers:
     folder: ''
     type: 'file'
     editable: true
+    allowUiUpdates: false
     options:
       # <string, required> path to dashboard files on disk. Required when using the 'file' type
       path: /etc/grafana/provisioning/dashboards/
