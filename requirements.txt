@@ -126,7 +126,7 @@ urllib3==2.2.2
     # via
     #   influxdb-client
     #   requests
-uwsgi==2.0.28
+uwsgi==2.0.29
     # via -r requirements.in
 zipp==3.19.2
     # via importlib-metadata
