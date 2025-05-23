@@ -62,7 +62,7 @@ importlib-metadata==8.7.0
     # via
     #   pycrowdsec
     #   satellitetle
-influxdb-client==1.48.0
+influxdb-client==1.49.0
     # via -r requirements.in
 jplephem==2.22
     # via skyfield
