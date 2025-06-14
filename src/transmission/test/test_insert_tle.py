@@ -2,7 +2,7 @@ from django.test import TestCase
 from transmission.models import TLE, Satellite
 from transmission.processing.save_raw_data import save_tle
 import datetime as dt
-import pytz
+from datetime import timezone
 
 # pylint: disable=all
 
@@ -21,5 +21,5 @@ class TestTLE(TestCase):
         tle_instance = TLE.objects.all()[0]
         self.assertEqual(tle_instance.sat, new_sat)
         self.assertEqual(tle_instance.tle, tle)
-        self.assertEqual(tle_instance.valid_from, dt.datetime(2008, 9, 20, 12, 25, 40, 104187, tzinfo=pytz.UTC))
+        self.assertEqual(tle_instance.valid_from, dt.datetime(2008, 9, 20, 12, 25, 40, 104187, tzinfo=timezone.utc))
         self.assertEqual(len(TLE.objects.all()), 1)
