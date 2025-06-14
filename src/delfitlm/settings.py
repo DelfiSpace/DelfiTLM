@@ -93,7 +93,7 @@ INSTALLED_APPS = [
     'transmission',
     'members',
     'home',
-    'bootstrap5',
+    'django_bootstrap5',
     'djecrety',
 
 ]

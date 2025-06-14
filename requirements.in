@@ -1,0 +1,26 @@
+APScheduler>=3.10.4
+    # scheduler used to run processing tasks
+channels>=4.1.0
+    # WebSocket framework for Django
+Django>=5.0.7
+    # CMS framework
+django_axes>=6.5.1
+    # Protect Django from suspicious access attempts
+django-bootstrap5>=24.2
+    # Bootstrap5 themes for Django
+django_filter>=24.2
+    # Allow dynamic QuerySets in Django
+djangorestframework>=3.15.2
+djangorestframework_api_key>=3.0.0
+djecrety>=1.0.17
+influxdb_client>=1.44.0
+py4j>=0.10.9.7
+psycopg2>=2.9.9
+pycrowdsec>=0.0.5
+Requests>=2.32.3
+satellitetle>=0.15.1
+    # Fetch TLEs from various online sources
+skyfield>=1.49
+    # Python astronomy package
+uWSGI>=2.0.26
+    # Python webserver

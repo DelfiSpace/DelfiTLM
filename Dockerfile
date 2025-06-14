@@ -1,5 +1,5 @@
-FROM  ubuntu:20.04
-FROM  python:3.12
+FROM  ubuntu:24.04
+FROM  python:3.13
 
 ENV PATH="/scripts:${PATH}"
 
@@ -15,7 +15,7 @@ RUN echo "deb https://deb.debian.org/debian/ bullseye main" >> /etc/apt/sources.
 # install dependencies
 COPY ./requirements.txt /requirements.txt
 
-RUN pip3 install -r /requirements.txt
+RUN pip3 install --no-cache-dir -r /requirements.txt
 
 # add the code to the docker image
 RUN mkdir /app
@@ -39,6 +39,7 @@ RUN chmod -R 755 /vol/web
 RUN mkdir /var/log/django
 RUN chown -R user:user /app
 RUN chmod -R 755 /var/log/django
+RUN chown -R user:user /var/log/django
 
 RUN chown -R user:user /app/home/temp
 RUN chmod -R 755 /app/home/temp

@@ -1,0 +1,35 @@
+# More information on the action can be found here:
+# https://github.com/marketplace/actions/cobertura-report
+name: Coverage
+
+on: [push]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+    - name: Set up Python 3.12
+      uses: actions/setup-python@v5
+      with:
+        python-version: 3.12
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt -r requirements_dev.txt
+    - name: Coverage
+      run: |
+        cd src
+        coverage run --source='.' --rcfile='../.coveragerc' manage.py test members 
+        coverage xml
+        coverage erase
+    - name: Report
+      uses: 5monkeys/cobertura-action@master
+      with:
+        path: src/coverage.xml
+        minimum_coverage: 75
+        show_missing: true
+        link_missing_lines: true
+        link_missing_lines_source_dir: src

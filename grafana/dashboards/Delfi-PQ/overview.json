@@ -18,13 +18,13 @@
   "editable": true,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 0,
-  "id": 15,
+  "id": 2,
   "links": [
     {
       "asDropdown": false,
       "icon": "dashboard",
       "includeVars": false,
-      "keepTime": false,
+      "keepTime": true,
       "tags": [],
       "targetBlank": false,
       "title": "EPS",
@@ -36,7 +36,7 @@
       "asDropdown": false,
       "icon": "dashboard",
       "includeVars": false,
-      "keepTime": false,
+      "keepTime": true,
       "tags": [],
       "targetBlank": false,
       "title": "COMMS",
@@ -216,7 +216,7 @@
             "type": "influxdb",
             "uid": "3ap6QYRVz"
           },
-          "query": "from(bucket: \"delfi_pq\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r[\"_measurement\"] == \"_raw\")\n  |> filter(fn: (r) => r[\"_field\"] == \"user\")\n  |> aggregateWindow(every: v.windowPeriod, fn: count)\n  |> cumulativeSum(columns: [\"_value\"]) ",
+          "query": "from(bucket: \"delfi_pq\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r[\"_measurement\"] == \"_raw\")\n  |> filter(fn: (r) => r[\"_field\"] == \"user\")\n  |> filter(fn: (r) =>  \"${username}\" == \"All\" or r[\"_value\"] == \"${username}\")   \n  |> aggregateWindow(every: v.windowPeriod, fn: count)\n  |> cumulativeSum(columns: [\"_value\"]) ",
           "refId": "A"
         }
       ],
@@ -287,7 +287,7 @@
           "refId": "A"
         }
       ],
-      "title": "Last Frame Received by",
+      "title": "Last frame received by",
       "type": "stat"
     },
     {
@@ -322,7 +322,7 @@
       },
       "gridPos": {
         "h": 3,
-        "w": 11,
+        "w": 9,
         "x": 8,
         "y": 9
       },
@@ -355,7 +355,71 @@
           "refId": "A"
         }
       ],
-      "title": "Last Frame Received on",
+      "title": "Last frame received on",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "3ap6QYRVz"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "fixedColor": "dark-green",
+            "mode": "fixed"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unitScale": true
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 3,
+        "w": 7,
+        "x": 17,
+        "y": 9
+      },
+      "id": 6,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [],
+          "fields": "/^application$/",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "10.3.1",
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "3ap6QYRVz"
+          },
+          "query": "from(bucket: \"delfi_pq\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r[\"_measurement\"] == \"_raw\")\n  |> filter(fn: (r) => r[\"_field\"] == \"application\")\n  |> last()",
+          "refId": "A"
+        }
+      ],
+      "title": "Last frame received using",
       "type": "stat"
     }
   ],
@@ -363,7 +427,34 @@
   "schemaVersion": 39,
   "tags": [],
   "templating": {
-    "list": []
+    "list": [
+      {
+        "allValue": "All",
+        "current": {
+          "selected": false,
+          "text": "All",
+          "value": "$__all"
+        },
+        "datasource": {
+          "type": "influxdb",
+          "uid": "3ap6QYRVz"
+        },
+        "definition": "from(bucket: \"delfi_pq\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r[\"_measurement\"] == \"_raw\")\n  |> filter(fn: (r) => r[\"_field\"] == \"user\")\n  |> distinct()",
+        "description": "",
+        "hide": 0,
+        "includeAll": true,
+        "label": "Username",
+        "multi": false,
+        "name": "username",
+        "options": [],
+        "query": "from(bucket: \"delfi_pq\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r[\"_measurement\"] == \"_raw\")\n  |> filter(fn: (r) => r[\"_field\"] == \"user\")\n  |> distinct()",
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 1,
+        "type": "query"
+      }
+    ]
   },
   "time": {
     "from": "2022-01-13T00:00:00.000Z",
@@ -373,6 +464,6 @@
   "timezone": "utc",
   "title": "Overview",
   "uid": "Delfi-PQ_Overview",
-  "version": 2,
+  "version": 3,
   "weekStart": ""
 }

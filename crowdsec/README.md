@@ -2,23 +2,23 @@
 
 CrowdSec is included as a service in the `docker-compose-deploy.yml`. CrowdSec parses nginx access logs as configured in `crowdsec/acquis.yaml` and checks against a set of scenarios that could indicate an attack is happening. If that is to happen, CrowdSec issues an alert and the bouncer will block that specific IP address. The bouncer polls CrowdSec at a regular interval to obtain the updated list of banned IP addresses and enforces the ban. The exact interval length is configurable.
 
-To access the CrowdSec cli (cscli) run: `docker exec -it delfitlm_crowdsec_1 /bin/bash`.
+To access the CrowdSec cli (cscli) run: `docker exec -it delfitlm-crowdsec-1 /bin/bash`.
 
 ## CrowdSec Dashboard
 
 System stats and graphs, including the scenarios and bouncers, can be viewed at https://app.crowdsec.net/ upon registering the server.
 Afgter registration, it is required to enroll the search engine in the online console by generating an API KEY. After this has been generated, the API KEY can be registered on the Crowdsec image:
 
-1. Access the container for cscli: `docker exec -it delfitlm_crowdsec_1 /bin/bash`.
+1. Access the container for cscli: `docker exec -it delfitlm-crowdsec-1 /bin/bash`.
 
-2. Enroll the Search Engine: `sudo cscli console enroll <API_KEY>`. 
+2. Enroll the Search Engine: `cscli console enroll <API_KEY>`. 
 
 ## Install collections 
 
 Crowdsec Hub can be used to install scenarios under which bans are enforced: https://docs.crowdsec.net/docs/user_guides/hub_mgmt/.
 A basic set of collections is already installed in the container but extra collections can be easilly added.
 
-1. Access the container for cscli: `docker exec -it delfitlm_crowdsec_1 /bin/bash`.
+1. Access the container for cscli: `docker exec -it delfitlm-crowdsec-1 /bin/bash`.
 
 2. Install the `nginx` scenario collection: `cscli collections install crowdsecurity/nginx`. This is just an example, as the `nginx` in installed by default.
 
@@ -31,7 +31,7 @@ The iptables Firewall Bouncer controls the host iptable settings to ban users: t
 A Python Bouncer can also be installed to protect the Django app: this bouncer does not require any access to the host machine but it only protects the app by banning malicious users to access the `app` container but allowing them to still eventually access all other containers. In terms of security, this solution is inferior to the iptables host Firewall bouncer but it requires no access to the host machine.
 
 Using both bouncers is possible as, anytime Crowdsec will reach a ban decision, both bouncers will be activated both bannng the same connection. Once the iptables Firewall bouncr will have banned a connection, this will never reach the Python bouncer, making it superfluous. <ins>It is thus advised to only use the iptables Firewall Bouncer, whenever possible</ins>.
-1. Access the container for cscli: `docker exec -it delfitlm_crowdsec_1 /bin/bash`.
+1. Access the container for cscli: `docker exec -it delfitlm-crowdsec-1 /bin/bash`.
 
 2. Create an api key with: `cscli bouncers add BouncerName`. (save it for the firewall setup)
 
@@ -42,7 +42,7 @@ Useful links:
     - https://docs.crowdsec.net/docs/bouncers/firewall/
     - https://prog.world/securing-docker-compose-stacks-with-crowdsec/
 
-1. Access the container for cscli: `docker exec -it delfitlm_crowdsec_1 /bin/bash`.
+1. Access the container for cscli: `docker exec -it delfitlm-crowdsec-1 /bin/bash`.
    
 2. Create an API key in CrowdSec for the bouncer: `cscli bouncers add HostFirewallBouncer`.
 
@@ -83,20 +83,24 @@ iptables_chains:
   - DOCKER-USER
 ```
 
-4. Run `sudo systemctl start crowdsec-firewall-bouncer.service` to start the firewall bouncer. Poll requests should be visible in the CrowSec logs.
+4. Run `sudo systemctl start crowdsec-firewall-bouncer.service` to start the firewall bouncer. 
+
+5. Restart the crowdsec image `docker restart delfitlm-crowdsec-1`.
+ 
+6. Poll requests should be visible in the CrowSec logs and in the web console.
 
 
 ### Pycrowdsec bouncer setup
 
 GitHub and instructions: https://github.com/crowdsecurity/pycrowdsec
 
-1. Access the container for cscli: `docker exec -it delfitlm_crowdsec_1 /bin/bash`.
+1. Access the container for cscli: `docker exec -it delfitlm-crowdsec-1 /bin/bash`.
    
 2. Create an API key in CrowdSec for the bouncer: `cscli bouncers add python_bouncer`.
 
 3. Write down the API KEY that has been generated.
 
-This bouncer doesn't require any installs outside docker and can be configured for Django from `settings.py`. Make sure to set the url and the key to the LAPI in the environment variables. Banned IP addresses will be redirected to a `Forbidden 403` view.
+4. Configure the bouncer from `settings.py`. Make sure to set the url and the key to the LAPI in the environment variables. Banned IP addresses will be redirected to a `Forbidden 403` view.
 
 ```
 PYCROWDSEC_LAPI_KEY = os.environ.get('CROWDSEC_LAPI')
@@ -110,6 +114,11 @@ PYCROWDSEC_EXCLUDE_VIEWS = {"ban_view"}
 
 PYCROWDSEC_POLL_INTERVAL = 10
 ```
+
+5. Restart the crowdsec image `docker restart delfitlm-crowdsec-1`.
+
+6. Poll requests should be visible in the CrowSec logs and in the web console.
+
 ## Whitelists
 
 Whitelista are used to ignore machines considered to be safe (such as security scanners) and avoid them to trigger a ban. A guide is available [here](https://docs.crowdsec.net/docs/whitelist/create/). It is reccommended to use the PostOverflows whitelist to limit the amount of events.
