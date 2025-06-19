@@ -117,7 +117,7 @@ typing-extensions==4.13.2
     #   reactivex
 tzlocal==5.3.1
     # via apscheduler
-urllib3==2.4.0
+urllib3==2.5.0
     # via
     #   influxdb-client
     #   requests
