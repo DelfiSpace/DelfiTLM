@@ -22,7 +22,7 @@ certifi==2025.4.26
     #   influxdb-client
     #   requests
     #   skyfield
-channels==4.3.0
+channels==4.3.1
     # via -r requirements.in
 charset-normalizer==3.4.2
     # via requests
