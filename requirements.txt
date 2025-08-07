@@ -26,7 +26,7 @@ channels==4.3.1
     # via -r requirements.in
 charset-normalizer==3.4.2
     # via requests
-django==5.2.4
+django==5.2.5
     # via
     #   -r requirements.in
     #   channels
