@@ -9,13 +9,15 @@ class XTCEParser:
     gateway_started = 0
 
     def __init__(self, XTCEfile, stream):
+        #logger.info("XTCETools " + str(XTCEfile) + " " + str(XTCEParser.gateway_started))
+        #if XTCEParser.gateway_started == 0:
+        #    XTCEParser.gateway_started = 1
+        #    logger.info("Loading XTCETools")
+        #    launch_gateway(classpath='transmission/processing/xtcetools-1.1.5.jar',
+        #                   port=25333,
+        #                   die_on_exit=True)
 
-        if XTCEParser.gateway_started == 0:
-            launch_gateway(classpath='transmission/processing/xtcetools-1.1.5.jar',
-                           port=25333,
-                           die_on_exit=True)
-            XTCEParser.gateway_started = 1
-
+        logger.info("Loading XTCEParser")
         gateway = JavaGateway()
 
         XTCEContainerContentModel = gateway.jvm.org.xtce.toolkit.XTCEContainerContentModel
@@ -29,8 +31,18 @@ class XTCEParser:
         XTCEEngineeringType = gateway.jvm.org.xtce.toolkit.XTCETypedObject.EngineeringType
         File = gateway.jvm.java.io.File
 
+        self.XTCEfile_ = XTCEfile
         self.db_ = XTCEDatabase(File(XTCEfile), True, False, True)
         self.stream_ = self.db_.getStream(stream)
+
+    def loadGateway():
+        logger.info("Loading py4j and XTCETools")
+        launch_gateway(classpath='transmission/processing/xtcetools-1.1.5.jar',
+                        port=25333,
+                        die_on_exit=True)
+
+    def getFile(self):
+        return self.XTCEfile
 
     def processTMFrame(self, data):
         try:
@@ -38,18 +50,14 @@ class XTCEParser:
             entries = model.getContentList()
             telemetry = {"frame": model.getName()}
 
-            logger.debug("TMFrame entries: %s", entries)
-
+            # throw an error if the frame is found but empty
             for entry in entries:
                 val = entry.getValue()
                 name = entry.getName()
-                logger.debug("TMFrame val: %s", val)
-                logger.debug("TMFrame name: %s", name)
 
-                if val:
+                if val and entry.getParameter().getAncillaryData("Ignore").isEmpty():
                     telemetry[name] = {"value": val.getCalibratedValue(), "status": self.isFieldValid(entry)}
 
-            logger.debug("TMFrame TLM: %s", telemetry)
             return telemetry
         except Py4JJavaError as ex:
             raise XTCEException(ex.java_exception)
@@ -111,7 +119,7 @@ class SatParsers:
     def __init__(self):
         self.parsers = {
             "delfi_pq": XTCEParser("delfipq/Delfi-PQ.xml", "Radio"),
-            "delfi_next": None,
+            #"delfi_next": None,
             "delfi_c3": XTCEParser("delfic3/Delfi-C3.xml", "TLM"),
-            "da_vinci": None
+            #"da_vinci": None
         }
