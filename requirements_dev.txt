@@ -8,7 +8,7 @@ astroid==3.3.10
     # via pylint
 autopep8==2.3.2
     # via -r requirements_dev.in
-coverage==7.10.2
+coverage==7.10.5
     # via -r requirements_dev.in
 dill==0.4.0
     # via pylint
