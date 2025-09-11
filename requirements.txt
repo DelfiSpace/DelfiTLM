@@ -14,7 +14,9 @@ asgiref==3.9.1
     #   django
     #   django-axes
 attrs==25.3.0
-    # via rush
+    # via
+    #   outcome
+    #   rush
 certifi==2025.4.26
     # via
     #   httpcore
@@ -47,6 +49,8 @@ djangorestframework-api-key==3.1.0
     # via -r requirements.in
 djecrety==1.0.17
     # via -r requirements.in
+filelock==3.19.1
+    # via spacetrack
 h11==0.16.0
     # via httpcore
 httpcore==1.0.9
@@ -72,8 +76,12 @@ numpy==2.2.6
     # via
     #   jplephem
     #   skyfield
+outcome==1.3.0.post0
+    # via spacetrack
 packaging==25.0
     # via djangorestframework-api-key
+platformdirs==4.4.0
+    # via spacetrack
 psycopg2==2.9.10
     # via -r requirements.in
 py4j==0.10.9.9
@@ -93,9 +101,9 @@ requests==2.32.4
     #   satellitetle
 rush==2021.4.0
     # via spacetrack
-satellitetle==0.17.1
+satellitetle==0.18.0
     # via -r requirements.in
-sgp4==2.24
+sgp4==2.25
     # via
     #   satellitetle
     #   skyfield
@@ -107,7 +115,7 @@ sniffio==1.3.1
     # via
     #   anyio
     #   spacetrack
-spacetrack==1.3.1
+spacetrack==1.4.0
     # via satellitetle
 sqlparse==0.5.3
     # via django
