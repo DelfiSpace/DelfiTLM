@@ -41,7 +41,7 @@ django-axes==8.0.0
     # via -r requirements.in
 django-bootstrap5==25.2
     # via -r requirements.in
-django-filter==25.1
+django-filter==25.2
     # via -r requirements.in
 djangorestframework==3.16.1
     # via -r requirements.in
