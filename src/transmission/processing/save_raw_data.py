@@ -1,26 +1,20 @@
 """Scripts for saving the frames into the database"""
-import os
 import re
 import copy
 import json
 from typing import Union
-
+import time
+from datetime import datetime, timezone
 from django.forms import ValidationError
 from django.core.exceptions import PermissionDenied
 from django.db import models
 from django.db.models.query import QuerySet
 from django.utils.dateparse import parse_datetime
 from skyfield.api import load, EarthSatellite
-import pytz
-from django_logger import logger
 from members.models import Member
 from transmission.models import Uplink, Downlink, TLE, Satellite
 from transmission.processing.XTCEParser import SatParsers, XTCEException
-from transmission.processing.bookkeep_new_data_time_range import get_new_data_buffer_temp_folder, \
-    include_timestamp_in_time_range, save_timestamps_to_file
-from transmission.processing.influxdb_api import save_raw_frame_to_influxdb
-from transmission.processing.telemetry_scraper import strip_tlm
-
+from transmission.processing.influxdb_api import influxdb_api
 
 def store_frames(frames, username: str, application: str = None) -> int:
     """Store frames in batches if the input is a list.
@@ -64,13 +58,25 @@ def build_frame_model_object(frame: dict, username: str, application: str = None
         if not user.has_perm("transmission.add_uplink"):
             raise PermissionDenied()
         frame_entry = Uplink()
-        frame_entry.operator = user
+        if "username" not in frame:
+            frame_entry.operator = user
+        else:
+            if user.is_staff:
+                frame_entry.operator = frame["username"]
+            else:
+                raise PermissionDenied()
 
     elif frame["link"] == "downlink":
         if not user.has_perm("transmission.add_downlink"):
             raise PermissionDenied()
         frame_entry = Downlink()
-        frame_entry.observer = user.UUID
+        if "username" not in frame:
+            frame_entry.observer = user
+        else:
+            if user.is_staff:
+                frame_entry.observer = frame["username"]
+            else:
+                raise PermissionDenied()
 
     else:
         raise ValidationError("Invalid frame link.")
@@ -102,7 +108,7 @@ def parse_submitted_frame(frame: dict, frame_entry: models.Model) -> models.Mode
     # assign the frame HEX values
     frame_entry.frame = frame['frame']
     # assign the timestamp
-    frame_entry.timestamp = parse_datetime(frame["timestamp"]).astimezone(pytz.utc)
+    frame_entry.timestamp = parse_datetime(frame["timestamp"]).astimezone(timezone.utc)
     # assign frequency, if present
     if "frequency" in frame and frame["frequency"] is not None:
         frame_entry.frequency = frame["frequency"]
@@ -110,7 +116,7 @@ def parse_submitted_frame(frame: dict, frame_entry: models.Model) -> models.Mode
     # add metadata
     metadata = copy.deepcopy(frame)
     # remove previously parsed fields
-    for field in ["frame", "timestamp", "frequency"]:
+    for field in ["frame", "timestamp", "frequency", "link", "username"]:
         if field in metadata:
             del metadata[field]
 
@@ -119,85 +125,104 @@ def parse_submitted_frame(frame: dict, frame_entry: models.Model) -> models.Mode
     return frame_entry
 
 
-def process_uplink_and_downlink() -> tuple:
-    """Process all unprocessed uplink and downlink frames,
-    i.e. move them to the influxdb raw satellite data bucket."""
+def process_uplink_and_downlink(invalid_frames: bool = False, callback = None):
+    """Process all processed uplink and downlink frames,
+    i.e. move them to the influxdb raw satellite data bucket.
+    if invalid_frames is false, only new frames are processed. If 
+    invalid_frames is true, only frames already marked as invalid 
+    will be processed."""
 
-    downlink_frames = Downlink.objects.all().filter(processed=False)
-    process_frames(downlink_frames, "downlink")
+    iterations = 0
 
-    uplink_frames = Uplink.objects.all().filter(processed=False)
-    process_frames(uplink_frames, "uplink")
+    parsers = SatParsers()
+    db = influxdb_api()
 
-    return len(downlink_frames), len(uplink_frames)
+    # list the satellites whose frames have been processed:
+    # ths allows to later start their processing task
+    satellites_list = []
+
+    # once the last frame has been processed, maintain the task active for
+    # at least 10 seconds while looking for more frames to process
+    while iterations < 50:
+        total_processed_frames = 0
+
+        if not invalid_frames:
+            # set a maximum length to the results to ensure responsive data processing
+            downlink_frames = Downlink.objects.all().filter(processed=False).order_by("timestamp")[:100]
+            uplink_frames = Uplink.objects.all().filter(processed=False).order_by("timestamp")[:100]
+        else:
+            # set a maximum length to the results to ensure responsive data processing
+            downlink_frames = Downlink.objects.all().filter(processed=True).filter(invalid=True).order_by("timestamp")[:100]
+            uplink_frames = Uplink.objects.all().filter(processed=True).filter(invalid=True).order_by("timestamp")[:100]
+
+        downlink_frames_count = process_frames(parsers, db, downlink_frames, "downlink", satellites_list)
+        uplink_frames_count = process_frames(parsers, db, uplink_frames, "uplink", satellites_list)
+        total_processed_frames = downlink_frames_count + uplink_frames_count
+
+        # if the satellites list is not empty and the scheduler callback is not None
+        if satellites_list and callback is not None:
+            # report the satellites that have been sending frames
+            callback(satellites_list)
+            # empty the list
+            satellites_list = []
+
+        # one more iteration
+        iterations += 1
+
+        if total_processed_frames != 0:
+            # frames were processed in this iteration, reset the iteration counter
+            iterations = 0
+
+        # maintain the thread alive and re-check if new frames have been received
+        time.sleep(0.2)
 
 
-def process_frames(frames: QuerySet, link: str) -> int:
+def process_frames(parsers: SatParsers, db: influxdb_api, frames: QuerySet, link: str, satellites_list: list) -> int:
     """Try to store frame to influxdb and set the processed flag to True
     if a frame was successfully stored in influxdb.
     Returns the count of successfully processed_frames."""
 
     processed_frames = 0
-    processed_frames_timestamps = {}
+
     for frame_obj in frames:
         frame_dict = frame_obj.to_dictionary()
-        stored, satellite = store_frame_to_influxdb(frame_dict, link)
+        stored, satellite = store_frame_to_influxdb(parsers, db, frame_obj.timestamp, frame_dict, link)
+        frame_obj.processed = True
+
         if stored:
-            frame_obj.processed = True
+            # valid frame
             frame_obj.invalid = False
-            frame_obj.save()
             processed_frames += 1
-            if satellite not in processed_frames_timestamps:
-                processed_frames_timestamps[satellite] = include_timestamp_in_time_range(
-                    satellite, link,
-                    frame_obj.timestamp,
-                    existing_range={}
-                )
-            else:
-                processed_frames_timestamps[satellite] = include_timestamp_in_time_range(
-                    satellite, link,
-                    frame_obj.timestamp,
-                    existing_range=processed_frames_timestamps[satellite]
-                )
-    for satellite, time_range in processed_frames_timestamps.items():
-        path = get_new_data_buffer_temp_folder(satellite)
-        path += satellite + "_" + link + "_" + str(len(os.listdir(path))) + ".json"
-        save_timestamps_to_file(time_range, path)
+
+            # satellite found, add it to the processing list
+            if satellite not in satellites_list:
+                satellites_list.append(satellite)
+        else:
+            frame_obj.invalid = True
+
+        frame_obj.save()
 
     return processed_frames
 
 
-def mark_frame_as_invalid(frame: str, link: str) -> None:
-    """Flag an invalid frame that doesn't correspond to any satellite."""
-    if link == "downlink":
-        Downlink.objects.filter(frame=frame).update(invalid=True)
-    elif link == "uplink":
-        Uplink.objects.filter(frame=frame).update(invalid=True)
-
-
-def store_frame_to_influxdb(frame: dict, link: str) -> tuple:
+def store_frame_to_influxdb(parsers: SatParsers, db: influxdb_api, timestamp: datetime, frame: dict, link: str) -> tuple:
     """Try to store frame to influxdb.
     Returns True if the frame was successfully stored, False otherwise."""
 
-    satellite = get_satellite_from_frame(frame["frame"])
+    satellite = get_satellite_from_frame(parsers, frame["frame"])
 
     if satellite is None:
-        mark_frame_as_invalid(frame["frame"], link)
-        logger.warning("invalid %s frame, cannot match satellite: %s", link, frame["frame"])
         return False, satellite
 
-    fields_to_save = ["frame", "timestamp", "observer", "frequency", "application", "metadata"]
-
-    frame = strip_tlm(frame, fields_to_save)
-    stored = save_raw_frame_to_influxdb(satellite, link, frame)
+    stored = db.save_raw_frame(satellite, link, timestamp, frame)
 
     return stored, satellite
 
 
-def get_satellite_from_frame(frame: str) -> Union[str, None]:
+def get_satellite_from_frame(parsers: SatParsers, frame: str) -> Union[str, None]:
     """Find the corresponding satellite by attempting to parse the frame.
     If the parsing is successful, return the satellite name, else None."""
-    for sat, parser in SatParsers().parsers.items():
+    for sat, parser in parsers.parsers.items():
         if parser is not None:
             try:
                 parser.processTMFrame(bytes.fromhex(frame))

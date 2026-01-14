@@ -22,7 +22,7 @@ services:
             driver: "json-file"
             options:
                 max-file: "5"   # file count
-                max-size: "10m" # file size
+                max-size: "1m"  # file size
 
 
     proxy:
@@ -51,7 +51,11 @@ services:
 
     pgadmin:
         container_name: pgadmin4_container
+<<<<<<< HEAD
+        image: dpage/pgadmin4:8.6
+=======
         image: dpage/pgadmin4:8.9
+>>>>>>> 4c892495399d42d7e674640b738a495bfe09dc8b
         restart: always
         environment:
             - PGADMIN_DEFAULT_EMAIL=${PGADMIN_DEFAULT_EMAIL:-admin@admin.com}
@@ -68,7 +72,7 @@ services:
 
 
     crowdsec:
-        image: crowdsecurity/crowdsec:v1.6.0-1
+        image: crowdsecurity/crowdsec:v1.6.2
         restart: always
         ports:
             - "8080:8080"
