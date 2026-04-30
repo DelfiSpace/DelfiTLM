@@ -1,26 +1,26 @@
-APScheduler>=3.10.4
+APScheduler>=3.11.0
     # scheduler used to run processing tasks
-channels>=4.1.0
+channels>=4.2.2
     # WebSocket framework for Django
-Django>=5.0.7
+Django>=5.2.1
     # CMS framework
-django_axes>=6.5.1
+django_axes>=8.0.0
     # Protect Django from suspicious access attempts
-django-bootstrap5>=24.2
+django-bootstrap5>=25.1
     # Bootstrap5 themes for Django
-django_filter>=24.2
+django_filter>=25.1
     # Allow dynamic QuerySets in Django
-djangorestframework>=3.15.2
-djangorestframework_api_key>=3.0.0
+djangorestframework>=3.16.0
+djangorestframework_api_key>=3.1.0
 djecrety>=1.0.17
-influxdb_client>=1.44.0
-py4j>=0.10.9.7
-psycopg2>=2.9.9
+influxdb_client>=1.48.0
+py4j>=0.10.9.9
+psycopg2>=2.9.10
 pycrowdsec>=0.0.5
 Requests>=2.32.3
-satellitetle>=0.15.1
+satellitetle>=0.17.0
     # Fetch TLEs from various online sources
-skyfield>=1.49
+skyfield>=1.53
     # Python astronomy package
-uWSGI>=2.0.26
+uWSGI>=2.0.29
     # Python webserver
