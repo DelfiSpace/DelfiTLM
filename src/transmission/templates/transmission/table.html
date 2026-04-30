@@ -1,4 +1,5 @@
 {% load  static %}
+{% load humanize %}
 <!DOCTYPE html>
   <head>
   <title>{% block title %}DelfiSpace - Frames{% endblock %}</title>
@@ -58,7 +59,7 @@
                 {% for frame in page_obj %}
                 <tr>
                     <td>{{ frame.id }}</td>
-                    <td>{{ frame.timestamp }}</td>
+                    <td>{{ frame.timestamp|date:"Y-m-d H:i:s.u" }}</td>
                     {% if table_name == "Downlink" %}
                     <td>{{ frame.observer }}</td>
                     {% endif %}

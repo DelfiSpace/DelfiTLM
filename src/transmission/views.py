@@ -1,5 +1,5 @@
 """API request handling. Map requests to the corresponding HTMLs."""
-from datetime import timedelta, datetime
+from datetime import datetime
 from http import HTTPStatus
 import json
 from json.decoder import JSONDecodeError
@@ -16,11 +16,11 @@ from rest_framework.decorators import permission_classes
 from django_logger import logger
 from members.models import APIKey
 from transmission.forms.forms import SubmitJob
-from transmission.processing.add_dummy_data import add_dummy_downlink_frames
 from transmission.scheduler import Scheduler, schedule_job
 from .models import Uplink, Downlink, TLE
 from .filters import TelemetryDownlinkFilter, TelemetryUplinkFilter, TLEFilter
-from .processing.save_raw_data import process_frames, store_frames
+#from .processing.save_raw_data import process_frames, store_frames
+from .processing.save_raw_data import store_frames
 
 QUERY_ROW_LIMIT = 100
 
@@ -50,7 +50,7 @@ def submit_frame(request):  # pylint:disable=R0911
                         api_key_name, number_of_saved_frames)
 
             try:
-                schedule_job("buffer_processing", date=datetime.now() + timedelta(seconds=30))
+                schedule_job("buffer_processing", date=datetime.now())
             except ValidationError as _:
                 pass
 
@@ -102,14 +102,6 @@ def submit_frame(request):  # pylint:disable=R0911
     return JsonResponse({"result": "failure", "message": "Method not allowed"}, status=HTTPStatus.METHOD_NOT_ALLOWED)
 
 
-def add_dummy_downlink(request):
-    """Add dummy frames to Downlink table as admin user."""
-
-    add_dummy_downlink_frames()
-
-    return JsonResponse({"len": len(Downlink.objects.all())})
-
-
 @login_required(login_url='/login')
 def delete_processed_frames(request, link):
     """Remove the processed frames that are already stored in influxdb"""
@@ -137,38 +129,38 @@ def delete_processed_frames(request, link):
     return redirect('get_frames_table', link)
 
 
-@login_required(login_url='/login')
-def process(request, link):
-    """Process frames that are not already stored in influxdb"""
-
-    user = request.user
-
-    if link not in ['uplink', 'downlink']:
-        return HttpResponseBadRequest()
-
-    if link == "uplink" and user.has_perm("transmission.view_uplink"):
-        frames = Uplink.objects.all().filter(processed=False)
-        logger.info("%s frames processing triggered: %s frames to process", link, len(frames))
-
-        processed_frame_count = process_frames(frames, link)
-        logger.info("%s %s frames were successfully processed", processed_frame_count, link)
-
-        messages.info(request, f"{processed_frame_count} {link} frames were processed.")
-
-    elif link == "downlink" and user.has_perm("transmission.view_downlink"):
-        frames = Downlink.objects.all().filter(processed=False)
-        logger.info("%s frames processing triggered: %s frames to process", link, len(frames))
-
-        processed_frame_count = process_frames(frames, link)
-        logger.info("%s %s frames were successfully processed", processed_frame_count, link)
-
-        messages.info(request, f"{processed_frame_count} {link} frames were processed.")
-
-    else:
-        logger.warning("%s was denied permission to access uplink or downlink tables", request.user)
-        return HttpResponseForbidden()
-
-    return redirect('get_frames_table', link)
+#@login_required(login_url='/login')
+#def process(request, link):
+#    """Process frames that are not already stored in influxdb"""
+#
+#    user = request.user
+#
+#    if link not in ['uplink', 'downlink']:
+#        return HttpResponseBadRequest()
+#
+#    if link == "uplink" and user.has_perm("transmission.view_uplink"):
+#        frames = Uplink.objects.all().filter(processed=False)
+#        logger.info("%s frames processing triggered: %s frames to process", link, len(frames))
+#
+#        processed_frame_count = process_frames(frames, link)
+#        logger.info("%s %s frames were successfully processed", processed_frame_count, link)
+#
+#        messages.info(request, f"{processed_frame_count} {link} frames were processed.")
+#
+#    elif link == "downlink" and user.has_perm("transmission.view_downlink"):
+#        frames = Downlink.objects.all().filter(processed=False)
+#        logger.info("%s frames processing triggered: %s frames to process", link, len(frames))
+#
+#        processed_frame_count = process_frames(frames, link)
+#        logger.info("%s %s frames were successfully processed", processed_frame_count, link)
+#
+#        messages.info(request, f"{processed_frame_count} {link} frames were processed.")
+#
+#    else:
+#        logger.warning("%s was denied permission to access uplink or downlink tables", request.user)
+#        return HttpResponseForbidden()
+#
+#    return redirect('get_frames_table', link)
 
 
 def paginate_telemetry_table(request, telemetry_filter, table_name):

@@ -1,4 +1,5 @@
 {% load  static %}
+{% load humanize %}
 <!DOCTYPE html>
   <head>
   <title>{% block title %}DelfiSpace - Home{% endblock %}</title>
@@ -44,14 +45,19 @@
     }
   </script>
 
+  <h1 class="text-center mb-4 mb-0">DelfiSpace</h1>
 
-  <h1 class="text-center mb-4">Delfi Space - TU Delft SpaceOps</h1>
+<img src="{% static 'tud-lr.webp' %}" class="img-fluid rounded"
+ityle = "width: 100%; height: 20%%; object-fit: cover;">
+  
+  <p class="text-center">Space Operations at the Delft University of Technology</p>
 
+  <h1 class="text-center mb-4">Our Satellites</h1>
 
 <div style="display: flex; flex-direction: row; flex-wrap: wrap;
 justify-content: center;">
 
-  <div class="card" style="width: 18rem; margin: 10px">
+  <!--div class="card" style="width: 18rem; margin: 10px">
 	  <img src="{% static 'tud-lr.webp' %}" class="card-img-top"
     style = "width: 100%; height: 46.4%; object-fit: cover;">
     <div class="card-body">
@@ -60,7 +66,7 @@ justify-content: center;">
         <a class="btn btn-custom-primary" href="https://www.tudelft.nl/lr/delfi-space" target="_blank">About</a>
         <a class="btn btn-custom-primary" href="/grafana/d/sknvMScVz/latest-reception-times?orgId=1" target="_blank">Latest Receptions</a>
     </div>
-  </div>
+  </div-->
 
       <div class="card" style="width: 18rem; margin: 10px">
 	      <img src="{% static 'delfi-c3.webp' %}" class="card-img-top"
@@ -69,8 +75,10 @@ justify-content: center;">
 
             <h5 class="card-title" style="color:Gray">Delfi-C3</h5>
             <p class="card-text"> Status: {{ delfi_c3_status }} </p>
+	    <p class="card-text">Launch:<br>&nbsp;&nbsp;&nbsp;{% if delfi_c3_launch is not None %}{{ delfi_c3_launch|date:"M dS Y" }}{% else %}-{% endif %}</p>
+	    <p class="card-text"> Last Reception:<br>&nbsp;&nbsp;&nbsp;{% if delfi_c3_last_data is not None %}{{ delfi_c3_last_data|date:"M dS Y H:i:s" }} UTC{% else %}-{% endif %}</p>
             <a class="btn btn-custom-primary" href="https://www.tudelft.nl/lr/delfi-space/delfi-c3" target="_blank">About</a>
-            <a class="btn btn-custom-primary" href="/grafana/d/ec0b906e-c704-41d9-a063-645b803db188/delfi-c3" target="_blank">Dashboard</a>
+            <a class="btn btn-custom-primary" href="/grafana/d/Delfi-C3_Overview" target="_blank">Dashboard</a>
         </div>
       </div>
 
@@ -80,7 +88,9 @@ justify-content: center;">
         <div class="card-body">
 
             <h5 class="card-title" style="color:Gray">Delfi-n3Xt</h5>
-            <p class="card-text"> Status: {{delfi_next_status}} </p>
+            <p class="card-text">Status: {{delfi_next_status}} </p>
+	    <p class="card-text">Launch:<br>&nbsp;&nbsp;&nbsp;{% if delfi_next_launch is not None %}{{ delfi_next_launch|date:"M dS Y" }}{% else %}-{% endif %}</p>
+	    <p class="card-text">Last Reception:<br>&nbsp;&nbsp;&nbsp;{% if delfi_next_last_data is not None %}{{ delfi_next_last_data|date:"M dS Y H:i:s" }} UTC{% else %}-{% endif %}</p>
             <a class="btn btn-custom-primary" href="https://www.tudelft.nl/lr/delfi-space/delfi-n3xt" target="_blank">About</a>
             <button class="btn btn-custom-primary" disabled>Dashboard</button>
 
@@ -93,9 +103,11 @@ justify-content: center;">
         <div class="card-body">
 
             <h5 class="card-title" style="color:Gray">Delfi-PQ</h5>
-            <p class="card-text">Status: {{delfi_pq_status}} </p>
+            <p class="card-text">Status: {{delfi_pq_status}}</p>
+	    <p class="card-text">Launch:<br>&nbsp;&nbsp;&nbsp;{% if delfi_pq_launch is not None %}{{ delfi_pq_launch|date:"M dS Y" }}{% else %}-{% endif %}</p>
+	    <p class="card-text">Last Reception:<br>&nbsp;&nbsp;&nbsp;{% if delfi_pq_last_data is not None %}{{ delfi_pq_last_data|date:"M dS Y H:i:s" }} UTC{% else %}-{% endif %}</p>
             <a class="btn btn-custom-primary" href="https://www.tudelft.nl/lr/delfi-space/delfi-pq" target="_blank">About</a>
-            <a class="btn btn-custom-primary" href="/grafana/d/_j9ikmi4z/delfipq" target="_blank">Dashboard</a>
+            <a class="btn btn-custom-primary" href="/grafana/d/Delfi-PQ_Overview" target="_blank">Dashboard</a>
         </div>
       </div>
 
@@ -107,20 +119,26 @@ justify-content: center;">
         <div class="card-body">
 
             <h5 class="card-title" style="color:Gray">Da Vinci Satellite</h5>
-            <p class="card-text"> Status: {{da_vinci_status}}</p>
+            <p class="card-text">Status: {{da_vinci_status}}</p>
+	    <p class="card-text">Launch:<br>&nbsp;&nbsp;&nbsp;{% if da_vinci_launch is not None %}{{ da_vinci_launch|date:"M dS Y" }}{% else %}-{% endif %}</p>
+	    <p class="card-text">Last Reception:<br>&nbsp;&nbsp;&nbsp;{% if da_vinci_last_data is not None %}{{ da_vinci_last_data|date:"M dS Y H:i:s" }} UTC{% else %}-{% endif %}</p>
             <a class="btn btn-custom-primary" href="https://davincisatellite.nl/?page_id=937&lang=en" target="_blank">About</a>
             <button class="btn btn-custom-primary" disabled>Dashboard</button>
         </div>
       </div>
 
-        <div class="card" style="width: 450; margin: 10px">
+        <!--div class="card" style="width: 450; margin: 10px">
             <iframe src="/grafana/d-solo/sknvMScVz/latest-reception-times?orgId=1&panelId=2" width="450" height="200" frameborder="0"></iframe>
         </div>
 
         <div class="card" style="width: 450; margin: 10px">
             <iframe src="/grafana/d-solo/sknvMScVz/latest-reception-times?orgId=1&panelId=5" width="450" height="200" frameborder="0"></iframe>
-        </div>
+        </div-->
+
+	<h1 class="text-center mb-4 mt-4">Where are our satellites</h1>
+
     {% include 'home/map.html' %}
+    <p class="text-center">Only currently orbiting satellites are shown on the map. Decayed and not launched satellites ones are not visible.</p>
 </div>
 </div>
 {% endblock %}

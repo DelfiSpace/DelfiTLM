@@ -23,7 +23,6 @@ services:
     build:
         context: .
     volumes:
-      - ./src/transmission/processing/temp/:/app/transmission/processing/temp/
       - ./src/home/temp/:/app/home/temp/
     environment:
         - ALLOWED_HOSTS=${ALLOWED_HOSTS:-localhost,127.0.0.1}
@@ -32,7 +31,6 @@ services:
         - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-postgres}
         - POSTGRES_HOST=${POSTGRES_HOST:-db}
         - POSTGRES_PORT=${POSTGRES_PORT:-5432}
-        - INFLUXDB_V2_ORG=${INFLUXDB_V2_ORG:-DelfiSpace}
         - INFLUXDB_V2_TOKEN=${INFLUXDB_V2_TOKEN:-adminpwd}
     restart: always
     depends_on:
@@ -56,8 +54,8 @@ services:
       - DOCKER_INFLUXDB_INIT_MODE=setup
       - DOCKER_INFLUXDB_INIT_USERNAME=${INFLUX_USERNAME:-admin}
       - DOCKER_INFLUXDB_INIT_PASSWORD=${INFLUX_PASSWORD:-adminpwd}
-      - DOCKER_INFLUXDB_INIT_ORG=${INFLUXDB_V2_ORG:-DelfiSpace}
-      - DOCKER_INFLUXDB_INIT_BUCKET=${INFLUX_BUCKET:-default}
+      - DOCKER_INFLUXDB_INIT_ORG=default
+      - DOCKER_INFLUXDB_INIT_BUCKET=default
       - DOCKER_INFLUXDB_INIT_ADMIN_TOKEN=${INFLUXDB_V2_TOKEN:-adminpwd}
     restart: always
     logging:
@@ -80,6 +78,7 @@ services:
     environment:
       - GF_SERVER_DOMAIN=${GF_SERVER_DOMAIN:-localhost}
       - GF_INFLUXDB_V2_TOKEN=${INFLUXDB_V2_TOKEN:-adminpwd}
+      - INFLUXDB_V2_ORG=${INFLUXDB_V2_ORG:-DelfiSpace}
     restart: always
     logging:
       driver: "json-file"

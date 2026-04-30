@@ -10,5 +10,4 @@ datasources:
       token: $GF_INFLUXDB_V2_TOKEN
     jsonData:
       version: Flux
-      organization: Delfi Space
-      defaultBucket: delfi_pq_downlink
+      organization: downlink
