@@ -2,7 +2,7 @@ APScheduler>=3.11.0
     # scheduler used to run processing tasks
 channels>=4.2.2
     # WebSocket framework for Django
-Django>=5.2.1
+Django>=5.2.17
     # CMS framework
 django_axes>=8.0.0
     # Protect Django from suspicious access attempts
