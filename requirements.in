@@ -17,7 +17,7 @@ influxdb_client>=1.48.0
 py4j>=0.10.9.9
 psycopg2>=2.9.10
 pycrowdsec>=0.0.5
-Requests>=2.32.3
+Requests>=2.33.0
 satellitetle>=0.17.0
     # Fetch TLEs from various online sources
 skyfield>=1.53
