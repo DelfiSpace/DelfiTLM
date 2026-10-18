@@ -4,31 +4,31 @@
 #
 #    pip-compile requirements.in
 #
-anyio==4.14.2
+anyio==4.15.1
     # via httpx
-apscheduler==3.11.1
+apscheduler==3.11.3
     # via -r requirements.in
-asgiref==3.9.1
+asgiref==3.12.1
     # via
     #   channels
     #   django
     #   django-axes
-attrs==25.3.0
+attrs==26.1.0
     # via
     #   outcome
     #   rush
-certifi==2025.4.26
+certifi==2026.10.18
     # via
     #   httpcore
     #   httpx
     #   influxdb-client
     #   requests
     #   skyfield
-channels==4.3.1
+channels==4.3.2
     # via -r requirements.in
-charset-normalizer==3.4.2
+charset-normalizer==3.5.2
     # via requests
-django==5.2.17
+django==5.2.18
     # via
     #   -r requirements.in
     #   channels
@@ -37,19 +37,19 @@ django==5.2.17
     #   django-filter
     #   djangorestframework
     #   djecrety
-django-axes==8.0.0
+django-axes==8.3.1
     # via -r requirements.in
-django-bootstrap5==25.3
+django-bootstrap5==26.4
     # via -r requirements.in
-django-filter==25.2
+django-filter==26.2
     # via -r requirements.in
-djangorestframework==3.17.2
+djangorestframework==3.18.3
     # via -r requirements.in
 djangorestframework-api-key==3.1.0
     # via -r requirements.in
 djecrety==1.0.17
     # via -r requirements.in
-filelock==3.20.3
+filelock==4.2.2
     # via spacetrack
 h11==0.16.0
     # via httpcore
@@ -57,32 +57,32 @@ httpcore==1.0.9
     # via httpx
 httpx==0.28.1
     # via spacetrack
-idna==3.10
+idna==3.20
     # via
     #   anyio
     #   httpx
     #   requests
-importlib-metadata==8.7.0
+importlib-metadata==9.0.1
     # via
     #   pycrowdsec
     #   satellitetle
-influxdb-client==1.49.0
+influxdb-client==1.50.0
     # via -r requirements.in
-jplephem==2.22
+jplephem==2.24
     # via skyfield
-logbook==1.8.1
+logbook==1.10.1
     # via spacetrack
-numpy==2.2.6
+numpy==2.5.4
     # via
     #   jplephem
     #   skyfield
 outcome==1.3.0.post0
     # via spacetrack
-packaging==25.0
+packaging==26.3
     # via djangorestframework-api-key
-platformdirs==4.4.0
+platformdirs==4.13.4
     # via spacetrack
-psycopg2==2.9.11
+psycopg2==2.9.13
     # via -r requirements.in
 py4j==0.10.9.9
     # via -r requirements.in
@@ -90,11 +90,11 @@ pycrowdsec==0.0.5
     # via -r requirements.in
 python-dateutil==2.9.0.post0
     # via influxdb-client
-reactivex==4.0.4
+reactivex==6.0.0
     # via influxdb-client
-represent==2.1
+represent==2.2.0
     # via spacetrack
-requests==2.32.5
+requests==2.34.2
     # via
     #   -r requirements.in
     #   pycrowdsec
@@ -103,13 +103,13 @@ rush==2021.4.0
     # via spacetrack
 satellitetle==0.18.0
     # via -r requirements.in
-sgp4==2.25
+sgp4==2.27
     # via
     #   satellitetle
     #   skyfield
 six==1.17.0
     # via python-dateutil
-skyfield==1.53
+skyfield==1.55
     # via -r requirements.in
 sniffio==1.3.1
     # via spacetrack
@@ -117,11 +117,12 @@ spacetrack==1.4.0
     # via satellitetle
 sqlparse==0.6.0
     # via django
-typing-extensions==4.13.2
+typing-extensions==4.16.0
     # via
     #   anyio
+    #   logbook
     #   reactivex
-tzlocal==5.3.1
+tzlocal==5.4.4
     # via apscheduler
 urllib3==2.8.0
     # via
@@ -129,8 +130,5 @@ urllib3==2.8.0
     #   requests
 uwsgi==2.0.31
     # via -r requirements.in
-zipp==3.21.0
+zipp==4.1.1
     # via importlib-metadata
-
-# The following packages are considered to be unsafe in a requirements file:
-# setuptools
