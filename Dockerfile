@@ -1,4 +1,4 @@
-FROM  ubuntu:24.04
+FROM  ubuntu:25.10
 FROM  python:3.14
 
 ENV PATH="/scripts:${PATH}"
