@@ -17,6 +17,9 @@ def parse_and_store_frame(parsers: SatParsers, db: influxdb_api, satellite: str,
     bucket = satellite + "_" + link
 
     if "frame" in telemetry:
+        # group fields by status, so each group is written in one call
+        # instead of one write per field
+        fields_by_status = {}
         for field, value_and_status in telemetry.items():
             # skip frame field
             if field == "frame":
@@ -30,8 +33,10 @@ def parse_and_store_frame(parsers: SatParsers, db: influxdb_api, satellite: str,
             except ValueError:
                 pass
 
-            db.save_processed_frame(satellite, link, telemetry["frame"], timestamp, {"status": status}, {field: value})
+            fields_by_status.setdefault(status, {})[field] = value
 
+        for status, fields in fields_by_status.items():
+            db.save_processed_frame(satellite, link, telemetry["frame"], timestamp, {"status": status}, fields)
 
 def process_retrieved_frames(parsers: SatParsers, db: influxdb_api, satellite: str, link: str) -> int:
     """Parse frames, store the parsed form and mark the raw entry as processed.
