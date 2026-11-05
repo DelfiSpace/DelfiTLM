@@ -6,13 +6,13 @@ Examples:
 
 Only frames whose AX.25 header matches the satellite are stored; frames from other
 satellites are skipped. Frames already in the bucket are skipped as duplicates.
-
 Frames sharing a timestamp with a different frame are shifted by 1 microsecond, since
 InfluxDB would otherwise overwrite one with the other.
 """
 import glob
 import json
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timedelta, timezone
+
 from django.core.management.base import BaseCommand, CommandError
 from transmission.processing.influxdb_api import influxdb_api
 
@@ -24,17 +24,24 @@ SATELLITE_HEADERS = {
 
 
 def parse_pytrack(line: str):
-    """'2022-01-14 08:47:27.912 UTC,131.694,8EA4...' -> (timestamp, frame)"""
-    time_str, _, frame = line.split(",")
-    timestamp = datetime.strptime(time_str, "%Y-%m-%d %H:%M:%S.%f %Z").replace(tzinfo=timezone.utc)
-    return timestamp, frame
+    """'2022-01-14 08:47:27.912 UTC,131.694,8EA4...' -> (timestamp or None, second column, frame).
+    A few lines only have 'HH:MM' (seconds dropped by the exporter); the timestamp is
+    returned as None and reconstructed from the previous line by the caller."""
+    time_str, second_col, frame = line.split(",")
+    for fmt in ("%Y-%m-%d %H:%M:%S.%f %Z", "%Y-%m-%d %H:%M:%S %Z"):
+        try:
+            return datetime.strptime(time_str, fmt).replace(tzinfo=timezone.utc), float(second_col), frame
+        except ValueError:
+            continue
+    datetime.strptime(time_str, "%Y-%m-%d %H:%M %Z")   # still must be a valid date and minute
+    return None, float(second_col), frame
 
 
 def parse_delfigs(line: str):
-    """'{"timestamp": "2022-01-14T10:21:42.747Z", "packet": "8EA4...", ...}' -> (timestamp, frame)"""
+    """'{"timestamp": "2022-01-14T10:21:42.747Z", "packet": "8EA4...", ...}' -> (timestamp, None, frame)"""
     data = json.loads(line)
     timestamp = datetime.fromisoformat(data["timestamp"].replace("Z", "+00:00"))
-    return timestamp, data["packet"]
+    return timestamp, None, data["packet"]
 
 
 PARSERS = {"pytrack": parse_pytrack, "delfigs": parse_delfigs}
@@ -52,7 +59,7 @@ class Command(BaseCommand):
         parser.add_argument("--user", help="value for the 'user' tag (default: the format name)")
         parser.add_argument("--limit", type=int, help="stop after this many lines (for testing)")
 
-    def handle(self, *args, **options):
+    def handle(self, *args, **options):  # pylint: disable=too-many-locals,too-many-branches
         satellite = options["satellite"]
         header = (options["header"] or SATELLITE_HEADERS[satellite]).upper()
         parse = PARSERS[options["format"]]
@@ -64,26 +71,39 @@ class Command(BaseCommand):
             raise CommandError("No files match the given paths")
 
         db = influxdb_api()
-        counts = {"lines": 0, "stored": 0, "duplicate": 0, "nudged": 0, "other_header": 0, "bad_line": 0}
-
+        total = {"lines": 0, "stored": 0, "duplicate": 0, "nudged": 0,
+                 "reconstructed": 0, "other_header": 0, "bad_line": 0}
         # timestamp -> frame already used in this load; several frames can share a timestamp,
         # and in InfluxDB the second would overwrite the first
         used_timestamps = {}
 
         for filename in files:
+            counts = dict.fromkeys(total, 0)
+            previous = None   # (timestamp, second column) of the last good pyTrack line
             with open(filename, encoding="utf-8") as file:
                 for line in file:
                     line = line.strip()
                     if not line:
                         continue
-                    if limit is not None and counts["lines"] >= limit:
+                    if limit is not None and total["lines"] + counts["lines"] >= limit:
                         break
                     counts["lines"] += 1
                     try:
-                        timestamp, frame = parse(line)
+                        timestamp, second_col, frame = parse(line)
                     except (ValueError, KeyError):
                         counts["bad_line"] += 1
                         continue
+
+                    if timestamp is None:
+                        # minute-only pyTrack time: rebuild it from the previous line,
+                        # using the elapsed-seconds column
+                        if previous is None:
+                            counts["bad_line"] += 1
+                            continue
+                        timestamp = previous[0] + timedelta(seconds=second_col - previous[1])
+                        counts["reconstructed"] += 1
+                    if second_col is not None:
+                        previous = (timestamp, second_col)
 
                     frame = frame.strip().upper()
                     if not frame.startswith(header):
@@ -104,8 +124,10 @@ class Command(BaseCommand):
                     else:
                         counts["duplicate"] += 1
 
+            for key, value in counts.items():
+                total[key] += value
             self.stdout.write(f"{filename}: {counts}")
-            if limit is not None and counts["lines"] >= limit:
+            if limit is not None and total["lines"] >= limit:
                 break
 
-        self.stdout.write(self.style.SUCCESS(f"Done: {counts}"))
+        self.stdout.write(self.style.SUCCESS(f"Done: {total}"))
