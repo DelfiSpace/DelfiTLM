@@ -2,7 +2,7 @@ APScheduler>=3.11.0
     # scheduler used to run processing tasks
 channels>=4.2.2
     # WebSocket framework for Django
-Django>=5.2.1
+Django<6.0
     # CMS framework
 django_axes>=8.0.0
     # Protect Django from suspicious access attempts
@@ -10,7 +10,7 @@ django-bootstrap5>=25.1
     # Bootstrap5 themes for Django
 django_filter>=25.1
     # Allow dynamic QuerySets in Django
-djangorestframework>=3.16.0
+djangorestframework>=3.17.2
 djangorestframework_api_key>=3.1.0
 djecrety>=1.0.17
 influxdb_client>=1.48.0
