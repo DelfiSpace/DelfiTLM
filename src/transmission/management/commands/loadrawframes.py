@@ -6,8 +6,13 @@ Examples:
 
 Only frames whose AX.25 header matches the satellite are stored; frames from other
 satellites are skipped. Frames already in the bucket are skipped as duplicates.
+
+Use --window to widen the duplicate check when another logger stamped the same frames
+slightly differently (pass logs and DelfiGS: use --window 1).
+
 Frames sharing a timestamp with a different frame are shifted by 1 microsecond, since
 InfluxDB would otherwise overwrite one with the other.
+
 """
 import glob
 import json
@@ -58,6 +63,8 @@ class Command(BaseCommand):
         parser.add_argument("--header", help="override the expected AX.25 header (hex)")
         parser.add_argument("--user", help="value for the 'user' tag (default: the format name)")
         parser.add_argument("--limit", type=int, help="stop after this many lines (for testing)")
+        parser.add_argument("--window", type=float, default=0.1,
+                            help="seconds within which the same frame counts as a duplicate (default 0.1)")
 
     def handle(self, *args, **options):  # pylint: disable=too-many-locals,too-many-branches
         satellite = options["satellite"]
@@ -119,7 +126,7 @@ class Command(BaseCommand):
                     used_timestamps[timestamp] = frame
 
                     tlm = {"frame": frame, "user": user, "application": options["format"]}
-                    if db.save_raw_frame(satellite, "downlink", timestamp, tlm):
+                    if db.save_raw_frame(satellite, "downlink", timestamp, tlm, window=options["window"]):
                         counts["stored"] += 1
                     else:
                         counts["duplicate"] += 1
