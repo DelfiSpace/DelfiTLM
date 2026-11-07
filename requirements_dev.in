@@ -1,4 +1,4 @@
-coverage>=7.8.0
+coverage>=7.17.0
     # verify the unit test coverage
 autopep8>=2.3.2
     # automatically format source code
