@@ -179,34 +179,40 @@ class influxdb_api:
         self._get_write_api().write(satellite, link, db_fields)
 
 
-    def update_raw_frame(self, satellite: str, link: str, timestamp: datetime, tlm: dict) -> bool:
-        """Updates frame in corresponding satellite table (if not already stored).
+    def update_raw_frame(self, satellite: str, link: str, timestamp: datetime, tlm: dict,
+                         frame: str = None, user: str = None) -> bool:
+        """Updates frame in corresponding satellite table (if already stored).
         Returns True if the frame was updated and False otherwise (if the frame was not found).
+        If frame and/or user are given, only the matching record is updated. Several stations
+        can receive a frame within the same 0.1 s window; without these filters the first
+        record found was updated, which could be another station's frame.
         """
         time_range_start = (timestamp - timedelta(seconds=0.1)).strftime(DATETIME_FORMAT_STRING)
         time_range_stop = (timestamp + timedelta(seconds=0.1)).strftime(DATETIME_FORMAT_STRING)
 
-        # check if frame already exists
         query = f'''from(bucket: "{satellite}")
             |> range(start: {time_range_start}, stop: {time_range_stop})
             |> filter(fn: (r) => r._measurement == "{RAW_MEASUREMENT}")
             |> pivot(rowKey:["_time"], columnKey: ["_field"], valueColumn: "_value")
             '''
+        if frame is not None:
+            query += f'|> filter(fn: (r) => r.frame == "{frame}")\n'
+        if user is not None:
+            query += f'|> filter(fn: (r) => r.user == "{user}")\n'
 
         # update frame only if already present
         frames = self._get_query_api().query(query=query, org=link)
         if len(frames) != 0:
-            frame = frames[0].records[0]
-            bucket = satellite
+            record = frames[0].records[0]
 
             db_fields = {
                 "measurement": RAW_MEASUREMENT,
                 "time": timestamp,
-                "tags": {"user": frame["user"], "application": frame["application"]},
+                "tags": {"user": record["user"], "application": record["application"]},
                 "fields": tlm
             }
 
-            self._get_write_api().write(bucket, link, db_fields)
+            self._get_write_api().write(satellite, link, db_fields)
             return True
 
         return False
