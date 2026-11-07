@@ -17,6 +17,9 @@ def parse_and_store_frame(parsers: SatParsers, db: influxdb_api, satellite: str,
     bucket = satellite + "_" + link
 
     if "frame" in telemetry:
+        # group fields by status, so each group is written in one call
+        # instead of one write per field
+        fields_by_status = {}
         for field, value_and_status in telemetry.items():
             # skip frame field
             if field == "frame":
@@ -30,8 +33,10 @@ def parse_and_store_frame(parsers: SatParsers, db: influxdb_api, satellite: str,
             except ValueError:
                 pass
 
-            db.save_processed_frame(satellite, link, telemetry["frame"], timestamp, {"status": status}, {field: value})
+            fields_by_status.setdefault(status, {})[field] = value
 
+        for status, fields in fields_by_status.items():
+            db.save_processed_frame(satellite, link, telemetry["frame"], timestamp, {"status": status}, fields)
 
 def process_retrieved_frames(parsers: SatParsers, db: influxdb_api, satellite: str, link: str) -> int:
     """Parse frames, store the parsed form and mark the raw entry as processed.
@@ -49,14 +54,16 @@ def process_retrieved_frames(parsers: SatParsers, db: influxdb_api, satellite: s
             # store processed frame
             parse_and_store_frame(parsers, db, satellite, row["_time"], row["frame"], link)
             # mark raw frame as processed and valid
-            db.update_raw_frame(satellite, link, row["_time"], {'processed': True, 'invalid': False})
+            db.update_raw_frame(satellite, link, row["_time"], {'processed': True, 'invalid': False},
+                    frame=row["frame"], user=row.get("user"))
             processed_frames_count += 1
 
         except XTCEException as ex:
             logger.error("%s: frame processing error: %s (%s)", satellite, ex, row["frame"])
             logger.error(traceback.format_exc())
             # mark raw frame as processed and invalid
-            db.update_raw_frame(satellite, link, row["_time"], {'processed': True, 'invalid': True})
+            db.update_raw_frame(satellite, link, row["_time"], {'processed': True, 'invalid': True},
+                    frame=row["frame"], user=row.get("user"))
 
         # indeed a very broad exception, but it keeps the processor running in case of rogue frames
         except Exception as ex:       # pylint: disable=broad-except
@@ -65,7 +72,8 @@ def process_retrieved_frames(parsers: SatParsers, db: influxdb_api, satellite: s
             logger.info("Problematic frame: " + str(row)) 
             logger.info(row)
             # mark raw frame as processed and invalid
-            db.update_raw_frame(satellite, link, row["_time"], {'processed': True, 'invalid': True})
+            db.update_raw_frame(satellite, link, row["_time"], {'processed': True, 'invalid': True},
+                    frame=row["frame"], user=row.get("user"))
 
     return processed_frames_count
 
