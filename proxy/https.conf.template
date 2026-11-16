@@ -68,6 +68,11 @@ server {
         proxy_pass          http://grafana:3000/;
     }
 
+    # Block the /grafana/metrics endpoint
+    location /grafana/metrics {
+        return 404;
+    }
+
     # proxy the influxDB web interface
     # From: https://github.com/influxdata/influxdb/issues/15721#issuecomment-1750302653
     location /influxdb/ {
