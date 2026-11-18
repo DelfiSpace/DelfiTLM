@@ -4,7 +4,7 @@ channels>=4.2.2
     # WebSocket framework for Django
 Django<6.0
     # CMS framework
-django_axes>=8.0.0
+django_axes>=9.0.0
     # Protect Django from suspicious access attempts
 django-bootstrap5>=25.1
     # Bootstrap5 themes for Django
