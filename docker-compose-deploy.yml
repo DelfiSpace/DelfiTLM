@@ -1,4 +1,3 @@
-version: '3.7'
 
 services:
     app:
@@ -51,11 +50,7 @@ services:
 
     pgadmin:
         container_name: pgadmin4_container
-<<<<<<< HEAD
-        image: dpage/pgadmin4:8.6
-=======
         image: dpage/pgadmin4:8.9
->>>>>>> 4c892495399d42d7e674640b738a495bfe09dc8b
         restart: always
         environment:
             - PGADMIN_DEFAULT_EMAIL=${PGADMIN_DEFAULT_EMAIL:-admin@admin.com}
