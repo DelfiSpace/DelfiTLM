@@ -113,13 +113,15 @@ class influxdb_api:
         return dataframe
 
 
-    def save_raw_frame(self, satellite: str, link: str, timestamp: datetime, tlm: dict) -> bool:
+    def save_raw_frame(self, satellite: str, link: str, timestamp: datetime, tlm: dict,
+                       window: float = 0.1) -> bool:
         """Write frame to corresponding satellite table (if not already stored).
         Returns True if the frame was stored and False otherwise (if the frame is already stored).
+        A frame counts as already stored if the same frame exists within +/- window seconds.
         Also store the frame with processed = False."""
 
-        time_range_start = (timestamp - timedelta(seconds=0.1)).strftime(DATETIME_FORMAT_STRING)
-        time_range_stop = (timestamp + timedelta(seconds=0.1)).strftime(DATETIME_FORMAT_STRING)
+        time_range_start = (timestamp - timedelta(seconds=window)).strftime(DATETIME_FORMAT_STRING)
+        time_range_stop = (timestamp + timedelta(seconds=window)).strftime(DATETIME_FORMAT_STRING)
 
         # check if frame already exists
         query = f'''from(bucket: "{satellite}")
