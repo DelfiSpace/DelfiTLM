@@ -6,7 +6,9 @@ from django.core.management import call_command
 from members.models import Member
 from transmission.models import Downlink
 from transmission.processing import XTCEParser
-from transmission.processing.process_raw_bucket import parse_and_store_frame, store_raw_frame
+from datetime import datetime
+from transmission.processing.process_raw_bucket import parse_and_store_frame
+from transmission.processing.influxdb_api import influxdb_api
 from transmission.processing.save_raw_data import parse_submitted_frame
 
 
@@ -57,12 +59,15 @@ def add_dummy_tlm_raw_data(satellite, input_file):
         data.sort(key=lambda x: x["timestamp"])
         # data = data[:100]
         # process each frame
+        db = influxdb_api()
         for frame in data:
-            stored = store_raw_frame(satellite,
-                                     frame["timestamp"],
-                                     frame["frame"],
-                                     frame["observer"],
-                                     "downlink")
+            timestamp = datetime.fromisoformat(frame["timestamp"].replace("Z", "+00:00"))
+            tlm = {
+                "frame": frame["frame"].upper(),
+                "user": frame["observer"],
+                "application": frame.get("app_source", "satnogs"),
+            }
+            stored = db.save_raw_frame(satellite, "downlink", timestamp, tlm)
             if stored:
                 stored_frames += 1
 
