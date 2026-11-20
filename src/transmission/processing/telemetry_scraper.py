@@ -60,7 +60,7 @@ def strip_tlm_list(telemetry: list, fields: list) -> list:
     return stripped_tlm_list
 
 
-def scrape(satellite: str, save_to_db=True, save_to_file=False) -> None:
+def scrape(satellite: str, save_to_db=True, save_to_file=False) -> None:  # pylint: disable=unused-argument
     """Scrape satnogs for new telemetry"""
 
     telemetry = []

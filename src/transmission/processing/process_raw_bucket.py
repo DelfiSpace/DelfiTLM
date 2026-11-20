@@ -78,6 +78,7 @@ def process_retrieved_frames(parsers: SatParsers, db: influxdb_api, satellite: s
 
 def process_raw_bucket(satellite: str, link: str = None, all_frames: bool = False, failed: bool = False):
     """Bucket processing or reprocessing task."""
+    # pylint: disable=unused-argument  # all_frames, failed: reprocessing options not implemented yet (#304)
     # if link is None process both uplink and downlink, otherwise process only specified link
 
     total_processed_frames = 0

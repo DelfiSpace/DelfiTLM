@@ -8,7 +8,7 @@ from django.conf import settings
 RAW_MEASUREMENT = "_raw"
 DATETIME_FORMAT_STRING = "%Y-%m-%dT%H:%M:%S.%fZ"
 
-class influxdb_api:
+class influxdb_api:  # pylint: disable=invalid-name
     """Class interfcing with InfluxDB"""
 
     def __init__(self):

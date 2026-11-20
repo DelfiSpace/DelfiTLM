@@ -46,8 +46,8 @@ TIMESTAMP = datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%SZ')
 API_KEY = ""
 
 # for single frame submissions
-PACKET = create_packet(FRAME, TIMESTAMP)
+example_packet = create_packet(FRAME, TIMESTAMP)
 # for batched submissions
-PACKET = create_batched_submission([(FRAME, TIMESTAMP)])
+example_packet = create_batched_submission([(FRAME, TIMESTAMP)])
 
-send_packet(PACKET, API_KEY)
+send_packet(example_packet, API_KEY)
