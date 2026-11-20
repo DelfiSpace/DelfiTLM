@@ -2,7 +2,6 @@
 from datetime import datetime, timedelta
 import json
 import os
-import sys
 import traceback
 from django.core.exceptions import PermissionDenied
 from django.core.serializers.json import DjangoJSONEncoder
@@ -121,7 +120,7 @@ def _get_satellites_status():
     """Method to find satellite status."""
     try:
         db = influxdb_api()
-    except :
+    except Exception:
         db = None
     sats_status = {}
     for sat, info in SATELLITES.items():
@@ -131,7 +130,7 @@ def _get_satellites_status():
         else:
             try:
                 last_rx_time = db.get_last_received_frame(sat)
-            except:
+            except Exception:
                 last_rx_time = None
         if last_rx_time is not None and isinstance(last_rx_time, datetime):
             sats_status[str(sat + "_last_data")] = last_rx_time

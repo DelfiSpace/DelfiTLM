@@ -1,12 +1,12 @@
 """Methods to populate influxdb buckets"""
 
 import json
+from datetime import datetime
 from django.core.management import call_command
 
 from members.models import Member
 from transmission.models import Downlink
 from transmission.processing import XTCEParser
-from datetime import datetime
 from transmission.processing.process_raw_bucket import parse_and_store_frame
 from transmission.processing.influxdb_api import influxdb_api
 from transmission.processing.save_raw_data import parse_submitted_frame

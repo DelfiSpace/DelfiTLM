@@ -1,5 +1,4 @@
 """Script to store satellite telemetry frames"""
-import string
 import time
 import traceback
 from transmission.processing.XTCEParser import SatParsers, XTCEException
@@ -14,7 +13,6 @@ def parse_and_store_frame(parsers: SatParsers, db: influxdb_api, satellite: str,
     parser = parsers.parsers[satellite]
 
     telemetry = parser.processTMFrame(bytes.fromhex(frame))
-    bucket = satellite + "_" + link
 
     if "frame" in telemetry:
         # group fields by status, so each group is written in one call
@@ -69,7 +67,7 @@ def process_retrieved_frames(parsers: SatParsers, db: influxdb_api, satellite: s
         except Exception as ex:       # pylint: disable=broad-except
             logger.error("%s: frame storage error: %s (%s)", satellite, ex, row["frame"])
             logger.error(traceback.format_exc())
-            logger.info("Problematic frame: " + str(row)) 
+            logger.info("Problematic frame: %s", row)
             logger.info(row)
             # mark raw frame as processed and invalid
             db.update_raw_frame(satellite, link, row["_time"], {'processed': True, 'invalid': True},
@@ -110,7 +108,7 @@ def process_raw_bucket(satellite: str, link: str = None, all_frames: bool = Fals
         if total_processed_frames != 0:
             # frames were processed in this iteration, reset the iteration counter
             iterations = 0
-            logger.info("Processed " + str(total_processed_frames) + " frames")
+            logger.info("Processed %d frames", total_processed_frames)
 
         # maintain the thread alive and re-check if new frames have been received
         time.sleep(0.2)
