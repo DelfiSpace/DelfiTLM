@@ -15,9 +15,6 @@ jobs:
       uses: actions/setup-python@v5
       with:
         python-version: 3.12
-    - name: Report
-      if: github.actor != 'dependabot[bot]'
-      uses: 5monkeys/cobertura-action@master
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
@@ -29,6 +26,7 @@ jobs:
         coverage xml
         coverage erase
     - name: Report
+      if: github.actor != 'dependabot[bot]'
       uses: 5monkeys/cobertura-action@master
       with:
         path: src/coverage.xml
