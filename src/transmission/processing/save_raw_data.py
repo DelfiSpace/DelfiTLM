@@ -152,7 +152,8 @@ def process_uplink_and_downlink(invalid_frames: bool = False, callback = None):
             uplink_frames = Uplink.objects.all().filter(processed=False).order_by("timestamp")[:100]
         else:
             # set a maximum length to the results to ensure responsive data processing
-            downlink_frames = Downlink.objects.all().filter(processed=True).filter(invalid=True).order_by("timestamp")[:100]
+            downlink_frames = (Downlink.objects.all().filter(processed=True).filter(invalid=True)
+                               .order_by("timestamp")[:100])
             uplink_frames = Uplink.objects.all().filter(processed=True).filter(invalid=True).order_by("timestamp")[:100]
 
         downlink_frames_count = process_frames(parsers, db, downlink_frames, "downlink", satellites_list)
@@ -205,7 +206,8 @@ def process_frames(parsers: SatParsers, db: influxdb_api, frames: QuerySet, link
     return processed_frames
 
 
-def store_frame_to_influxdb(parsers: SatParsers, db: influxdb_api, timestamp: datetime, frame: dict, link: str) -> tuple:
+def store_frame_to_influxdb(parsers: SatParsers, db: influxdb_api, timestamp: datetime, frame: dict,
+                            link: str) -> tuple:
     """Try to store frame to influxdb.
     Returns True if the frame was successfully stored, False otherwise."""
 

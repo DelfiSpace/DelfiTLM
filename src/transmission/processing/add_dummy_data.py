@@ -1,13 +1,11 @@
 """Methods to populate influxdb buckets"""
 
 import json
+from datetime import datetime
 from django.core.management import call_command
 
 from members.models import Member
 from transmission.models import Downlink
-from transmission.processing import XTCEParser
-from datetime import datetime
-from transmission.processing.process_raw_bucket import parse_and_store_frame
 from transmission.processing.influxdb_api import influxdb_api
 from transmission.processing.save_raw_data import parse_submitted_frame
 
@@ -26,28 +24,6 @@ def add_dummy_downlink_frames(input_file="transmission/dummy_downlink.json"):
             frame_entry.observer = Member.objects.all().filter(username="admin")[0]
             frame_entry = parse_submitted_frame(frame, frame_entry)
             frame_entry.save()
-
-
-def add_dummy_tlm_data(satellite, input_file):
-    """Add dummy processed telemetry intended to test and experiment with dashboards."""
-    with open(input_file, encoding="utf-8") as file:
-        data = json.load(file)
-        # sort messages in chronological order
-        data.sort(key=lambda x: x["timestamp"])
-        # data = data[:100]
-        # process each frame
-        for frame in data:
-            try:
-                parse_and_store_frame(satellite,
-                                      frame["timestamp"],
-                                      frame["frame"],
-                                      frame["observer"],
-                                      "downlink"
-                                      )
-            except XTCEParser.XTCEException as _:
-                # ignore
-                pass
-    return len(data)
 
 
 def add_dummy_tlm_raw_data(satellite, input_file):

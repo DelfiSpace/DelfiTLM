@@ -26,6 +26,7 @@ jobs:
         coverage xml
         coverage erase
     - name: Report
+      if: github.actor != 'dependabot[bot]'
       uses: 5monkeys/cobertura-action@master
       with:
         path: src/coverage.xml
