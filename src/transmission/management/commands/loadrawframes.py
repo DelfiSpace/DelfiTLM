@@ -107,7 +107,7 @@ class Command(BaseCommand):
 
         for filename in files:
             counts = dict.fromkeys(total, 0)
-            previous = None   # (timestamp, second column) of the last good pyTrack line
+            prev_time, prev_col = None, None   # timestamp and second column of the last good pyTrack line
             for record in read_records(filename, file_format):
                 if limit is not None and total["lines"] + counts["lines"] >= limit:
                     break
@@ -121,13 +121,13 @@ class Command(BaseCommand):
                 if timestamp is None:
                     # minute-only pyTrack time: rebuild it from the previous line,
                     # using the elapsed-seconds column
-                    if previous is None:
+                    if prev_time is None:
                         counts["bad_line"] += 1
                         continue
-                    timestamp = previous[0] + timedelta(seconds=second_col - previous[1])
+                    timestamp = prev_time + timedelta(seconds=second_col - prev_col)
                     counts["reconstructed"] += 1
                 if second_col is not None:
-                    previous = (timestamp, second_col)
+                    prev_time, prev_col = timestamp, second_col
 
                 frame = frame.strip().upper()
                 if not frame.startswith(header):

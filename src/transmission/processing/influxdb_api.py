@@ -3,14 +3,12 @@ from datetime import datetime, timedelta
 from influxdb_client import InfluxDBClient
 from influxdb_client.client.write_api import SYNCHRONOUS
 from influxdb_client.rest import ApiException
-from influxdb_client.domain.bucket import Bucket
 from django.conf import settings
-from django_logger import logger
 
 RAW_MEASUREMENT = "_raw"
 DATETIME_FORMAT_STRING = "%Y-%m-%dT%H:%M:%S.%fZ"
 
-class influxdb_api:
+class influxdb_api:  # pylint: disable=invalid-name
     """Class interfcing with InfluxDB"""
 
     def __init__(self):
@@ -51,12 +49,12 @@ class influxdb_api:
         """Initialize the database."""
 
         try:
-            orgs = self._get_organizations_api().find_organizations(org="downlink")
+            self._get_organizations_api().find_organizations(org="downlink")
         except ApiException:
             self._get_organizations_api().create_organization('downlink')
 
         try:
-            orgs = self._get_organizations_api().find_organizations(org="uplink")
+            self._get_organizations_api().find_organizations(org="uplink")
         except ApiException:
             self._get_organizations_api().create_organization('uplink')
 
