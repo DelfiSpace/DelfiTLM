@@ -1,7 +1,8 @@
 # DelfiTLM
 
-[![Django CI](https://github.com/iiacoban42/DelfiTLM/actions/workflows/django.yml/badge.svg?branch=main)](https://github.com/iiacoban42/DelfiTLM/actions/workflows/django.yml)
-[![Pylint](https://github.com/iiacoban42/DelfiTLM/actions/workflows/pylint.yml/badge.svg?branch=main)](https://github.com/iiacoban42/DelfiTLM/actions/workflows/pylint.yml)
+[![Django CI](https://github.com/DelfiSpace/DelfiTLM/actions/workflows/django.yml/badge.svg?branch=main)](https://github.com/DelfiSpace/DelfiTLM/actions/workflows/django.yml)
+[![Pylint](https://github.com/DelfiSpace/DelfiTLM/actions/workflows/pylint.yml/badge.svg?branch=main)](https://github.com/DelfiSpace/DelfiTLM/actions/workflows/pylint.yml)
+[![Coverage](https://github.com/DelfiSpace/DelfiTLM/actions/workflows/coverage.yml/badge.svg?branch=main)](https://github.com/DelfiSpace/DelfiTLM/actions/workflows/coverage.yml)
 
 ## Requirements
 
