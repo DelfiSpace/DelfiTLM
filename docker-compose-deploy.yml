@@ -67,7 +67,7 @@ services:
 
 
     crowdsec:
-        image: crowdsecurity/crowdsec:v1.6.2
+        image: crowdsecurity/crowdsec:v1.8.2
         restart: always
         ports:
             - "8080:8080"

@@ -3,7 +3,7 @@
 
 services:
   db:
-    image: postgres:16.0
+    image: postgres:19.0
     volumes:
       - db_data:/var/lib/postgresql/data
     environment:
@@ -64,7 +64,7 @@ services:
         max-size: "10m" # file size
 
   grafana:
-    image: grafana/grafana:10.3.1
+    image: grafana/grafana:13.3.1
     ports:
       - '3000:3000'
     volumes:
