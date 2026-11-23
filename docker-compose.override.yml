@@ -17,7 +17,7 @@ services:
       - ./src:/app
 
   pgadmin:
-    image: dpage/pgadmin4:8.3
+    image: dpage/pgadmin4:9.19
     restart: always
     environment:
       PGADMIN_DEFAULT_EMAIL: admin@admin.com
