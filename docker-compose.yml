@@ -44,7 +44,7 @@ services:
 
 
   influxdb:
-    image: influxdb:2.7
+    image: influxdb:2.10
     ports:
       - 8086:8086
     volumes:
