@@ -19,3 +19,13 @@ updates:
       # daily is good at the beginning, to converge quickly to a secure system
       # weekly can be used once the system is stable
       interval: "daily"
+
+  # Enable version updates for Docker-Compose
+  - package-ecosystem: "docker-compose"
+    # Look for a `Dockerfile` in the `root` directory
+    directory: "/"
+    # Check for updates once a week
+    schedule:
+      # daily is good at the beginning, to converge quickly to a secure system
+      # weekly can be used once the system is stable
+      interval: "daily"
