@@ -5,7 +5,7 @@ services:
   db:
     image: postgres:19.0
     volumes:
-      - db_data:/var/lib/postgresql/data
+      - db_data:/var/lib/postgresql
     environment:
       - POSTGRES_DB=${POSTGRES_DB:-delfitlm}
       - POSTGRES_USER=${POSTGRES_USER:-postgres}
