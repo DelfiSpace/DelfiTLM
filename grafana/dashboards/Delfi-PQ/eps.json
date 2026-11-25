@@ -36,7 +36,7 @@
       "title": "Overview",
       "tooltip": "Delfi-PQ Overview",
       "type": "link",
-      "url": "https://delfispace.tudelft.nl/grafana/d/Delfi-PQ_Overview"
+      "url": "/d/Delfi-PQ_Overview"
     },
     {
       "asDropdown": false,
@@ -48,7 +48,7 @@
       "title": "COMMS",
       "tooltip": "COMMS Telemetry",
       "type": "link",
-      "url": "https://delfispace.tudelft.nl/grafana/d/Delfi-PQ_COMMS"
+      "url": "/d/Delfi-PQ_COMMS"
     },
     {
       "asDropdown": false,
@@ -60,7 +60,7 @@
       "title": "OBC",
       "tooltip": "OBC Telemetry",
       "type": "link",
-      "url": "https://delfispace.tudelft.nl/grafana/d/Delfi-PQ_OBC"
+      "url": "/d/Delfi-PQ_OBC"
     }
   ],
   "liveNow": false,

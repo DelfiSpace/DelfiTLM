@@ -30,7 +30,7 @@
       "title": "Telemetry",
       "tooltip": "Delfi-C3 Telemetry",
       "type": "link",
-      "url": "https://delfispace.tudelft.nl/grafana/d/Delfi-C3_Telemetry"
+      "url": "/d/Delfi-C3_Telemetry"
     },
     {
       "asDropdown": false,
@@ -42,7 +42,7 @@
       "title": "Payload",
       "tooltip": "Delfi-C3 Payload",
       "type": "link",
-      "url": "https://delfispace.tudelft.nl/grafana/d/Delfi-C3_Payload"
+      "url": "/d/Delfi-C3_Payload"
     }
   ],
   "liveNow": false,
