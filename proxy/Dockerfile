@@ -1,5 +1,5 @@
 # this image runs an nginx proxy
-FROM nginxinc/nginx-unprivileged:1-alpine
+FROM nginx/nginx-unprivileged:1.30.7-alpine-slim
 
 # retrieve the current user ID
 RUN UID=`whoami`
